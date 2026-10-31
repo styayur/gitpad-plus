@@ -1,0 +1,75 @@
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  portable:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version-file: .node-version
+      - uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4
+        with:
+          global-json-file: global.json
+      - name: Activate pinned pnpm
+        run: |
+          if ! command -v corepack >/dev/null; then npm install -g corepack@0.34.6; fi
+          corepack enable
+          corepack install --global pnpm@12.16.1
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm typecheck && pnpm lint && pnpm test && pnpm build
+      - run: pnpm --filter @gitpad-plus/sdk build
+      - name: Restore and test portable Core
+        run: |
+          dotnet restore tests/dotnet/GitPadPlus.Core.Tests.csproj --locked-mode
+          dotnet test tests/dotnet/GitPadPlus.Core.Tests.csproj --no-restore -c Release --logger 'trx;LogFileName=core.trx' --results-directory artifacts/dotnet
+      - name: Browser integration with real file storage
+        run: |
+          pnpm exec playwright install --with-deps chromium --only-shell
+          pnpm test:ui
+      - name: Dependency security
+        run: |
+          pnpm audit --json > artifacts/npm-audit.json
+          dotnet list src/GitPadPlus.Core/GitPadPlus.Core.csproj package --vulnerable --include-transitive --format json > artifacts/nuget-audit.json
+      - name: License inventory and SBOM
+        run: node scripts/licenses.mjs
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: portable-evidence
+          path: artifacts/
+  windows-build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version-file: .node-version
+      - uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9
+        with:
+          global-json-file: global.json
+      - name: Build embedded resources
+        shell: pwsh
+        run: |
+          npm install --global corepack@0.34.6
+          corepack enable
+          corepack install --global pnpm@12.16.1
+          pnpm install --frozen-lockfile
+          pnpm build
+      - name: Install Windows workload only
+        run: dotnet workload install maui-windows --version 10.0.400
+      - name: Compile unpackaged Windows target
+        run: dotnet build apps/GitPadPlus.App/GitPadPlus.App.csproj -c Release -f net10.0-windows10.0.19041.0 -p:TargetFrameworks=net10.0-windows10.0.19041.0 -p:RuntimeIdentifier=win-x64 -p:WindowsPackageType=None
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: windows-build-not-release
+          path: apps/GitPadPlus.App/bin/Release/net10.0-windows10.0.19041.0/win-x64/

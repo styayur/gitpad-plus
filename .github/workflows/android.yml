@@ -1,0 +1,24 @@
+name: Android dedicated runner build
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  android-build:
+    if: vars.GITPAD_ANDROID_RUNNER_READY == 'true'
+    runs-on: [self-hosted, linux, android]
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - name: Verify provisioned toolchain
+        run: |
+          test "$(node --version)" = v24.19.0
+          test "$(pnpm --version)" = 12.16.1
+          test "$(dotnet --version)" = 10.0.403
+          dotnet workload list
+      - run: pnpm install --frozen-lockfile && pnpm build
+      - name: Compile without manufacturing a Release signing identity
+        run: dotnet build apps/GitPadPlus.App/GitPadPlus.App.csproj -c Debug -f net10.0-android -p:TargetFrameworks=net10.0-android
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: android-debug-not-release
+          path: apps/GitPadPlus.App/bin/Debug/net10.0-android/*.apk

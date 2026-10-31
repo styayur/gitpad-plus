@@ -1,0 +1,1 @@
+{"name":"@gitpad-plus/sdk","version":"0.1.0-alpha.1","private":true,"type":"module","license":"AGPL-3.0-only","exports":{".":{"types":"./dist/index.d.ts","import":"./dist/index.js"}},"files":["dist"],"scripts":{"build":"tsc --declaration --outDir dist --target ES2022 --module ESNext --moduleResolution Bundler --skipLibCheck index.ts"}}

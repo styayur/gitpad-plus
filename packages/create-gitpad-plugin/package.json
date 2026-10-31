@@ -1,0 +1,1 @@
+{"name":"create-gitpad-plugin","version":"0.1.0-alpha.1","private":true,"type":"module","license":"AGPL-3.0-only","bin":{"create-gitpad-plugin":"./cli.mjs"}}

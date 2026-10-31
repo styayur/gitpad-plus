@@ -1,0 +1,16 @@
+node_modules/
+web-dist/
+bin/
+obj/
+artifacts/
+test-results/
+playwright-report/
+.vs/
+.idea/
+**/dist/
+*.user
+*.keystore
+*.jks
+.env*
+!.env.example
+Vault/
