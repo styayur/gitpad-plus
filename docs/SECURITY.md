@@ -8,6 +8,8 @@ The WebView loads local resources with CSP: no remote scripts/frames/objects, no
 
 RPC cancellation is local cancellation of waiting, not rollback. Optimistic revision/hash checks reject stale document writes, including sidecar-only modifications. Long-document transport serializes full Markdown; the acceptance report records observed timings and their scope. Background saves remain best effort. Emulator process restart, activity recreation and background/foreground restoration have development-probe evidence; this does not establish physical-device behavior or guarantee unsaved edits survive arbitrary process death.
 
+Document save calls allow 60 seconds for acknowledgement. A real emulator probe received a successful save response after 15.3 seconds, beyond the former generic 10-second deadline. The longer write-specific deadline keeps that valid acknowledgement in the writer queue; it does not retry an uncertain write or weaken revision checks. If the deadline still expires, reload before retrying because the native operation may already have committed.
+
 Native image/Markdown pickers run on the UI thread, cap input sizes, and return validated data through narrow RPC methods. Windows clipboard bitmaps are decoded and re-encoded as PNG. The browser development host retains HTML file selection. A native picker cancellation is not an import failure; errors are surfaced without silently discarding the editor buffer.
 
 Security overrides are exact: KaTeX <0.18.2 -> 0.18.2 (GHSA-238p-pmpm-9mq7); minimatch <11.0.1 -> 11.0.1 (GHSA-g3hv-75wg-m249). They are recorded in pnpm-workspace.yaml, not hidden audit exceptions. Run npm/NuGet audits and regression tests after any update. Scans do not prove absence of every vulnerability.

@@ -2,6 +2,7 @@
 import { test, expect, type APIRequestContext } from '@playwright/test';
 import { readdirSync, readFileSync, appendFileSync } from 'node:fs';
 import { join } from 'node:path';
+const fixtureDate=()=>{const now=new Date();return `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;};
 
 async function call(request:APIRequestContext,method:string,params:unknown={}) {
   const response=await request.post('/rpc',{data:{protocolVersion:1,requestId:crypto.randomUUID(),method,params}});
@@ -32,14 +33,14 @@ test('official SDK toolbar formats a selection and unloads cleanly',async({page}
   await page.getByRole('button',{name:'Settings',exact:true}).click();await page.getByLabel('Official toolbar',{exact:true}).uncheck();await page.getByRole('button',{name:'Close settings'}).click();await expect(page.getByRole('toolbar',{name:'Formatting'}).getByRole('button')).toHaveCount(0);
 });
 test('peek uses original source and closes after three seconds',async({page,request})=>{
-  const note=await call(request,'documents.create',{date:'2026-10-31',title:'Peek fixture'});
+  const note=await call(request,'documents.create',{date:fixtureDate(),title:'Peek fixture'});
   await call(request,'documents.save',{id:note.header.id,body:'__original__\n',title:note.header.title,tags:[],expectedRevision:note.sidecar.revision,expectedHash:note.sidecar.contentHash,blocks:[],selections:[]});
   await page.goto('/');await page.getByRole('textbox',{name:'Search notes'}).fill('Peek fixture');await page.getByRole('navigation',{name:'Notes'}).getByRole('button').click();
   await expect(page.locator('.ProseMirror strong')).toHaveText('original');await page.getByRole('button',{name:'Source peek',exact:true}).click();
   await expect(page.getByRole('textbox',{name:'Original Markdown source'})).toHaveValue('__original__');await expect(page.getByRole('dialog',{name:'Markdown source peek'})).toBeHidden({timeout:5000});await expect(page.locator('.ProseMirror strong')).toHaveText('original');
 });
 test('unknown directives survive an edit to another block',async({page,request})=>{
-  const note=await call(request,'documents.create',{date:'2026-10-31',title:'Unknown fixture'});const body=':::future[Unknown]{z="last" a="first"}\nkeep **everything**\n:::\n\nEditable\n';
+  const note=await call(request,'documents.create',{date:fixtureDate(),title:'Unknown fixture'});const body=':::future[Unknown]{z="last" a="first"}\nkeep **everything**\n:::\n\nEditable\n';
   await call(request,'documents.save',{id:note.header.id,body,title:note.header.title,tags:[],expectedRevision:note.sidecar.revision,expectedHash:note.sidecar.contentHash,blocks:[],selections:[]});
   await page.goto('/');await page.getByRole('textbox',{name:'Search notes'}).fill('Unknown fixture');await page.getByRole('navigation',{name:'Notes'}).getByRole('button').click();
   await expect(page.locator('[data-gitpad-unknown]')).toBeVisible();const paragraph=page.locator('.ProseMirror p').last();await paragraph.click();await page.keyboard.press('End');await page.keyboard.type(' changed');await page.getByRole('button',{name:'Save',exact:true}).click();
@@ -56,7 +57,7 @@ test('clear data requires a separate confirmation and preserves data on cancel',
 });
 
 for(const fixture of readdirSync('tests/markdown-fixtures'))test(`opening/saving fixture preserves source bytes: ${fixture}`,async({page,request})=>{
-  const body=readFileSync(join('tests/markdown-fixtures',fixture),'utf8');const note=await call(request,'documents.create',{date:'2026-10-31',title:fixture});
+  const body=readFileSync(join('tests/markdown-fixtures',fixture),'utf8');const note=await call(request,'documents.create',{date:fixtureDate(),title:fixture});
   await call(request,'documents.save',{id:note.header.id,body,title:fixture,tags:[],expectedRevision:note.sidecar.revision,expectedHash:note.sidecar.contentHash,blocks:[],selections:[]});
   await page.goto('/');await page.getByRole('textbox',{name:'Search notes'}).fill(fixture);await page.getByRole('navigation',{name:'Notes'}).getByRole('button').click();
   if(fixture==='html.md'||fixture==='frontmatter.md')await expect(page.getByRole('region',{name:'Markdown editor'}).getByRole('alert')).toContainText('read-only');
@@ -65,7 +66,7 @@ for(const fixture of readdirSync('tests/markdown-fixtures'))test(`opening/saving
 });
 
 test('renders directives, GFM table, mathematics and callout without raw HTML',async({page,request})=>{
-  const note=await call(request,'documents.create',{date:'2026-10-31',title:'Rich fixture'});
+  const note=await call(request,'documents.create',{date:fixtureDate(),title:'Rich fixture'});
   const body=':underline[underlined] :mark[highlight]{color="yellow"}\n\n| A | B |\n| - | - |\n| 1 | 2 |\n\nInline $x^2$\n\n> [!NOTE]\n> Context\n\n:::fold[Details]{default="closed"}\nFolded body\n:::\n';
   await call(request,'documents.save',{id:note.header.id,body,title:note.header.title,tags:[],expectedRevision:note.sidecar.revision,expectedHash:note.sidecar.contentHash,blocks:[],selections:[]});
   await page.goto('/');await page.getByRole('textbox',{name:'Search notes'}).fill('Rich fixture');await page.getByRole('navigation',{name:'Notes'}).getByRole('button').click();
@@ -75,7 +76,7 @@ test('renders directives, GFM table, mathematics and callout without raw HTML',a
   await page.screenshot({path:'artifacts/browser-editor.png',fullPage:true});
 });
 test('source peek editing cancels the timer and remains undoable without rebuilding the editor',async({page,request})=>{
-  const note=await call(request,'documents.create',{date:'2026-10-31',title:'Undo fixture'});
+  const note=await call(request,'documents.create',{date:fixtureDate(),title:'Undo fixture'});
   await call(request,'documents.save',{id:note.header.id,body:'Original paragraph\n',title:note.header.title,tags:[],expectedRevision:note.sidecar.revision,expectedHash:note.sidecar.contentHash,blocks:[],selections:[]});
   await page.goto('/');await page.getByRole('textbox',{name:'Search notes'}).fill('Undo fixture');await page.getByRole('navigation',{name:'Notes'}).getByRole('button').click();await expect(page.locator('.ProseMirror')).toBeVisible();await page.getByRole('button',{name:'Source peek',exact:true}).click();
   const source=page.getByRole('textbox',{name:'Original Markdown source'});await source.fill('Changed **source**');await page.waitForTimeout(3200);await expect(source).toBeVisible();await page.getByRole('button',{name:'Apply source edit'}).click();await expect(page.locator('.ProseMirror strong')).toHaveText('source');
@@ -100,12 +101,12 @@ test('imports an image into the real vault and renders its local persisted conte
 });
 
 test('two distinct editable panes save independently and restore after restart',async({page,request})=>{
-  const first=await call(request,'documents.create',{date:'2026-10-31',title:'First pane'}),second=await call(request,'documents.create',{date:'2026-10-31',title:'Second pane'});
+  const first=await call(request,'documents.create',{date:fixtureDate(),title:'First pane'}),second=await call(request,'documents.create',{date:fixtureDate(),title:'Second pane'});
   await page.goto('/');await page.getByRole('navigation',{name:'Notes'}).getByRole('button').filter({hasText:'First pane'}).click();
   await expect(page.locator('.ProseMirror')).toHaveCount(1);await page.getByRole('combobox',{name:'Open beside'}).selectOption(second.header.id);
   await expect(page.locator('.ProseMirror')).toHaveCount(2);await page.locator('.ProseMirror').first().fill('Primary 中文');await page.locator('.ProseMirror').last().fill('Secondary 👩🏽‍💻');
   await page.getByRole('button',{name:'Save',exact:true}).click();
-  expect((await call(request,'documents.load',{id:first.header.id})).body).toContain('Primary 中文');expect((await call(request,'documents.load',{id:second.header.id})).body).toContain('Secondary 👩🏽‍💻');
+  await expect.poll(async()=>(await call(request,'documents.load',{id:first.header.id})).body).toContain('Primary 中文');await expect.poll(async()=>(await call(request,'documents.load',{id:second.header.id})).body).toContain('Secondary 👩🏽‍💻');
   await expect.poll(async()=>(await call(request,'workspace.get')).secondaryId).toBe(second.header.id);
   await page.reload();await expect(page.locator('.ProseMirror')).toHaveCount(2);await expect(page.locator('.ProseMirror').first()).toContainText('Primary 中文');await expect(page.locator('.ProseMirror').last()).toContainText('Secondary 👩🏽‍💻');
 });
@@ -128,7 +129,7 @@ test('image file drop and paste persist through the real storage bridge',async({
 });
 
 test('external Markdown is compared, archived and explicitly reconciled through the UI',async({page,request})=>{
-  const note=await call(request,'documents.create',{date:'2026-10-31',title:'External recovery'});
+  const note=await call(request,'documents.create',{date:fixtureDate(),title:'External recovery'});
   await page.goto('/');await page.getByRole('navigation',{name:'Notes'}).getByRole('button').click();await expect(page.locator('.ProseMirror')).toBeVisible();await page.getByRole('button',{name:'Save',exact:true}).click();
   appendFileSync(join(process.env.GITPAD_TEST_VAULT!,'Journal',note.header.id+'.md'),'External 中文\n');
   await page.getByRole('button',{name:'Check recovery'}).click();await page.getByRole('button',{name:'Compare retained versions'}).click();
@@ -140,4 +141,20 @@ test('external Markdown is compared, archived and explicitly reconciled through 
 test('plugin disabled preference persists after restart',async({page})=>{
   await page.goto('/');await page.getByRole('button',{name:'Settings',exact:true}).click();await page.getByLabel('Official toolbar',{exact:true}).uncheck();await page.getByRole('button',{name:'Close settings'}).click();
   await page.reload();await page.getByRole('button',{name:'Settings',exact:true}).click();await expect(page.getByLabel('Official toolbar',{exact:true})).not.toBeChecked();
+});
+
+test('a committed save acknowledgement delayed past ten seconds completes without losing the buffer',async({page,request})=>{
+  let delayed=false;
+  await page.route('**/rpc',async route=>{
+    const message=route.request().postDataJSON();
+    if(!delayed&&message.method==='documents.save'&&message.params.body.includes('Delayed acknowledgement')){
+      delayed=true;const response=await route.fetch();
+      // Reproduce a committed native write whose acknowledgement arrives late.
+      await new Promise(resolve=>setTimeout(resolve,12_000));await route.fulfill({response});
+    }else await route.continue();
+  });
+  await page.goto('/');await page.getByRole('button',{name:'New note',exact:true}).click();const editor=page.locator('.ProseMirror');await expect(editor).toBeVisible();
+  const id=await page.getByRole('tab',{selected:true}).getAttribute('title');await editor.fill('Delayed acknowledgement 中文 👩🏽‍💻');await page.getByRole('button',{name:'Save',exact:true}).click();
+  await expect.poll(async()=>(await call(request,'documents.load',{id})).body).toContain('Delayed acknowledgement 中文 👩🏽‍💻');
+  await expect(page.locator('footer [role=status]')).toHaveText('Local: Saved',{timeout:20_000});expect(delayed).toBe(true);await expect(editor).toContainText('Delayed acknowledgement 中文 👩🏽‍💻');
 });

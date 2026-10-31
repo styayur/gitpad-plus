@@ -19,9 +19,13 @@
     },
     "playwright": {
       "skipped": 0,
-      "passed": 27,
-      "evidence": "artifacts/playwright.json",
-      "failed": 0
+      "passed": 28,
+      "evidence": [
+        "artifacts/local-audit/midnight-deadline-playwright.log",
+        "artifacts/local-audit/delayed-acknowledgement-regression.log"
+      ],
+      "failed": 0,
+      "mode": "27 full suite plus one focused new delayed-ACK regression; new full CI run pending"
     },
     "releaseGate": {
       "skipped": 0,
@@ -131,5 +135,12 @@
     "note": "Later tooling-only commits need new candidate source stamps; this is a specifically identified intermediate candidate.",
     "sha256": "ce57c434110bc4e0dd010c5e4aa0a32ff102ebeadbe6f0c0a9658c5f0c309174",
     "bytes": 34306088
+  },
+  "writeAcknowledgement": {
+    "observedResponseMs": 15265.3,
+    "evidence": "artifacts/local-audit/delayed-acknowledgement-regression.log",
+    "regression": "Committed response deliberately held for 12000ms, real source persisted and buffer reached Saved",
+    "newDocumentSaveDeadlineMs": 60000,
+    "previousDeadlineMs": 10000
   }
 }

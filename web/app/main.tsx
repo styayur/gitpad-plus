@@ -51,7 +51,7 @@ function App() {
     try{
       if(id===sessionRef.current?.note.header.id)throw new Error('Choose a different note for the second pane');
       await flush();const note=await rpc.call<Note>('documents.load',{id});secondaryRef.current?.dispose();
-      const next=new DocumentSession(note,async request=>{const saved=await rpc.call<Note>('documents.save',request);void refresh().catch(error);host.emit('documents.changed',{});return saved;},updateDirty);
+      const next=new DocumentSession(note,async request=>{const saved=await rpc.call<Note>('documents.save',request,undefined,60_000);void refresh().catch(error);host.emit('documents.changed',{});return saved;},updateDirty);
       secondaryRef.current=next;setSecondary(next);
     }catch(e){error(e);}
   }
@@ -61,7 +61,7 @@ function App() {
       if(id===secondaryRef.current?.note.header.id)throw new Error('This note is already open in the second pane. Close that pane before opening it here.');
       await flush(); const note=await rpc.call<Note>('documents.load',{id}); if(current!==generation.current)return;
       sessionRef.current?.dispose();
-      const next=new DocumentSession(note, async request => { const saved=await rpc.call<Note>('documents.save',request); void refresh().catch(error); host.emit('documents.changed',{}); return saved; }, updateDirty);
+      const next=new DocumentSession(note, async request => { const saved=await rpc.call<Note>('documents.save',request,undefined,60_000); void refresh().catch(error); host.emit('documents.changed',{}); return saved; }, updateDirty);
       sessionRef.current=next; setSession(next);
       setCalendarOpen(false);
       setDate(note.header.date);setMonth(new Date(Number(note.header.date.slice(0,4)),Number(note.header.date.slice(5,7))-1,1));
