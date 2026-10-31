@@ -13,7 +13,7 @@ public partial class App : Application
         {
             if (window.Handler?.PlatformView is Microsoft.UI.Xaml.Window native)
             {
-                native.SystemBackdrop = new Microsoft.UI.Xaml.Media.MicaBackdrop();
+                if (Microsoft.UI.Composition.SystemBackdrops.MicaController.IsSupported()) native.SystemBackdrop = new Microsoft.UI.Xaml.Media.MicaBackdrop();
                 native.AppWindow.Closing += (_, args) => { if (page.HasUnsavedChanges) { args.Cancel = true; page.RequestFlush(); } };
             }
         };

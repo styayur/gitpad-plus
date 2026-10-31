@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 import { useEffect, useRef, useState } from 'react';
 import { Crepe } from '@milkdown/crepe';
-import { editorViewCtx, commandsCtx } from '@milkdown/kit/core';
+import { editorViewCtx, commandsCtx, parserCtx } from '@milkdown/kit/core';
 import { $prose } from '@milkdown/kit/utils';
 import { toggleStrongCommand, toggleEmphasisCommand, wrapInBulletListCommand, blockquoteSchema, toggleLinkCommand, insertImageCommand } from '@milkdown/kit/preset/commonmark';
 import { toggleStrikethroughCommand } from '@milkdown/kit/preset/gfm';
@@ -71,6 +71,10 @@ export function Editor({session, settings, handle, upload, imageUrl}: {session: 
       });
     };
     const onClick = (event: MouseEvent) => {
+      const summary=(event.target as HTMLElement).closest('summary');
+      if(summary?.parentElement?.matches('details[data-gitpad-fold]')){
+        event.preventDefault();editor.editor.action(ctx=>{const view=ctx.get(editorViewCtx);const transaction=view.state.tr;view.state.doc.descendants((node,pos)=>{if(node.type.name==='gitpad_fold'&&view.nodeDOM(pos)===summary.parentElement)transaction.setNodeMarkup(pos,undefined,{...node.attrs,closed:!node.attrs.closed});});if(transaction.docChanged)view.dispatch(transaction);});
+      }
       const anchor = (event.target as HTMLElement).closest('a');
       if (anchor) { event.preventDefault(); if (anchor.getAttribute('href')?.startsWith('gitpadplus:')) window.dispatchEvent(new CustomEvent('gitpad-navigate', {detail: anchor.getAttribute('href')})); }
     };
@@ -91,7 +95,7 @@ export function Editor({session, settings, handle, upload, imageUrl}: {session: 
         }); },
         command(name) {
           if (name === 'peek') { editor.editor.action(ctx => { const view = ctx.get(editorViewCtx); const blocks = blockKey.getState(view.state)?.live ?? []; peekIndex.current = Math.max(0, blocks.findIndex(b => b.pos <= view.state.selection.from && view.state.selection.from <= b.pos+b.node.nodeSize)); const text = new SourceDocument(session.body).slice(peekIndex.current); setPeekText(text); peek.current?.show(text); }); return; }
-          if (name === 'expandAll' || name === 'collapseAll') { root.current?.querySelectorAll('details').forEach(d => { d.open = name === 'expandAll'; }); return; }
+          if (name === 'expandAll' || name === 'collapseAll') { editor.editor.action(ctx=>{const view=ctx.get(editorViewCtx),transaction=view.state.tr;view.state.doc.descendants((node,pos)=>{if(node.type.name==='gitpad_fold')transaction.setNodeMarkup(pos,undefined,{...node.attrs,closed:name==='collapseAll'});});view.dispatch(transaction);}); return; }
           editor.editor.action(ctx => {
             const commands = ctx.get(commandsCtx), view = ctx.get(editorViewCtx); view.focus();
             if (name === 'bold') commands.call(toggleStrongCommand.key);
@@ -126,7 +130,15 @@ export function Editor({session, settings, handle, upload, imageUrl}: {session: 
     {failure && <p role="alert">{failure}</p>}
     <div ref={root} data-testid="milkdown" />
     {peek.current?.source != null && <div className="peek" role="dialog" aria-label="Markdown source peek"><label>Original Markdown source<textarea aria-label="Original Markdown source" value={peekText} onChange={e => { peek.current?.edit(); setPeekText(e.target.value); }} /></label>
-      {peek.current.editing && <button onClick={() => { const updated = new SourceDocument(session.body).replace(peekIndex.current, peekText).raw; session.edit(updated,session.blocks); peek.current?.close(); void session.flush().then(()=>window.dispatchEvent(new CustomEvent('gitpad-reopen'))); }}>Apply source edit</button>}
+      {peek.current.editing && <button onClick={() => {
+        const active=crepeRef.current;if(!active)return;
+        active.editor.action(ctx=>{const view=ctx.get(editorViewCtx),block=blockKey.getState(view.state)?.live[peekIndex.current];if(!block)return;
+          const updated=new SourceDocument(session.body).replace(peekIndex.current,peekText).raw,replacement=ctx.get(parserCtx)(peekText);
+          // One ordinary editor transaction retains the existing undo history.
+          session.body=updated;view.dispatch(view.state.tr.replaceWith(block.pos,block.pos+block.node.nodeSize,replacement.content));
+          session.edit(updated,sourceBlocks(blockKey.getState(view.state),updated));view.focus();
+        });peek.current?.close();
+      }}>Apply source edit</button>}
       <button onClick={() => peek.current?.close()}>Close peek</button></div>}
   </section>;
 }

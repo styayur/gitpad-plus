@@ -17,7 +17,7 @@ jobs:
           dotnet workload list
       - run: pnpm install --frozen-lockfile && pnpm build
       - name: Compile without manufacturing a Release signing identity
-        run: dotnet build apps/GitPadPlus.App/GitPadPlus.App.csproj -c Debug -f net10.0-android -p:TargetFrameworks=net10.0-android
+        run: dotnet build apps/GitPadPlus.App/GitPadPlus.App.csproj -c Debug -f net10.0-android -p:GitPadTargetFramework=net10.0-android
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: android-debug-not-release

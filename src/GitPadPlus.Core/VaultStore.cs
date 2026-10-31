@@ -12,6 +12,7 @@ public sealed class VaultStore
     private readonly string root;
     private readonly Action<string>? checkpoint;
     private readonly string marker;
+    public List<RecoveryIssue> RecoveryIssues { get; } = [];
     public string Root => root;
     private string Meta => Safe(".gitpad");
     private string Db => Safe(".gitpad", "index.sqlite");
@@ -83,12 +84,17 @@ public sealed class VaultStore
     {
         lock (gate)
         {
+            try
+            {
             var raw = File.ReadAllText(Markdown(id), Utf8);
             var parsed = Frontmatter.Decode(raw);
             var sidecar = Read<Sidecar>(AnchorPath(id));
             if (parsed.Header.Id != id || sidecar.DocumentId != id || sidecar.SchemaVersion != 1 || sidecar.ContentHash != Identity.Hash(raw))
                 throw new RecoveryRequiredException("Markdown/sidecar mismatch; retained unchanged for recovery. External edits require explicit reconciliation.");
             return new(parsed.Header, parsed.Body, sidecar);
+            }
+            catch (Exception ex) when (ex is YamlDotNet.Core.YamlException or JsonException or FormatException or InvalidDataException)
+            { throw new RecoveryRequiredException("Invalid persisted metadata; original files retained for repair."); }
         }
     }
     public Note Save(SaveRequest request)
@@ -173,7 +179,11 @@ public sealed class VaultStore
             foreach (var folder in Directory.EnumerateDirectories(Safe(".gitpad", "transactions")))
             {
                 _ = Safe(Path.GetRelativePath(root, folder));
-                if (File.Exists(Path.Combine(folder, "transaction.json"))) Finish(folder);
+                if (File.Exists(Path.Combine(folder, "transaction.json")))
+                {
+                    try { Finish(folder); }
+                    catch (Exception ex) when (ex is IOException or JsonException or ArgumentException) { RecoveryIssues.Add(new(null, "TransactionConflict")); }
+                }
             }
             foreach (var folder in Directory.EnumerateDirectories(Safe(".gitpad", "trash")))
             {
@@ -227,9 +237,9 @@ public sealed class VaultStore
             foreach (var file in Directory.EnumerateFiles(Safe("Journal"), "*.md"))
             {
                 _ = Safe("Journal", Path.GetFileName(file));
-                if (!Guid.TryParse(Path.GetFileNameWithoutExtension(file), out var id)) throw new InvalidDataException("Unknown journal filename retained.");
-                var note = Load(id);
-                Project(note.Header, note.Body);
+                if (!Guid.TryParse(Path.GetFileNameWithoutExtension(file), out var id)) { RecoveryIssues.Add(new(null, "UnknownFilename")); continue; }
+                try { var note = Load(id); Project(note.Header, note.Body); }
+                catch (Exception ex) when (ex is IOException or ArgumentException) { if (!RecoveryIssues.Any(i => i.DocumentId == id)) RecoveryIssues.Add(new(id, "MetadataMismatch")); }
             }
         }
     }
@@ -341,6 +351,7 @@ public sealed class VaultStore
             // Only dedicated managed subdirectories are removed; the root is never recursively deleted.
             foreach (var directory in new[] { "Journal", "Assets", ".gitpad" }) Directory.Delete(Safe(directory), true);
             foreach (var path in new[] { "Journal", "Assets", ".gitpad/anchors", ".gitpad/transactions", ".gitpad/trash" }) Directory.CreateDirectory(Safe(path));
+            RecoveryIssues.Clear();
             InitializeIndex();
         }
     }

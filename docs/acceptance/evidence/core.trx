@@ -1,0 +1,202 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TestRun id="66bb9065-4074-4adf-981d-1a946fa6262f" name="@fb10a0c6d554 2026-10-31 03:48:29" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Times creation="2026-10-31T03:48:29.5895000+00:00" queuing="2026-10-31T03:48:29.5895001+00:00" start="2026-10-31T03:48:28.5984571+00:00" finish="2026-10-31T03:48:29.7109472+00:00" />
+  <TestSettings name="default" id="2c65d680-cbe7-4297-9af9-cdf3715ef9b1">
+    <Deployment runDeploymentRoot="_fb10a0c6d554_2026-10-31_03_48_29" />
+  </TestSettings>
+  <Results>
+    <UnitTestResult executionId="45c1a772-437e-4082-932b-4df2f0359de5" testId="27d6a336-4739-e621-390f-5cfc120e9273" testName="GitPadPlus.Tests.VaultTests.StaleRevisionCannotOverwriteNewerSave" computerName="fb10a0c6d554" duration="00:00:00.0111901" startTime="2026-10-31T03:48:29.6307860+00:00" endTime="2026-10-31T03:48:29.6422592+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="45c1a772-437e-4082-932b-4df2f0359de5" />
+    <UnitTestResult executionId="517c4d29-5a12-4a5f-b3d3-5536fdbcd333" testId="e3c0ce49-5813-7c2a-79b3-a5d1a5eac5b9" testName="GitPadPlus.Tests.VaultTests.FrontmatterRetainsUnknownFieldsAndCrLfBody" computerName="fb10a0c6d554" duration="00:00:00.0082643" startTime="2026-10-31T03:48:29.5841995+00:00" endTime="2026-10-31T03:48:29.5924292+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="517c4d29-5a12-4a5f-b3d3-5536fdbcd333" />
+    <UnitTestResult executionId="31573b52-64cb-4017-a76d-b104847d3f1f" testId="ff5a599b-74df-31b0-77ba-eb9e8c5b7de7" testName="GitPadPlus.Tests.VaultTests.InterruptedSaveRecoversMatchingPair(stage: &quot;Staged&quot;)" computerName="fb10a0c6d554" duration="00:00:00.0066053" startTime="2026-10-31T03:48:29.5710825+00:00" endTime="2026-10-31T03:48:29.5776955+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="31573b52-64cb-4017-a76d-b104847d3f1f" />
+    <UnitTestResult executionId="0740fa95-e8c0-4506-b4f3-d561c964ffdf" testId="81d35db1-8095-82c3-906d-a39b675671a0" testName="GitPadPlus.Tests.VaultTests.InterruptedSaveRecoversMatchingPair(stage: &quot;MarkdownReplaced&quot;)" computerName="fb10a0c6d554" duration="00:00:00.0098291" startTime="2026-10-31T03:48:29.5641202+00:00" endTime="2026-10-31T03:48:29.5709508+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="0740fa95-e8c0-4506-b4f3-d561c964ffdf" />
+    <UnitTestResult executionId="e56f7414-7a12-4968-b11b-36ade98d7473" testId="b852d432-8caa-054a-44c7-ca27d0bfce50" testName="GitPadPlus.Tests.VaultTests.AnchorResolverUsesUtf16AndRefusesDuplicateQuoteJumps" computerName="fb10a0c6d554" duration="00:00:00.0042712" startTime="2026-10-31T03:48:29.5623439+00:00" endTime="2026-10-31T03:48:29.5624292+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="e56f7414-7a12-4968-b11b-36ade98d7473" />
+    <UnitTestResult executionId="4a167fd6-98ab-44fa-a452-2435d34bc0fb" testId="ff60ba27-102a-fc99-7da6-46b9880f318c" testName="GitPadPlus.Tests.VaultTests.InvalidDatesRejected(date: &quot;../oops&quot;)" computerName="fb10a0c6d554" duration="00:00:00.0061583" startTime="2026-10-31T03:48:29.4394430+00:00" endTime="2026-10-31T03:48:29.4395829+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="4a167fd6-98ab-44fa-a452-2435d34bc0fb" />
+    <UnitTestResult executionId="fa41de95-c6d1-4c9f-8fec-b6e6e225258f" testId="a0c3dbb4-363a-5915-a55d-b2979df022cd" testName="GitPadPlus.Tests.VaultTests.RejectsTraversal" computerName="fb10a0c6d554" duration="00:00:00.0021132" startTime="2026-10-31T03:48:29.4543941+00:00" endTime="2026-10-31T03:48:29.4564262+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="fa41de95-c6d1-4c9f-8fec-b6e6e225258f" />
+    <UnitTestResult executionId="f3433224-26e6-40c5-91fd-7edb45ec4d4d" testId="ee59ee5c-6fad-a536-ec1e-7d13530cc42b" testName="GitPadPlus.Tests.VaultTests.ImagesAreDeduplicatedAndActiveContentRejected" computerName="fb10a0c6d554" duration="00:00:00.0022944" startTime="2026-10-31T03:48:29.6292576+00:00" endTime="2026-10-31T03:48:29.6306416+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="f3433224-26e6-40c5-91fd-7edb45ec4d4d" />
+    <UnitTestResult executionId="be739cb3-5df9-41d1-99f9-93bca802afbd" testId="7d3ef4f3-de81-2030-171f-eb37f799ad81" testName="GitPadPlus.Tests.VaultTests.InterruptedSaveRecoversMatchingPair(stage: &quot;SidecarReplaced&quot;)" computerName="fb10a0c6d554" duration="00:00:00.0062674" startTime="2026-10-31T03:48:29.5778374+00:00" endTime="2026-10-31T03:48:29.5840385+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="be739cb3-5df9-41d1-99f9-93bca802afbd" />
+    <UnitTestResult executionId="f0253d48-1b07-4ee5-9328-f97a880d6852" testId="6fa603f4-e700-f381-f0bd-1d58b88f0436" testName="GitPadPlus.Tests.VaultTests.NativeCoreEnforcesPackagedPluginCapabilities" computerName="fb10a0c6d554" duration="00:00:00.0343826" startTime="2026-10-31T03:48:29.4566023+00:00" endTime="2026-10-31T03:48:29.4910641+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="f0253d48-1b07-4ee5-9328-f97a880d6852" />
+    <UnitTestResult executionId="ab660462-b715-48ce-9b96-a70a162137ff" testId="33b0b05b-3666-a597-412c-285edd86350d" testName="GitPadPlus.Tests.VaultTests.CorruptIndexIsQuarantinedAndRebuilt" computerName="fb10a0c6d554" duration="00:00:00.0185237" startTime="2026-10-31T03:48:29.4400122+00:00" endTime="2026-10-31T03:48:29.4541683+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="ab660462-b715-48ce-9b96-a70a162137ff" />
+    <UnitTestResult executionId="e2a65b11-9c12-4605-b34c-bcdb903bb1dd" testId="86d3b020-11fe-e4a2-2a2a-216b8656c1cc" testName="GitPadPlus.Tests.VaultTests.BridgeRejectsUnknownMethodsAndProtocolVersions" computerName="fb10a0c6d554" duration="00:00:00.0031456" startTime="2026-10-31T03:48:29.5616076+00:00" endTime="2026-10-31T03:48:29.5616735+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="e2a65b11-9c12-4605-b34c-bcdb903bb1dd" />
+    <UnitTestResult executionId="59800db0-c112-4359-a1ce-fad5fd1558d4" testId="6626edc2-cc9b-12f4-1b51-3891b1a4a700" testName="GitPadPlus.Tests.VaultTests.SymbolicLinkCannotEscapeOrBeCleared" computerName="fb10a0c6d554" duration="00:00:00.0026153" startTime="2026-10-31T03:48:29.5619064+00:00" endTime="2026-10-31T03:48:29.5619757+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="59800db0-c112-4359-a1ce-fad5fd1558d4" />
+    <UnitTestResult executionId="39609b0c-8816-461c-8320-3974aafffd65" testId="c37f4148-fbac-97a9-7a03-6eb85d29e4b9" testName="GitPadPlus.Tests.VaultTests.BridgeCreateAndDirtyClearProtection" computerName="fb10a0c6d554" duration="00:00:00.0176443" startTime="2026-10-31T03:48:29.5062386+00:00" endTime="2026-10-31T03:48:29.5238409+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="39609b0c-8816-461c-8320-3974aafffd65" />
+    <UnitTestResult executionId="26f8ffaf-277f-457b-8119-f7df1b1f396e" testId="add8b9ca-d40b-54b1-df94-07ed3c8b8161" testName="GitPadPlus.Tests.VaultTests.DeleteRetainsRecoverableTrash" computerName="fb10a0c6d554" duration="00:00:00.0055529" startTime="2026-10-31T03:48:29.6229801+00:00" endTime="2026-10-31T03:48:29.6282790+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="26f8ffaf-277f-457b-8119-f7df1b1f396e" />
+    <UnitTestResult executionId="21cd94ad-4b1e-432b-a6d7-0b4ea35cb253" testId="6e042aa4-ef2f-de7b-e631-02ab7d94afb3" testName="GitPadPlus.Tests.VaultTests.LinksAreStrictAndVersion7" computerName="fb10a0c6d554" duration="00:00:00.0034450" startTime="2026-10-31T03:48:29.5614423+00:00" endTime="2026-10-31T03:48:29.5615124+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="21cd94ad-4b1e-432b-a6d7-0b4ea35cb253" />
+    <UnitTestResult executionId="d415062d-effe-474e-94c3-1c63fedd59b7" testId="72eead00-c2cd-1df1-c142-d9a5ecd6d0c5" testName="GitPadPlus.Tests.VaultTests.InvalidNoteDoesNotPreventReadingOtherNotes" computerName="fb10a0c6d554" duration="00:00:00.0085920" startTime="2026-10-31T03:48:29.5612256+00:00" endTime="2026-10-31T03:48:29.5612936+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="d415062d-effe-474e-94c3-1c63fedd59b7" />
+    <UnitTestResult executionId="10f51dd1-37f2-457c-af9a-bad56b983bdc" testId="80db0604-0e3e-6636-08b9-1451246806f6" testName="GitPadPlus.Tests.VaultTests.CreateSaveReloadAndSearch" computerName="fb10a0c6d554" duration="00:00:00.0132015" startTime="2026-10-31T03:48:29.6094803+00:00" endTime="2026-10-31T03:48:29.6226191+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="10f51dd1-37f2-457c-af9a-bad56b983bdc" />
+    <UnitTestResult executionId="86cffd7b-505c-49ff-a2c8-65b95e9f8bd4" testId="59ba7248-967e-5c8b-6d71-ffcebfb33881" testName="GitPadPlus.Tests.VaultTests.AnchorIdentitiesAndTombstonesRoundTrip" computerName="fb10a0c6d554" duration="00:00:00.0107796" startTime="2026-10-31T03:48:29.5926857+00:00" endTime="2026-10-31T03:48:29.6032963+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="86cffd7b-505c-49ff-a2c8-65b95e9f8bd4" />
+    <UnitTestResult executionId="6bbc74ca-36a9-4c36-8ce9-97f6792d5297" testId="dcc95f84-1829-16a3-7b9e-4b328f648420" testName="GitPadPlus.Tests.VaultTests.ExternalMarkdownEditFailsClosed" computerName="fb10a0c6d554" duration="00:00:00.0026305" startTime="2026-10-31T03:48:29.6067618+00:00" endTime="2026-10-31T03:48:29.6093110+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="6bbc74ca-36a9-4c36-8ce9-97f6792d5297" />
+    <UnitTestResult executionId="863df6d0-3e4c-430e-9b86-72f32bc7a6c1" testId="439bb260-e456-7aaa-f5fc-45d9b5817748" testName="GitPadPlus.Tests.VaultTests.MultipleNotesPerDayRemainDistinct" computerName="fb10a0c6d554" duration="00:00:00.0053600" startTime="2026-10-31T03:48:29.5620618+00:00" endTime="2026-10-31T03:48:29.5621269+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="863df6d0-3e4c-430e-9b86-72f32bc7a6c1" />
+    <UnitTestResult executionId="54ccaa13-a490-4ab1-beef-6a48edd2f8a6" testId="9b5e5c61-3ae2-f071-6ec3-4e472d5f8fd5" testName="GitPadPlus.Tests.VaultTests.InvalidDatesRejected(date: &quot;2026-02-30&quot;)" computerName="fb10a0c6d554" duration="00:00:00.0023057" startTime="2026-10-31T03:48:29.4384350+00:00" endTime="2026-10-31T03:48:29.4386341+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="54ccaa13-a490-4ab1-beef-6a48edd2f8a6" />
+    <UnitTestResult executionId="5e485078-2215-4d1a-bbfc-ccae6bf14134" testId="f9a442cc-35e0-dc5f-25ae-c937be5add7f" testName="GitPadPlus.Tests.VaultTests.ClearRequiresCurrentConfirmationAndNoDirtyState" computerName="fb10a0c6d554" duration="00:00:00.0148205" startTime="2026-10-31T03:48:29.4912919+00:00" endTime="2026-10-31T03:48:29.5060245+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="5e485078-2215-4d1a-bbfc-ccae6bf14134" />
+    <UnitTestResult executionId="f0b7c560-97f3-4315-84cd-715fbde103c9" testId="911b9f83-307f-6bfe-971c-aa29186ff84a" testName="GitPadPlus.Tests.VaultTests.BridgeRejectsMissingAndNullRequiredFields" computerName="fb10a0c6d554" duration="00:00:00.0023245" startTime="2026-10-31T03:48:29.5622068+00:00" endTime="2026-10-31T03:48:29.5622671+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="f0b7c560-97f3-4315-84cd-715fbde103c9" />
+    <UnitTestResult executionId="be98cece-6cfb-490e-8b32-f039cf27aa4d" testId="9504319f-2293-cabc-1f57-89685a0b11f4" testName="GitPadPlus.Tests.VaultTests.NoOpSavePreservesBytes" computerName="fb10a0c6d554" duration="00:00:00.0032228" startTime="2026-10-31T03:48:29.6035000+00:00" endTime="2026-10-31T03:48:29.6066041+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="be98cece-6cfb-490e-8b32-f039cf27aa4d" />
+    <UnitTestResult executionId="7e8f7c79-1c80-421b-8f03-656209625df3" testId="1f2e87db-f7ca-caf8-f65c-77ac76e1f0a0" testName="GitPadPlus.Tests.VaultTests.IndexCanBeRebuiltAfterDeletion" computerName="fb10a0c6d554" duration="00:00:00.0059563" startTime="2026-10-31T03:48:29.5617610+00:00" endTime="2026-10-31T03:48:29.5618267+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="7e8f7c79-1c80-421b-8f03-656209625df3" />
+    <UnitTestResult executionId="912cd754-b0c9-4664-8bd9-de8cadc7acc0" testId="2a961226-4d77-35bf-909f-3987e11cd753" testName="GitPadPlus.Tests.VaultTests.CannotAdoptAnExternalNonemptyDirectory" computerName="fb10a0c6d554" duration="00:00:00.0010735" startTime="2026-10-31T03:48:29.5607681+00:00" endTime="2026-10-31T03:48:29.5608823+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="912cd754-b0c9-4664-8bd9-de8cadc7acc0" />
+    <UnitTestResult executionId="f33f7a84-de2b-41af-8887-df9a59d5777d" testId="d5ce51b3-a620-e9cc-b6f1-368d532dd923" testName="GitPadPlus.Tests.VaultTests.RecoveryNeverOverwritesExternalChange" computerName="fb10a0c6d554" duration="00:00:00.2015355" startTime="2026-10-31T03:48:29.2090130+00:00" endTime="2026-10-31T03:48:29.4217435+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="f33f7a84-de2b-41af-8887-df9a59d5777d" />
+    <UnitTestResult executionId="9cd55507-020f-4f94-85c1-75d84a88440f" testId="6944cb12-ef9b-f6b2-d8a4-ed26e15983a9" testName="GitPadPlus.Tests.VaultTests.InvalidDatesRejected(date: &quot;31/10/2026&quot;)" computerName="fb10a0c6d554" duration="00:00:00.0013083" startTime="2026-10-31T03:48:29.4398026+00:00" endTime="2026-10-31T03:48:29.4398664+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="9cd55507-020f-4f94-85c1-75d84a88440f" />
+  </Results>
+  <TestDefinitions>
+    <UnitTest name="GitPadPlus.Tests.VaultTests.InvalidDatesRejected(date: &quot;2026-02-30&quot;)" storage="/workspace/gitpad-plus/tests/dotnet/bin/debug/net10.0/gitpadplus.core.tests.dll" id="9b5e5c61-3ae2-f071-6ec3-4e472d5f8fd5">
+      <Execution id="54ccaa13-a490-4ab1-beef-6a48edd2f8a6" />
+      <TestMethod codeBase="/workspace/gitpad-plus/tests/dotnet/bin/Debug/net10.0/GitPadPlus.Core.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="GitPadPlus.Tests.VaultTests" name="InvalidDatesRejected" />
+    </UnitTest>
+    <UnitTest name="GitPadPlus.Tests.VaultTests.CreateSaveReloadAndSearch" storage="/workspace/gitpad-plus/tests/dotnet/bin/debug/net10.0/gitpadplus.core.tests.dll" id="80db0604-0e3e-6636-08b9-1451246806f6">
+      <Execution id="10f51dd1-37f2-457c-af9a-bad56b983bdc" />
+      <TestMethod codeBase="/workspace/gitpad-plus/tests/dotnet/bin/Debug/net10.0/GitPadPlus.Core.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="GitPadPlus.Tests.VaultTests" name="CreateSaveReloadAndSearch" />
+    </UnitTest>
+    <UnitTest name="GitPadPlus.Tests.VaultTests.CorruptIndexIsQuarantinedAndRebuilt" storage="/workspace/gitpad-plus/tests/dotnet/bin/debug/net10.0/gitpadplus.core.tests.dll" id="33b0b05b-3666-a597-412c-285edd86350d">
+      <Execution id="ab660462-b715-48ce-9b96-a70a162137ff" />
+      <TestMethod codeBase="/workspace/gitpad-plus/tests/dotnet/bin/Debug/net10.0/GitPadPlus.Core.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="GitPadPlus.Tests.VaultTests" name="CorruptIndexIsQuarantinedAndRebuilt" />
+    </UnitTest>
+    <UnitTest name="GitPadPlus.Tests.VaultTests.InvalidNoteDoesNotPreventReadingOtherNotes" storage="/workspace/gitpad-plus/tests/dotnet/bin/debug/net10.0/gitpadplus.core.tests.dll" id="72eead00-c2cd-1df1-c142-d9a5ecd6d0c5">
+      <Execution id="d415062d-effe-474e-94c3-1c63fedd59b7" />
+      <TestMethod codeBase="/workspace/gitpad-plus/tests/dotnet/bin/Debug/net10.0/GitPadPlus.Core.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="GitPadPlus.Tests.VaultTests" name="InvalidNoteDoesNotPreventReadingOtherNotes" />
+    </UnitTest>
+    <UnitTest name="GitPadPlus.Tests.VaultTests.StaleRevisionCannotOverwriteNewerSave" storage="/workspace/gitpad-plus/tests/dotnet/bin/debug/net10.0/gitpadplus.core.tests.dll" id="27d6a336-4739-e621-390f-5cfc120e9273">
+      <Execution id="45c1a772-437e-4082-932b-4df2f0359de5" />
+      <TestMethod codeBase="/workspace/gitpad-plus/tests/dotnet/bin/Debug/net10.0/GitPadPlus.Core.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="GitPadPlus.Tests.VaultTests" name="StaleRevisionCannotOverwriteNewerSave" />
+    </UnitTest>
+    <UnitTest name="GitPadPlus.Tests.VaultTests.IndexCanBeRebuiltAfterDeletion" storage="/workspace/gitpad-plus/tests/dotnet/bin/debug/net10.0/gitpadplus.core.tests.dll" id="1f2e87db-f7ca-caf8-f65c-77ac76e1f0a0">
+      <Execution id="7e8f7c79-1c80-421b-8f03-656209625df3" />
+      <TestMethod codeBase="/workspace/gitpad-plus/tests/dotnet/bin/Debug/net10.0/GitPadPlus.Core.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="GitPadPlus.Tests.VaultTests" name="IndexCanBeRebuiltAfterDeletion" />
+    </UnitTest>
+    <UnitTest name="GitPadPlus.Tests.VaultTests.InterruptedSaveRecoversMatchingPair(stage: &quot;MarkdownReplaced&quot;)" storage="/workspace/gitpad-plus/tests/dotnet/bin/debug/net10.0/gitpadplus.core.tests.dll" id="81d35db1-8095-82c3-906d-a39b675671a0">
+      <Execution id="0740fa95-e8c0-4506-b4f3-d561c964ffdf" />
+      <TestMethod codeBase="/workspace/gitpad-plus/tests/dotnet/bin/Debug/net10.0/GitPadPlus.Core.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="GitPadPlus.Tests.VaultTests" name="InterruptedSaveRecoversMatchingPair" />
+    </UnitTest>
+    <UnitTest name="GitPadPlus.Tests.VaultTests.BridgeCreateAndDirtyClearProtection" storage="/workspace/gitpad-plus/tests/dotnet/bin/debug/net10.0/gitpadplus.core.tests.dll" id="c37f4148-fbac-97a9-7a03-6eb85d29e4b9">
+      <Execution id="39609b0c-8816-461c-8320-3974aafffd65" />
+      <TestMethod codeBase="/workspace/gitpad-plus/tests/dotnet/bin/Debug/net10.0/GitPadPlus.Core.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="GitPadPlus.Tests.VaultTests" name="BridgeCreateAndDirtyClearProtection" />
+    </UnitTest>
+    <UnitTest name="GitPadPlus.Tests.VaultTests.AnchorResolverUsesUtf16AndRefusesDuplicateQuoteJumps" storage="/workspace/gitpad-plus/tests/dotnet/bin/debug/net10.0/gitpadplus.core.tests.dll" id="b852d432-8caa-054a-44c7-ca27d0bfce50">
+      <Execution id="e56f7414-7a12-4968-b11b-36ade98d7473" />
+      <TestMethod codeBase="/workspace/gitpad-plus/tests/dotnet/bin/Debug/net10.0/GitPadPlus.Core.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="GitPadPlus.Tests.VaultTests" name="AnchorResolverUsesUtf16AndRefusesDuplicateQuoteJumps" />
+    </UnitTest>
+    <UnitTest name="GitPadPlus.Tests.VaultTests.NoOpSavePreservesBytes" storage="/workspace/gitpad-plus/tests/dotnet/bin/debug/net10.0/gitpadplus.core.tests.dll" id="9504319f-2293-cabc-1f57-89685a0b11f4">
+      <Execution id="be98cece-6cfb-490e-8b32-f039cf27aa4d" />
+      <TestMethod codeBase="/workspace/gitpad-plus/tests/dotnet/bin/Debug/net10.0/GitPadPlus.Core.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="GitPadPlus.Tests.VaultTests" name="NoOpSavePreservesBytes" />
+    </UnitTest>
+    <UnitTest name="GitPadPlus.Tests.VaultTests.LinksAreStrictAndVersion7" storage="/workspace/gitpad-plus/tests/dotnet/bin/debug/net10.0/gitpadplus.core.tests.dll" id="6e042aa4-ef2f-de7b-e631-02ab7d94afb3">
+      <Execution id="21cd94ad-4b1e-432b-a6d7-0b4ea35cb253" />
+      <TestMethod codeBase="/workspace/gitpad-plus/tests/dotnet/bin/Debug/net10.0/GitPadPlus.Core.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="GitPadPlus.Tests.VaultTests" name="LinksAreStrictAndVersion7" />
+    </UnitTest>
+    <UnitTest name="GitPadPlus.Tests.VaultTests.DeleteRetainsRecoverableTrash" storage="/workspace/gitpad-plus/tests/dotnet/bin/debug/net10.0/gitpadplus.core.tests.dll" id="add8b9ca-d40b-54b1-df94-07ed3c8b8161">
+      <Execution id="26f8ffaf-277f-457b-8119-f7df1b1f396e" />
+      <TestMethod codeBase="/workspace/gitpad-plus/tests/dotnet/bin/Debug/net10.0/GitPadPlus.Core.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="GitPadPlus.Tests.VaultTests" name="DeleteRetainsRecoverableTrash" />
+    </UnitTest>
+    <UnitTest name="GitPadPlus.Tests.VaultTests.SymbolicLinkCannotEscapeOrBeCleared" storage="/workspace/gitpad-plus/tests/dotnet/bin/debug/net10.0/gitpadplus.core.tests.dll" id="6626edc2-cc9b-12f4-1b51-3891b1a4a700">
+      <Execution id="59800db0-c112-4359-a1ce-fad5fd1558d4" />
+      <TestMethod codeBase="/workspace/gitpad-plus/tests/dotnet/bin/Debug/net10.0/GitPadPlus.Core.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="GitPadPlus.Tests.VaultTests" name="SymbolicLinkCannotEscapeOrBeCleared" />
+    </UnitTest>
+    <UnitTest name="GitPadPlus.Tests.VaultTests.InvalidDatesRejected(date: &quot;31/10/2026&quot;)" storage="/workspace/gitpad-plus/tests/dotnet/bin/debug/net10.0/gitpadplus.core.tests.dll" id="6944cb12-ef9b-f6b2-d8a4-ed26e15983a9">
+      <Execution id="9cd55507-020f-4f94-85c1-75d84a88440f" />
+      <TestMethod codeBase="/workspace/gitpad-plus/tests/dotnet/bin/Debug/net10.0/GitPadPlus.Core.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="GitPadPlus.Tests.VaultTests" name="InvalidDatesRejected" />
+    </UnitTest>
+    <UnitTest name="GitPadPlus.Tests.VaultTests.RejectsTraversal" storage="/workspace/gitpad-plus/tests/dotnet/bin/debug/net10.0/gitpadplus.core.tests.dll" id="a0c3dbb4-363a-5915-a55d-b2979df022cd">
+      <Execution id="fa41de95-c6d1-4c9f-8fec-b6e6e225258f" />
+      <TestMethod codeBase="/workspace/gitpad-plus/tests/dotnet/bin/Debug/net10.0/GitPadPlus.Core.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="GitPadPlus.Tests.VaultTests" name="RejectsTraversal" />
+    </UnitTest>
+    <UnitTest name="GitPadPlus.Tests.VaultTests.AnchorIdentitiesAndTombstonesRoundTrip" storage="/workspace/gitpad-plus/tests/dotnet/bin/debug/net10.0/gitpadplus.core.tests.dll" id="59ba7248-967e-5c8b-6d71-ffcebfb33881">
+      <Execution id="86cffd7b-505c-49ff-a2c8-65b95e9f8bd4" />
+      <TestMethod codeBase="/workspace/gitpad-plus/tests/dotnet/bin/Debug/net10.0/GitPadPlus.Core.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="GitPadPlus.Tests.VaultTests" name="AnchorIdentitiesAndTombstonesRoundTrip" />
+    </UnitTest>
+    <UnitTest name="GitPadPlus.Tests.VaultTests.MultipleNotesPerDayRemainDistinct" storage="/workspace/gitpad-plus/tests/dotnet/bin/debug/net10.0/gitpadplus.core.tests.dll" id="439bb260-e456-7aaa-f5fc-45d9b5817748">
+      <Execution id="863df6d0-3e4c-430e-9b86-72f32bc7a6c1" />
+      <TestMethod codeBase="/workspace/gitpad-plus/tests/dotnet/bin/Debug/net10.0/GitPadPlus.Core.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="GitPadPlus.Tests.VaultTests" name="MultipleNotesPerDayRemainDistinct" />
+    </UnitTest>
+    <UnitTest name="GitPadPlus.Tests.VaultTests.FrontmatterRetainsUnknownFieldsAndCrLfBody" storage="/workspace/gitpad-plus/tests/dotnet/bin/debug/net10.0/gitpadplus.core.tests.dll" id="e3c0ce49-5813-7c2a-79b3-a5d1a5eac5b9">
+      <Execution id="517c4d29-5a12-4a5f-b3d3-5536fdbcd333" />
+      <TestMethod codeBase="/workspace/gitpad-plus/tests/dotnet/bin/Debug/net10.0/GitPadPlus.Core.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="GitPadPlus.Tests.VaultTests" name="FrontmatterRetainsUnknownFieldsAndCrLfBody" />
+    </UnitTest>
+    <UnitTest name="GitPadPlus.Tests.VaultTests.ExternalMarkdownEditFailsClosed" storage="/workspace/gitpad-plus/tests/dotnet/bin/debug/net10.0/gitpadplus.core.tests.dll" id="dcc95f84-1829-16a3-7b9e-4b328f648420">
+      <Execution id="6bbc74ca-36a9-4c36-8ce9-97f6792d5297" />
+      <TestMethod codeBase="/workspace/gitpad-plus/tests/dotnet/bin/Debug/net10.0/GitPadPlus.Core.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="GitPadPlus.Tests.VaultTests" name="ExternalMarkdownEditFailsClosed" />
+    </UnitTest>
+    <UnitTest name="GitPadPlus.Tests.VaultTests.ClearRequiresCurrentConfirmationAndNoDirtyState" storage="/workspace/gitpad-plus/tests/dotnet/bin/debug/net10.0/gitpadplus.core.tests.dll" id="f9a442cc-35e0-dc5f-25ae-c937be5add7f">
+      <Execution id="5e485078-2215-4d1a-bbfc-ccae6bf14134" />
+      <TestMethod codeBase="/workspace/gitpad-plus/tests/dotnet/bin/Debug/net10.0/GitPadPlus.Core.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="GitPadPlus.Tests.VaultTests" name="ClearRequiresCurrentConfirmationAndNoDirtyState" />
+    </UnitTest>
+    <UnitTest name="GitPadPlus.Tests.VaultTests.InterruptedSaveRecoversMatchingPair(stage: &quot;Staged&quot;)" storage="/workspace/gitpad-plus/tests/dotnet/bin/debug/net10.0/gitpadplus.core.tests.dll" id="ff5a599b-74df-31b0-77ba-eb9e8c5b7de7">
+      <Execution id="31573b52-64cb-4017-a76d-b104847d3f1f" />
+      <TestMethod codeBase="/workspace/gitpad-plus/tests/dotnet/bin/Debug/net10.0/GitPadPlus.Core.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="GitPadPlus.Tests.VaultTests" name="InterruptedSaveRecoversMatchingPair" />
+    </UnitTest>
+    <UnitTest name="GitPadPlus.Tests.VaultTests.BridgeRejectsMissingAndNullRequiredFields" storage="/workspace/gitpad-plus/tests/dotnet/bin/debug/net10.0/gitpadplus.core.tests.dll" id="911b9f83-307f-6bfe-971c-aa29186ff84a">
+      <Execution id="f0b7c560-97f3-4315-84cd-715fbde103c9" />
+      <TestMethod codeBase="/workspace/gitpad-plus/tests/dotnet/bin/Debug/net10.0/GitPadPlus.Core.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="GitPadPlus.Tests.VaultTests" name="BridgeRejectsMissingAndNullRequiredFields" />
+    </UnitTest>
+    <UnitTest name="GitPadPlus.Tests.VaultTests.RecoveryNeverOverwritesExternalChange" storage="/workspace/gitpad-plus/tests/dotnet/bin/debug/net10.0/gitpadplus.core.tests.dll" id="d5ce51b3-a620-e9cc-b6f1-368d532dd923">
+      <Execution id="f33f7a84-de2b-41af-8887-df9a59d5777d" />
+      <TestMethod codeBase="/workspace/gitpad-plus/tests/dotnet/bin/Debug/net10.0/GitPadPlus.Core.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="GitPadPlus.Tests.VaultTests" name="RecoveryNeverOverwritesExternalChange" />
+    </UnitTest>
+    <UnitTest name="GitPadPlus.Tests.VaultTests.ImagesAreDeduplicatedAndActiveContentRejected" storage="/workspace/gitpad-plus/tests/dotnet/bin/debug/net10.0/gitpadplus.core.tests.dll" id="ee59ee5c-6fad-a536-ec1e-7d13530cc42b">
+      <Execution id="f3433224-26e6-40c5-91fd-7edb45ec4d4d" />
+      <TestMethod codeBase="/workspace/gitpad-plus/tests/dotnet/bin/Debug/net10.0/GitPadPlus.Core.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="GitPadPlus.Tests.VaultTests" name="ImagesAreDeduplicatedAndActiveContentRejected" />
+    </UnitTest>
+    <UnitTest name="GitPadPlus.Tests.VaultTests.NativeCoreEnforcesPackagedPluginCapabilities" storage="/workspace/gitpad-plus/tests/dotnet/bin/debug/net10.0/gitpadplus.core.tests.dll" id="6fa603f4-e700-f381-f0bd-1d58b88f0436">
+      <Execution id="f0253d48-1b07-4ee5-9328-f97a880d6852" />
+      <TestMethod codeBase="/workspace/gitpad-plus/tests/dotnet/bin/Debug/net10.0/GitPadPlus.Core.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="GitPadPlus.Tests.VaultTests" name="NativeCoreEnforcesPackagedPluginCapabilities" />
+    </UnitTest>
+    <UnitTest name="GitPadPlus.Tests.VaultTests.InterruptedSaveRecoversMatchingPair(stage: &quot;SidecarReplaced&quot;)" storage="/workspace/gitpad-plus/tests/dotnet/bin/debug/net10.0/gitpadplus.core.tests.dll" id="7d3ef4f3-de81-2030-171f-eb37f799ad81">
+      <Execution id="be739cb3-5df9-41d1-99f9-93bca802afbd" />
+      <TestMethod codeBase="/workspace/gitpad-plus/tests/dotnet/bin/Debug/net10.0/GitPadPlus.Core.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="GitPadPlus.Tests.VaultTests" name="InterruptedSaveRecoversMatchingPair" />
+    </UnitTest>
+    <UnitTest name="GitPadPlus.Tests.VaultTests.CannotAdoptAnExternalNonemptyDirectory" storage="/workspace/gitpad-plus/tests/dotnet/bin/debug/net10.0/gitpadplus.core.tests.dll" id="2a961226-4d77-35bf-909f-3987e11cd753">
+      <Execution id="912cd754-b0c9-4664-8bd9-de8cadc7acc0" />
+      <TestMethod codeBase="/workspace/gitpad-plus/tests/dotnet/bin/Debug/net10.0/GitPadPlus.Core.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="GitPadPlus.Tests.VaultTests" name="CannotAdoptAnExternalNonemptyDirectory" />
+    </UnitTest>
+    <UnitTest name="GitPadPlus.Tests.VaultTests.InvalidDatesRejected(date: &quot;../oops&quot;)" storage="/workspace/gitpad-plus/tests/dotnet/bin/debug/net10.0/gitpadplus.core.tests.dll" id="ff60ba27-102a-fc99-7da6-46b9880f318c">
+      <Execution id="4a167fd6-98ab-44fa-a452-2435d34bc0fb" />
+      <TestMethod codeBase="/workspace/gitpad-plus/tests/dotnet/bin/Debug/net10.0/GitPadPlus.Core.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="GitPadPlus.Tests.VaultTests" name="InvalidDatesRejected" />
+    </UnitTest>
+    <UnitTest name="GitPadPlus.Tests.VaultTests.BridgeRejectsUnknownMethodsAndProtocolVersions" storage="/workspace/gitpad-plus/tests/dotnet/bin/debug/net10.0/gitpadplus.core.tests.dll" id="86d3b020-11fe-e4a2-2a2a-216b8656c1cc">
+      <Execution id="e2a65b11-9c12-4605-b34c-bcdb903bb1dd" />
+      <TestMethod codeBase="/workspace/gitpad-plus/tests/dotnet/bin/Debug/net10.0/GitPadPlus.Core.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="GitPadPlus.Tests.VaultTests" name="BridgeRejectsUnknownMethodsAndProtocolVersions" />
+    </UnitTest>
+  </TestDefinitions>
+  <TestEntries>
+    <TestEntry testId="27d6a336-4739-e621-390f-5cfc120e9273" executionId="45c1a772-437e-4082-932b-4df2f0359de5" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="e3c0ce49-5813-7c2a-79b3-a5d1a5eac5b9" executionId="517c4d29-5a12-4a5f-b3d3-5536fdbcd333" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="ff5a599b-74df-31b0-77ba-eb9e8c5b7de7" executionId="31573b52-64cb-4017-a76d-b104847d3f1f" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="81d35db1-8095-82c3-906d-a39b675671a0" executionId="0740fa95-e8c0-4506-b4f3-d561c964ffdf" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="b852d432-8caa-054a-44c7-ca27d0bfce50" executionId="e56f7414-7a12-4968-b11b-36ade98d7473" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="ff60ba27-102a-fc99-7da6-46b9880f318c" executionId="4a167fd6-98ab-44fa-a452-2435d34bc0fb" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="a0c3dbb4-363a-5915-a55d-b2979df022cd" executionId="fa41de95-c6d1-4c9f-8fec-b6e6e225258f" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="ee59ee5c-6fad-a536-ec1e-7d13530cc42b" executionId="f3433224-26e6-40c5-91fd-7edb45ec4d4d" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="7d3ef4f3-de81-2030-171f-eb37f799ad81" executionId="be739cb3-5df9-41d1-99f9-93bca802afbd" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="6fa603f4-e700-f381-f0bd-1d58b88f0436" executionId="f0253d48-1b07-4ee5-9328-f97a880d6852" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="33b0b05b-3666-a597-412c-285edd86350d" executionId="ab660462-b715-48ce-9b96-a70a162137ff" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="86d3b020-11fe-e4a2-2a2a-216b8656c1cc" executionId="e2a65b11-9c12-4605-b34c-bcdb903bb1dd" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="6626edc2-cc9b-12f4-1b51-3891b1a4a700" executionId="59800db0-c112-4359-a1ce-fad5fd1558d4" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="c37f4148-fbac-97a9-7a03-6eb85d29e4b9" executionId="39609b0c-8816-461c-8320-3974aafffd65" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="add8b9ca-d40b-54b1-df94-07ed3c8b8161" executionId="26f8ffaf-277f-457b-8119-f7df1b1f396e" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="6e042aa4-ef2f-de7b-e631-02ab7d94afb3" executionId="21cd94ad-4b1e-432b-a6d7-0b4ea35cb253" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="72eead00-c2cd-1df1-c142-d9a5ecd6d0c5" executionId="d415062d-effe-474e-94c3-1c63fedd59b7" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="80db0604-0e3e-6636-08b9-1451246806f6" executionId="10f51dd1-37f2-457c-af9a-bad56b983bdc" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="59ba7248-967e-5c8b-6d71-ffcebfb33881" executionId="86cffd7b-505c-49ff-a2c8-65b95e9f8bd4" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="dcc95f84-1829-16a3-7b9e-4b328f648420" executionId="6bbc74ca-36a9-4c36-8ce9-97f6792d5297" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="439bb260-e456-7aaa-f5fc-45d9b5817748" executionId="863df6d0-3e4c-430e-9b86-72f32bc7a6c1" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="9b5e5c61-3ae2-f071-6ec3-4e472d5f8fd5" executionId="54ccaa13-a490-4ab1-beef-6a48edd2f8a6" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="f9a442cc-35e0-dc5f-25ae-c937be5add7f" executionId="5e485078-2215-4d1a-bbfc-ccae6bf14134" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="911b9f83-307f-6bfe-971c-aa29186ff84a" executionId="f0b7c560-97f3-4315-84cd-715fbde103c9" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="9504319f-2293-cabc-1f57-89685a0b11f4" executionId="be98cece-6cfb-490e-8b32-f039cf27aa4d" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="1f2e87db-f7ca-caf8-f65c-77ac76e1f0a0" executionId="7e8f7c79-1c80-421b-8f03-656209625df3" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="2a961226-4d77-35bf-909f-3987e11cd753" executionId="912cd754-b0c9-4664-8bd9-de8cadc7acc0" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="d5ce51b3-a620-e9cc-b6f1-368d532dd923" executionId="f33f7a84-de2b-41af-8887-df9a59d5777d" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="6944cb12-ef9b-f6b2-d8a4-ed26e15983a9" executionId="9cd55507-020f-4f94-85c1-75d84a88440f" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+  </TestEntries>
+  <TestLists>
+    <TestList name="Results Not in a List" id="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestList name="All Loaded Results" id="19431567-8539-422a-85d7-44ee4e166bda" />
+  </TestLists>
+  <ResultSummary outcome="Completed">
+    <Counters total="29" executed="29" passed="29" failed="0" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />
+    <Output>
+      <StdOut>[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 10.0.14)
+[xUnit.net 00:00:00.09]   Discovering: GitPadPlus.Core.Tests
+[xUnit.net 00:00:00.15]   Discovered:  GitPadPlus.Core.Tests
+[xUnit.net 00:00:00.18]   Starting:    GitPadPlus.Core.Tests
+[xUnit.net 00:00:00.65]   Finished:    GitPadPlus.Core.Tests
+</StdOut>
+    </Output>
+  </ResultSummary>
+</TestRun>

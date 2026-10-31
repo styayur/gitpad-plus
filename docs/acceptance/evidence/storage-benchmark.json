@@ -1,0 +1,15 @@
+{
+  "scope": "Linux portable storage only; not native performance acceptance",
+  "timestamp": "2026-10-31T03:44:00.1566936+00:00",
+  "runtime": ".NET 10.0.14",
+  "notes": 1000,
+  "largeUtf16Length": 250000,
+  "openMs": 38.0202,
+  "create1000Ms": 1441.1446,
+  "calendarMs": 20.2207,
+  "searchMs": 5.8125,
+  "rebuild1000Ms": 986.9478,
+  "largeSaveMs": 20.5365,
+  "reopenIncludingIndexMs": 887.5664,
+  "managedMemoryBytes": 18484056
+}

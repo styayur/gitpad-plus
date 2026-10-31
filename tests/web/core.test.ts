@@ -12,7 +12,7 @@ import { PluginHost } from '../../web/plugin-host/host';
 import type { PluginPort } from '../../web/plugin-host/host';
 import { definePlugin } from '../../packages/sdk/index';
 import toolbar from '../../plugins/official-toolbar';
-import stats from '../../plugins/official-calendar-stats';
+import stats, { createCalendarStatsPlugin } from '../../plugins/official-calendar-stats';
 import { RpcClient } from '../../web/bridge/client';
 import type { Note, RpcRequest, RpcResponse, Transport, SaveRequest } from '../../web/bridge/types';
 import { DocumentSession } from '../../web/editor/session';
@@ -88,6 +88,12 @@ describe('Plugin SDK',()=>{
   it('isolates a failing command and failing deactivate while releasing resources',async()=>{
     const host=new PluginHost(port);const plugin=definePlugin({manifest:{...toolbar.manifest,id:'failing-plugin'},activate:api=>{api.registerCommand({id:'fail',title:'fail',run:()=>{throw new Error('plugin bug');}});},deactivate:()=>{throw new Error('cleanup bug');}});
     await host.activate(plugin,plugin.manifest.permissions);await host.commands.get('failing-plugin:fail')!.run();expect(host.errors).toHaveLength(1);await host.dispose();expect(host.commands.size).toBe(0);expect(host.errors).toHaveLength(2);
+  });
+  it('does not register late calendar results after unloading',async()=>{
+    let finish!:(value:{id:string;date:string;title:string}[])=>void;
+    const host=new PluginHost({...port,queryCalendar:()=>new Promise(resolve=>{finish=resolve;})});
+    const plugin=createCalendarStatsPlugin();const activating=host.activate(plugin,plugin.manifest.permissions);
+    await host.deactivate(plugin.manifest.id);finish([{id:v7(),date:'2026-10-31',title:'late'}]);await activating;expect(host.decorations.size).toBe(0);
   });
 });
 

@@ -23,6 +23,7 @@ public record GitStatus(string State = "NotConfigured");
 public record LinkTarget(Guid DocumentId, Guid? BlockId, Guid? SelectionId);
 public record SaveTransaction(Guid Id, string OldHash, string NewHash);
 public record DeleteMarker(Guid Id, long Revision);
+public record RecoveryIssue(Guid? DocumentId, string Code);
 
 public static class Identity
 {
@@ -60,6 +61,7 @@ public static class Identity
 [JsonSerializable(typeof(BlockAnchor[]))]
 [JsonSerializable(typeof(SelectionAnchor[]))]
 [JsonSerializable(typeof(string[]))]
+[JsonSerializable(typeof(RecoveryIssue[]))]
 public partial class DataJson : JsonSerializerContext;
 
 public sealed class RevisionConflictException(string message) : IOException(message);

@@ -17,6 +17,8 @@ public record ImagePathParams(string Path);
 public record PluginParams(string PluginId);
 public record PluginInvocation(string PluginId, string Method, JsonElement Params);
 public record PluginInfo(string Id, bool Enabled, string[] Permissions);
+public record PersistAnchorParams(Guid DocumentId, SelectionAnchor Anchor, long ExpectedRevision, string ExpectedHash);
+public record ResolveAnchorParams(Guid DocumentId, Guid SelectionId, string RenderedBlockText);
 
 [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
 [JsonSerializable(typeof(RpcRequest))]
@@ -31,6 +33,9 @@ public record PluginInfo(string Id, bool Enabled, string[] Permissions);
 [JsonSerializable(typeof(PluginParams))]
 [JsonSerializable(typeof(PluginInvocation))]
 [JsonSerializable(typeof(PluginInfo[]))]
+[JsonSerializable(typeof(PersistAnchorParams))]
+[JsonSerializable(typeof(ResolveAnchorParams))]
+[JsonSerializable(typeof(AnchorResolution))]
 [JsonSerializable(typeof(ClearPreview))]
 [JsonSerializable(typeof(GitStatus))]
 [JsonSerializable(typeof(LinkTarget))]
@@ -103,6 +108,7 @@ public sealed class Bridge(VaultStore store)
             case "settings.get": return Element(store.GetSettings());
             case "settings.update": return Element(store.SetSettings(Get<AppSettings>(parameters)));
             case "git.status": return Element(new GitStatus());
+            case "recovery.list": return Element(store.RecoveryIssues.ToArray());
             case "media.import":
                 var image = Get<ImageParams>(parameters);
                 return Element(store.ImportImage(image.Filename, Convert.FromBase64String(image.Base64)));
@@ -117,6 +123,17 @@ public sealed class Bridge(VaultStore store)
                 StateChanged?.Invoke("Cleared");
                 return Element(true);
             case "links.navigate": return Element(Identity.ParseLink(Get<string>(parameters)));
+            case "anchors.create":
+                var anchor = Get<PersistAnchorParams>(parameters);
+                var anchorNote = store.Load(anchor.DocumentId);
+                return Element(store.Save(new(anchor.DocumentId, anchorNote.Body, anchorNote.Header.Title, anchorNote.Header.Tags,
+                    anchor.ExpectedRevision, anchor.ExpectedHash, anchorNote.Sidecar.Blocks, [.. anchorNote.Sidecar.Selections, anchor.Anchor])));
+            case "anchors.resolve":
+                var resolve = Get<ResolveAnchorParams>(parameters);
+                var targetNote = store.Load(resolve.DocumentId);
+                var targetAnchor = targetNote.Sidecar.Selections.SingleOrDefault(a => a.Id == Identity.Require(resolve.SelectionId));
+                if (targetAnchor is null || !targetNote.Sidecar.Blocks.Any(b => b.Id == targetAnchor.BlockId && !b.Deleted)) return Element(new AnchorResolution("missing", null, null, []));
+                return Element(AnchorEngine.Resolve(targetAnchor, resolve.RenderedBlockText));
             case "plugins.list":
                 lock (pluginGate) return Element(PluginMethods.Select(p => new PluginInfo(p.Key, activePlugins.Contains(p.Key), p.Value)).ToArray());
             case "plugins.activate":

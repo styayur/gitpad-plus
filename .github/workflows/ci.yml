@@ -40,6 +40,7 @@ jobs:
         run: |
           pnpm audit --json > artifacts/npm-audit.json
           dotnet list src/GitPadPlus.Core/GitPadPlus.Core.csproj package --vulnerable --include-transitive --format json > artifacts/nuget-audit.json
+          node scripts/security-gate.mjs
       - name: License inventory and SBOM
         run: node scripts/licenses.mjs
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
@@ -68,7 +69,7 @@ jobs:
       - name: Install Windows workload only
         run: dotnet workload install maui-windows --version 10.0.400
       - name: Compile unpackaged Windows target
-        run: dotnet build apps/GitPadPlus.App/GitPadPlus.App.csproj -c Release -f net10.0-windows10.0.19041.0 -p:TargetFrameworks=net10.0-windows10.0.19041.0 -p:RuntimeIdentifier=win-x64 -p:WindowsPackageType=None
+        run: dotnet build apps/GitPadPlus.App/GitPadPlus.App.csproj -c Release -f net10.0-windows10.0.19041.0 -p:GitPadTargetFramework=net10.0-windows10.0.19041.0 -p:RuntimeIdentifier=win-x64 -p:WindowsPackageType=None
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: windows-build-not-release

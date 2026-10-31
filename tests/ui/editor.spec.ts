@@ -50,3 +50,30 @@ test('clear data requires a separate confirmation and preserves data on cancel',
   await page.getByRole('button',{name:'Settings',exact:true}).click();await page.getByRole('button',{name:'Clear Local GitPad+ Data',exact:true}).click();await expect(page.getByRole('alertdialog')).toContainText('1 notes');await page.getByRole('button',{name:'Cancel',exact:true}).click();
   await page.getByRole('button',{name:'Clear Local GitPad+ Data',exact:true}).click();await page.getByRole('button',{name:'Confirm permanent deletion'}).click();await expect(page.getByRole('heading',{name:'A place for today’s thoughts'})).toBeVisible();await expect(page.getByRole('tab')).toHaveCount(0);
 });
+
+for(const fixture of readdirSync('tests/markdown-fixtures'))test(`opening/saving fixture preserves source bytes: ${fixture}`,async({page,request})=>{
+  const body=readFileSync(join('tests/markdown-fixtures',fixture),'utf8');const note=await call(request,'documents.create',{date:'2026-10-31',title:fixture});
+  await call(request,'documents.save',{id:note.header.id,body,title:fixture,tags:[],expectedRevision:note.sidecar.revision,expectedHash:note.sidecar.contentHash,blocks:[],selections:[]});
+  await page.goto('/');await page.getByRole('textbox',{name:'Search notes'}).fill(fixture);await page.getByRole('navigation',{name:'Notes'}).getByRole('button').click();
+  if(fixture==='html.md'||fixture==='frontmatter.md')await expect(page.getByRole('region',{name:'Markdown editor'}).getByRole('alert')).toContainText('read-only');
+  else await expect(page.locator('.ProseMirror')).toBeVisible();
+  await page.getByRole('button',{name:'Save',exact:true}).click();const loaded=await call(request,'documents.load',{id:note.header.id});expect(loaded.body).toBe(body);
+});
+
+test('renders directives, GFM table, mathematics and callout without raw HTML',async({page,request})=>{
+  const note=await call(request,'documents.create',{date:'2026-10-31',title:'Rich fixture'});
+  const body=':underline[underlined] :mark[highlight]{color="yellow"}\n\n| A | B |\n| - | - |\n| 1 | 2 |\n\nInline $x^2$\n\n> [!NOTE]\n> Context\n\n:::fold[Details]{default="closed"}\nFolded body\n:::\n';
+  await call(request,'documents.save',{id:note.header.id,body,title:note.header.title,tags:[],expectedRevision:note.sidecar.revision,expectedHash:note.sidecar.contentHash,blocks:[],selections:[]});
+  await page.goto('/');await page.getByRole('textbox',{name:'Search notes'}).fill('Rich fixture');await page.getByRole('navigation',{name:'Notes'}).getByRole('button').click();
+  await expect(page.locator('[data-gitpad-format="underline"]')).toContainText('underlined');await expect(page.getByRole('table')).toBeVisible();await expect(page.getByRole('cell',{name:'2',exact:true})).toBeVisible();await expect(page.locator('.katex').first()).toBeVisible();await expect(page.locator('blockquote[data-callout="note"]')).toContainText('Context');
+  await expect(page.locator('details[data-gitpad-fold]')).toHaveJSProperty('open',false);
+  await page.getByRole('toolbar').getByRole('button',{name:'Expand all',exact:true}).click();await expect(page.locator('details[data-gitpad-fold]')).toHaveJSProperty('open',true);
+  await page.screenshot({path:'artifacts/browser-editor.png',fullPage:true});
+});
+test('source peek editing cancels the timer and remains undoable without rebuilding the editor',async({page,request})=>{
+  const note=await call(request,'documents.create',{date:'2026-10-31',title:'Undo fixture'});
+  await call(request,'documents.save',{id:note.header.id,body:'Original paragraph\n',title:note.header.title,tags:[],expectedRevision:note.sidecar.revision,expectedHash:note.sidecar.contentHash,blocks:[],selections:[]});
+  await page.goto('/');await page.getByRole('textbox',{name:'Search notes'}).fill('Undo fixture');await page.getByRole('navigation',{name:'Notes'}).getByRole('button').click();await expect(page.locator('.ProseMirror')).toBeVisible();await page.getByRole('button',{name:'Source peek',exact:true}).click();
+  const source=page.getByRole('textbox',{name:'Original Markdown source'});await source.fill('Changed **source**');await page.waitForTimeout(3200);await expect(source).toBeVisible();await page.getByRole('button',{name:'Apply source edit'}).click();await expect(page.locator('.ProseMirror strong')).toHaveText('source');
+  await page.locator('.ProseMirror').press('ControlOrMeta+z');await expect(page.locator('.ProseMirror')).toHaveText('Original paragraph');
+});

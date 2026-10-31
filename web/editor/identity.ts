@@ -19,13 +19,19 @@ export function identityPlugin(saved: Block[] = []) {
         const nodes = topLevel(transaction.doc), used = new Set<string>(), assigned = new Map<number, LiveBlock>();
         for (const old of before.live) {
           const mapped = transaction.mapping.mapResult(old.pos, 1);
-          const match = nodes.find(n => n.pos === mapped.pos && n.node.type === old.node.type);
+          const match = nodes.find(n => n.pos === mapped.pos);
           if (!mapped.deleted && match && !assigned.has(match.pos)) { assigned.set(match.pos, {...match, id: old.id, aliases: old.aliases}); used.add(old.id); }
         }
         // Moves reuse the original identity; copies leave the mapped original intact and get new IDs.
         for (const old of before.live.filter(b => !used.has(b.id))) {
           const matches = nodes.filter(n => !assigned.has(n.pos) && n.node.eq(old.node));
           if (matches.length === 1) { const match = matches[0]; assigned.set(match.pos, {...match, id: old.id, aliases: old.aliases}); used.add(old.id); }
+        }
+        // Replacing/reformatting one block retains its primary identity. A merge's
+        // position is already assigned, so the secondary ID still becomes a tombstone.
+        for (const old of before.live.filter(b => !used.has(b.id))) {
+          const pos=transaction.mapping.map(old.pos,-1),match=nodes.find(n=>n.pos===pos&&!assigned.has(n.pos));
+          if(match){assigned.set(match.pos,{...match,id:old.id,aliases:old.aliases});used.add(old.id);}
         }
         const deleted = [...before.deleted];
         for (const old of before.live.filter(b => !used.has(b.id))) {

@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "releaseVersion": "0.1.0-alpha.1",
+  "releaseGate": "blocked",
+  "environment": "Debian 13 x64",
+  "tests": {
+    "dotnet": {
+      "passed": 29,
+      "failed": 0,
+      "skipped": 0
+    },
+    "vitest": {
+      "passed": 37,
+      "failed": 0,
+      "skipped": 0
+    },
+    "playwright": {
+      "passed": 20,
+      "failed": 0,
+      "skipped": 0
+    },
+    "standalonePlugin": {
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0
+    }
+  },
+  "native": {
+    "windowsRuntime": "not_run",
+    "androidBuild": "not_run",
+    "androidRuntime": "not_run",
+    "androidReleaseSigning": "missing"
+  },
+  "initialCiRun": "https://github.com/styayur/gitpad-plus/actions/runs/41165509112",
+  "initialCiConclusion": "failed; regression fixes awaiting CI",
+  "notes": [
+    "Browser integration is not native acceptance.",
+    "No release tag or assets published.",
+    "Repository metadata edit was denied HTTP 403 by connected integration; push/read CI succeeded."
+  ]
+}

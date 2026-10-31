@@ -29,6 +29,8 @@ jobs:
         run: |
           gh run view "$RUN_ID" --json headSha,conclusion > run.json
           node -e 'const r=JSON.parse(require("fs").readFileSync("run.json"));if(r.headSha!==process.env.EXPECTED||r.conclusion!=="success")process.exit(1)'
+          gh run list --workflow ci.yml --commit "$EXPECTED" --limit 1 --json headSha,conclusion > ci.json
+          node -e 'const r=JSON.parse(require("fs").readFileSync("ci.json"));if(r[0]?.headSha!==process.env.EXPECTED||r[0]?.conclusion!=="success")process.exit(1)'
           gh run download "$RUN_ID" --name release-candidate --dir release-candidate
       - name: Fail closed on missing native acceptance, signatures or asset checks
         env:

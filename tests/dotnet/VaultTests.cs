@@ -64,7 +64,9 @@ public sealed class VaultTests : IDisposable
         Assert.Throws<IOException>(() => faulty.Save(Edit(note, "staged")));
         var path = Path.Combine(Root, "Journal", note.Header.Id + ".md");
         File.AppendAllText(path, "external");
-        Assert.Throws<RecoveryRequiredException>(() => Store());
+        var recovered = Store();
+        Assert.NotEmpty(recovered.RecoveryIssues);
+        Assert.Throws<RecoveryRequiredException>(() => recovered.Load(note.Header.Id));
         Assert.EndsWith("external", File.ReadAllText(path));
         Assert.Single(Directory.EnumerateFiles(Path.Combine(Root, ".gitpad", "transactions"), "previous.md", SearchOption.AllDirectories));
     }
@@ -201,5 +203,21 @@ public sealed class VaultTests : IDisposable
             var result = bridge.Handle("{\"protocolVersion\":1,\"requestId\":\"bad\",\"method\":\"documents.create\",\"params\":" + parameters + "}");
             Assert.NotEqual(JsonValueKind.Null, JsonDocument.Parse(result).RootElement.GetProperty("error").ValueKind);
         }
+    }
+    [Fact] public void AnchorResolverUsesUtf16AndRefusesDuplicateQuoteJumps()
+    {
+        var anchor = new SelectionAnchor(Guid.CreateVersion7(), Guid.CreateVersion7(), "same", "", "", 0, 4);
+        Assert.Equal("ambiguous", AnchorEngine.Resolve(anchor, "same same").State);
+        Assert.Equal(2, AnchorEngine.Resolve(anchor, "😀same").Start);
+        Assert.Equal("missing", AnchorEngine.Resolve(anchor, "gone").State);
+        var contextual = anchor with { Prefix = "left ", Suffix = " right" };
+        Assert.Equal(10, AnchorEngine.Resolve(contextual, "same left same right").Start);
+    }
+    [Fact] public void InvalidNoteDoesNotPreventReadingOtherNotes()
+    {
+        var store = Store(); var good = store.Create("2026-10-31", "Good"); var broken = store.Create("2026-10-31", "Broken");
+        File.WriteAllText(store.Safe("Journal", broken.Header.Id + ".md"), "---\nmalformed: [\n---\n");
+        var reopened = Store(); Assert.Equal(good.Header.Id, Assert.Single(reopened.List()).Id); Assert.NotEmpty(reopened.RecoveryIssues);
+        Assert.Throws<RecoveryRequiredException>(() => reopened.Load(broken.Header.Id));
     }
 }

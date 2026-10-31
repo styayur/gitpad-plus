@@ -50,6 +50,7 @@ function App() {
   useEffect(()=>{ void refresh().catch(error); },[search]);
   useEffect(()=>{
     void rpc.call<Settings>('settings.get').then(setSettings).catch(error);
+    void rpc.call<{documentId:string|null;code:string}[]>('recovery.list').then(issues=>{if(issues.length)setMessage(`${issues.length} recovery issue(s): original files retained; repair is required before opening affected notes.`);}).catch(error);
     for(const plugin of [toolbar,stats])void rpc.call('plugins.activate',{pluginId:plugin.manifest.id}).then(()=>host.activate(plugin,plugin.manifest.permissions)).catch(error);
     const key=(event:KeyboardEvent)=>{if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='s'){event.preventDefault();void flush().catch(error);}};
     const before=(event:BeforeUnloadEvent)=>{if(sessionRef.current?.dirty){event.preventDefault();}};
@@ -72,7 +73,11 @@ function App() {
   async function copy(level:'note'|'block'|'selection') {try{const value=level==='note'&&session?`gitpadplus://note/${session.note.header.id}`:level==='block'?editor.current?.blockLink():editor.current?.selectionLink();if(!value)throw new Error('Select text inside one paragraph first');await flush();await navigator.clipboard.writeText(value);setMessage('Link copied');}catch(e){error(e);}}
   const upload=async(file:File)=>{const bytes=new Uint8Array(await file.arrayBuffer());let binary='';for(let i=0;i<bytes.length;i+=8192)binary+=String.fromCharCode(...bytes.subarray(i,i+8192));return await rpc.call<string>('media.import',{filename:file.name,base64:btoa(binary)});};
   const imageUrl=async(path:string)=>{if(!path.startsWith('../Assets/'))return /^(https?:|data:|javascript:)/i.test(path)?'':path;return rpc.call<string>('media.read',{path});};
-  async function togglePlugin(which:'toolbar'|'stats') {try{const plugin=which==='toolbar'?toolbar:stats;if(enabled[which]){await host.deactivate(plugin.manifest.id);await rpc.call('plugins.deactivate',{pluginId:plugin.manifest.id});}else{await rpc.call('plugins.activate',{pluginId:plugin.manifest.id});await host.activate(plugin,plugin.manifest.permissions);}setEnabled(before=>({...before,[which]:!before[which]}));}catch(e){error(e);}}
+  async function togglePlugin(which:'toolbar'|'stats') {
+    const previous=enabled[which];setEnabled(before=>({...before,[which]:!previous}));
+    try{const plugin=which==='toolbar'?toolbar:stats;if(previous){await host.deactivate(plugin.manifest.id);await rpc.call('plugins.deactivate',{pluginId:plugin.manifest.id});}else{await rpc.call('plugins.activate',{pluginId:plugin.manifest.id});await host.activate(plugin,plugin.manifest.permissions);}}
+    catch(e){setEnabled(before=>({...before,[which]:previous}));error(e);}
+  }
   const count = new Date(month.getFullYear(),month.getMonth()+1,0).getDate(), offset=(month.getDay()+6)%7;
   return <div className="shell"><header><div><strong>GitPad+</strong><span className="alpha">Development · unreleased</span></div><button onClick={()=>setShowSettings(true)}>Settings</button></header>
     <div className="workspace"><aside aria-label="Calendar navigation"><div className="month"><button aria-label="Previous month" onClick={()=>setMonth(new Date(month.getFullYear(),month.getMonth()-1,1))}>‹</button><h2>{month.toLocaleDateString(undefined,{month:'long',year:'numeric'})}</h2><button aria-label="Next month" onClick={()=>setMonth(new Date(month.getFullYear(),month.getMonth()+1,1))}>›</button></div>
