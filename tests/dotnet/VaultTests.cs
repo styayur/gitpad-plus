@@ -220,4 +220,11 @@ public sealed class VaultTests : IDisposable
         var reopened = Store(); Assert.Equal(good.Header.Id, Assert.Single(reopened.List()).Id); Assert.NotEmpty(reopened.RecoveryIssues);
         Assert.Throws<RecoveryRequiredException>(() => reopened.Load(broken.Header.Id));
     }
+    [Fact] public void WorkspaceRestoresAndRejectsLateStateUpdates()
+    {
+        var store = Store(); var id = store.Create("2026-10-31", "Workspace").Header.Id;
+        store.SetWorkspace(new([id], id, 2)); store.SetWorkspace(new([], null, 1));
+        var restored = Store().GetWorkspace(); Assert.Equal(id, Assert.Single(restored.Tabs)); Assert.Equal(id, restored.ActiveId);
+        Assert.Throws<ArgumentException>(() => store.SetWorkspace(new([], id, 3)));
+    }
 }

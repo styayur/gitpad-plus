@@ -107,6 +107,8 @@ public sealed class Bridge(VaultStore store)
                 return Element(true);
             case "settings.get": return Element(store.GetSettings());
             case "settings.update": return Element(store.SetSettings(Get<AppSettings>(parameters)));
+            case "workspace.get": return Element(store.GetWorkspace());
+            case "workspace.save": return Element(store.SetWorkspace(Get<WorkspaceState>(parameters)));
             case "git.status": return Element(new GitStatus());
             case "recovery.list": return Element(store.RecoveryIssues.ToArray());
             case "media.import":

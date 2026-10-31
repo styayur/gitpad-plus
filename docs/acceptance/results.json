@@ -5,7 +5,7 @@
   "environment": "Debian 13 x64",
   "tests": {
     "dotnet": {
-      "passed": 29,
+      "passed": 30,
       "failed": 0,
       "skipped": 0
     },
@@ -15,7 +15,7 @@
       "skipped": 0
     },
     "playwright": {
-      "passed": 20,
+      "passed": 23,
       "failed": 0,
       "skipped": 0
     },
@@ -37,5 +37,18 @@
     "Browser integration is not native acceptance.",
     "No release tag or assets published.",
     "Repository metadata edit was denied HTTP 403 by connected integration; push/read CI succeeded."
+  ],
+  "standalonePluginHost": "passed: built plugin registered, executed and unloaded through actual PluginHost without Core edits",
+  "ciRuns": [
+    {
+      "url": "https://github.com/styayur/gitpad-plus/actions/runs/41165509112",
+      "portable": "failed before plugin-switch fix",
+      "windowsBuild": "failed before app-only target selector"
+    },
+    {
+      "url": "https://github.com/styayur/gitpad-plus/actions/runs/41166119095",
+      "portable": "passed",
+      "windowsBuild": "failed: nullable message argument CS8604; fixed locally"
+    }
   ]
 }

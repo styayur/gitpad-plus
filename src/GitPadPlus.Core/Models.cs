@@ -24,6 +24,7 @@ public record LinkTarget(Guid DocumentId, Guid? BlockId, Guid? SelectionId);
 public record SaveTransaction(Guid Id, string OldHash, string NewHash);
 public record DeleteMarker(Guid Id, long Revision);
 public record RecoveryIssue(Guid? DocumentId, string Code);
+public record WorkspaceState(Guid[] Tabs, Guid? ActiveId, long Sequence = 0);
 
 public static class Identity
 {
@@ -62,6 +63,7 @@ public static class Identity
 [JsonSerializable(typeof(SelectionAnchor[]))]
 [JsonSerializable(typeof(string[]))]
 [JsonSerializable(typeof(RecoveryIssue[]))]
+[JsonSerializable(typeof(WorkspaceState))]
 public partial class DataJson : JsonSerializerContext;
 
 public sealed class RevisionConflictException(string message) : IOException(message);

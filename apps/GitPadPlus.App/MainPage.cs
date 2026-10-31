@@ -17,10 +17,12 @@ public sealed class MainPage : ContentPage
         editor = new HybridWebView { HybridRoot = "wwwroot", DefaultFile = "index.html" };
         editor.RawMessageReceived += async (_, args) =>
         {
+            var message = args.Message;
+            if (message is null) return;
             await requests.WaitAsync();
             try
             {
-                var response = await Task.Run(() => bridge.Handle(args.Message));
+                var response = await Task.Run(() => bridge.Handle(message));
                 MainThread.BeginInvokeOnMainThread(() => editor.SendRawMessage(response));
             }
             finally { requests.Release(); }

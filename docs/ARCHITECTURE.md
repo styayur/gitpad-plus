@@ -8,4 +8,4 @@ Web modules separate the Markdown AST/source mapper, editor state/identity, anch
 
 DocumentSession is a per-note single-writer queue. It snapshots edits, sends the previous acknowledged revision/hash, retains a newer buffer during delayed saves and reports errors without dropping content. Native requests are serialized at the WebView boundary. A timeout/cancellation cannot undo a committed native operation; reload before retrying uncertain writes.
 
-Current limitations: top-level block identity coverage is stronger than nested-node coverage; native multi-pane workspace and interactive external-file reconciliation are unfinished. These are v0.1 gaps, not v0.2 roadmap items.
+Current limitations: top-level block identity coverage is stronger than nested-node coverage; native multi-pane workspace and interactive external-file reconciliation are unfinished; ordinary tab/active-note restart restoration is implemented. These are v0.1 gaps, not v0.2 roadmap items.

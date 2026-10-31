@@ -18,3 +18,5 @@ pnpm build
 ```
 
 The generator refuses an existing directory, links the local compiled SDK, adds a manifest, sample command, test, TS configuration and license. Review built modules before passing them to PluginHost.activate; Core source need not change. Commit a generated project's own lockfile. Publication of npm packages and a plugin marketplace are not part of this delivery.
+
+The generated standalone plugin has additionally been compiled and activated through the actual PluginHost, its registered command executed, and its resources unloaded successfully, without changes to Core source. This demonstrates the reviewed host installation API; it is not a claim that a remote plugin loader exists.

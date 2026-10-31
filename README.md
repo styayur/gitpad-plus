@@ -10,7 +10,7 @@ A local-first Markdown journal with calendar navigation, WYSIWYG editing and per
 
 Implemented and tested in the portable core/browser workflow:
 
-- Calendar, multiple notes per date, switchable/closable tabs, title editing and local FTS5 search.
+- Calendar, multiple notes per date, switchable/closable tabs with restart restoration, title editing and local FTS5 search.
 - Real Milkdown Crepe editing, GFM, formatting toolbar, directive marks, fold containers, callouts and opaque unknown-directive preservation.
 - A three-second peek into actual Markdown source slices, with a separate apply action for source edits.
 - RFC 9562 UUIDv7 identities, ProseMirror block tracking, W3C quote/context anchors, strict note/block/selection URIs, session-scoped Yjs positions and Text Fragment export.

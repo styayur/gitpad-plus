@@ -24,6 +24,7 @@ function App() {
   const sessionRef = useRef<DocumentSession|null>(null), editor = useRef<EditorHandle|null>(null), generation=useRef(0), loadGeneration=useRef(0);
   const hostRef = useRef<PluginHost|null>(null);
   const pendingNavigation = useRef<ReturnType<typeof parseLink>|null>(null);
+  const [workspaceRestored,setWorkspaceRestored]=useState(false),workspaceSequence=useRef(0);
   const error = (e: unknown) => setMessage(String(e));
   const refresh = async () => { const current = ++loadGeneration.current; const result=await rpc.call<Summary[]>('documents.list',{search:search||null}); if(current===loadGeneration.current)setNotes(result); };
   if(!hostRef.current) hostRef.current=new PluginHost({
@@ -51,6 +52,12 @@ function App() {
   useEffect(()=>{
     void rpc.call<Settings>('settings.get').then(setSettings).catch(error);
     void rpc.call<{documentId:string|null;code:string}[]>('recovery.list').then(issues=>{if(issues.length)setMessage(`${issues.length} recovery issue(s): original files retained; repair is required before opening affected notes.`);}).catch(error);
+    void(async()=>{try{
+      const saved=await rpc.call<{tabs:string[];activeId:string|null;sequence:number}>('workspace.get');workspaceSequence.current=saved.sequence;
+      const available=await rpc.call<Summary[]>('documents.list');setTabs(saved.tabs.map(id=>available.find(n=>n.id===id)).filter((n):n is Summary=>!!n));
+      if(saved.activeId&&available.some(n=>n.id===saved.activeId))await open(saved.activeId);
+      setWorkspaceRestored(true);
+    }catch(e){error(e);setWorkspaceRestored(true);}})();
     for(const plugin of [toolbar,stats])void rpc.call('plugins.activate',{pluginId:plugin.manifest.id}).then(()=>host.activate(plugin,plugin.manifest.permissions)).catch(error);
     const key=(event:KeyboardEvent)=>{if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='s'){event.preventDefault();void flush().catch(error);}};
     const before=(event:BeforeUnloadEvent)=>{if(sessionRef.current?.dirty){event.preventDefault();}};
@@ -62,6 +69,7 @@ function App() {
     return()=>{window.removeEventListener('keydown',key);window.removeEventListener('beforeunload',before);document.removeEventListener('visibilitychange',visible);window.removeEventListener('gitpad-reopen',reopen);window.removeEventListener('gitpad-navigate',navigate);window.removeEventListener('HybridWebViewMessageReceived',native);void host.dispose();sessionRef.current?.dispose();};
   },[]);
   useEffect(()=>{document.documentElement.dataset.theme=settings.theme;},[settings]);
+  useEffect(()=>{if(workspaceRestored)void rpc.call('workspace.save',{tabs:tabs.map(n=>n.id),activeId:session?.note.header.id??null,sequence:++workspaceSequence.current}).catch(error);},[tabs,session,workspaceRestored]);
   async function navigateLink(value:string){
     try{
       const target=parseLink(value);await open(target.id);const current=sessionRef.current;if(current?.note.header.id!==target.id)return;
@@ -71,7 +79,7 @@ function App() {
   }
   async function create(){try{await flush();const note=await rpc.call<Note>('documents.create',{date,title:'Untitled'});await refresh();host.emit('documents.changed',{});await open(note.header.id);}catch(e){error(e);}}
   async function copy(level:'note'|'block'|'selection') {try{const value=level==='note'&&session?`gitpadplus://note/${session.note.header.id}`:level==='block'?editor.current?.blockLink():editor.current?.selectionLink();if(!value)throw new Error('Select text inside one paragraph first');await flush();await navigator.clipboard.writeText(value);setMessage('Link copied');}catch(e){error(e);}}
-  const upload=async(file:File)=>{const bytes=new Uint8Array(await file.arrayBuffer());let binary='';for(let i=0;i<bytes.length;i+=8192)binary+=String.fromCharCode(...bytes.subarray(i,i+8192));return await rpc.call<string>('media.import',{filename:file.name,base64:btoa(binary)});};
+  const upload=async(file:File)=>{if(file.size>16_000_000)throw new Error('Images must be at most 16 MB.');const bytes=new Uint8Array(await file.arrayBuffer());let binary='';for(let i=0;i<bytes.length;i+=8192)binary+=String.fromCharCode(...bytes.subarray(i,i+8192));return await rpc.call<string>('media.import',{filename:file.name,base64:btoa(binary)});};
   const imageUrl=async(path:string)=>{if(!path.startsWith('../Assets/'))return /^(https?:|data:|javascript:)/i.test(path)?'':path;return rpc.call<string>('media.read',{path});};
   async function togglePlugin(which:'toolbar'|'stats') {
     const previous=enabled[which];setEnabled(before=>({...before,[which]:!previous}));

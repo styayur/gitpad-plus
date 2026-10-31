@@ -77,3 +77,20 @@ test('source peek editing cancels the timer and remains undoable without rebuild
   const source=page.getByRole('textbox',{name:'Original Markdown source'});await source.fill('Changed **source**');await page.waitForTimeout(3200);await expect(source).toBeVisible();await page.getByRole('button',{name:'Apply source edit'}).click();await expect(page.locator('.ProseMirror strong')).toHaveText('source');
   await page.locator('.ProseMirror').press('ControlOrMeta+z');await expect(page.locator('.ProseMirror')).toHaveText('Original paragraph');
 });
+test('restores open tabs and active note after a full page restart',async({page,request})=>{
+  await page.goto('/');await page.getByRole('button',{name:'New note',exact:true}).click();await expect(page.locator('.ProseMirror')).toBeVisible();await page.locator('.ProseMirror').fill('Restored active text');await page.getByRole('button',{name:'Save',exact:true}).click();
+  await expect.poll(async()=>{const state=await call(request,'workspace.get');return state.tabs.length;}).toBe(1);
+  await page.reload();await expect(page.getByRole('tab')).toHaveCount(1);await expect(page.locator('.ProseMirror')).toContainText('Restored active text');
+});
+test('persistent selection link reloads and selects the exact rendered text',async({page,context})=>{
+  await context.grantPermissions(['clipboard-read','clipboard-write']);await page.goto('/');await page.getByRole('button',{name:'New note',exact:true}).click();const editor=page.locator('.ProseMirror');await editor.fill('before hello after');
+  await editor.evaluate(element=>{const text=element.querySelector('p')!.firstChild!;const range=document.createRange();range.setStart(text,7);range.setEnd(text,12);const selection=window.getSelection()!;selection.removeAllRanges();selection.addRange(range);document.dispatchEvent(new Event('selectionchange'));});
+  await page.getByRole('button',{name:'Selection link',exact:true}).click();await expect(page.getByRole('alert')).toContainText('Link copied');const link=await page.evaluate(()=>navigator.clipboard.readText());expect(link).toContain('?selection=');
+  await page.evaluate(value=>window.dispatchEvent(new CustomEvent('gitpad-navigate',{detail:value})),link);await expect(page.getByRole('alert')).toContainText('Selection located.');await expect.poll(()=>page.evaluate(()=>window.getSelection()?.toString())).toBe('hello');
+});
+test('imports an image into the real vault and renders its local persisted content',async({page,request})=>{
+  await page.goto('/');await page.getByRole('button',{name:'New note',exact:true}).click();await expect(page.locator('.ProseMirror')).toBeVisible();
+  const chooser=page.waitForEvent('filechooser');await page.getByRole('button',{name:'Image',exact:true}).click();await(await chooser).setFiles({name:'pixel.png',mimeType:'image/png',buffer:Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aZyoAAAAASUVORK5CYII=','base64')});
+  const image=page.getByRole('img',{name:'pixel.png'});await expect(image).toBeVisible();await expect.poll(()=>image.evaluate((element:HTMLImageElement)=>element.complete&&element.naturalWidth>0)).toBe(true);
+  await page.getByRole('button',{name:'Save',exact:true}).click();const notes=await call(request,'documents.list');const saved=await call(request,'documents.load',{id:notes[0].id});expect(saved.body).toContain('../Assets/');expect(saved.body).not.toContain('data:image');expect(readdirSync(join(process.env.GITPAD_TEST_VAULT!,'Assets'))).toHaveLength(1);
+});

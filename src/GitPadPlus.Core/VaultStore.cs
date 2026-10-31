@@ -290,6 +290,20 @@ public sealed class VaultStore
         }
     }
     public AppSettings GetSettings() => File.Exists(Safe(".gitpad", "settings.json")) ? Read<AppSettings>(Safe(".gitpad", "settings.json")) : new();
+    public WorkspaceState GetWorkspace() => File.Exists(Safe(".gitpad", "session.json")) ? Read<WorkspaceState>(Safe(".gitpad", "session.json")) : new([], null);
+    public WorkspaceState SetWorkspace(WorkspaceState workspace)
+    {
+        lock (gate)
+        {
+            if (workspace.Tabs.Length > 100 || workspace.Tabs.Distinct().Count() != workspace.Tabs.Length) throw new ArgumentException("Invalid workspace tabs.");
+            foreach (var id in workspace.Tabs) Identity.Require(id);
+            if (workspace.ActiveId is Guid active && !workspace.Tabs.Contains(active)) throw new ArgumentException("Active note must be an open tab.");
+            var previous = GetWorkspace();
+            if (workspace.Sequence <= previous.Sequence) return previous;
+            var temp = Safe(".gitpad", "session.new"); DurableWrite(temp, Json(workspace));
+            File.Move(temp, Safe(".gitpad", "session.json"), true); return workspace;
+        }
+    }
     public AppSettings SetSettings(AppSettings settings)
     {
         lock (gate)
@@ -305,7 +319,7 @@ public sealed class VaultStore
     {
         lock (gate)
         {
-            if (bytes.Length is 0 or > 20_000_000) throw new ArgumentException("Images must be 1 byte to 20 MB.");
+            if (bytes.Length is 0 or > 16_000_000) throw new ArgumentException("Images must be 1 byte to 16 MB.");
             // Sniff content and reject active SVG/HTML; never trust a caller extension.
             var extension = bytes.AsSpan().StartsWith(new byte[] { 137, 80, 78, 71, 13, 10, 26, 10 }) ? ".png"
                 : bytes.AsSpan().StartsWith(new byte[] { 255, 216, 255 }) ? ".jpg"
@@ -314,6 +328,7 @@ public sealed class VaultStore
             var hash = Convert.ToHexStringLower(System.Security.Cryptography.SHA256.HashData(bytes));
             var name = hash + extension;
             var target = Safe("Assets", name);
+            if (File.Exists(target) && Convert.ToHexStringLower(System.Security.Cryptography.SHA256.HashData(File.ReadAllBytes(target))) != hash) throw new RecoveryRequiredException("Existing asset hash mismatch; file retained.");
             if (!File.Exists(target))
             {
                 var temp = Safe("Assets", name + ".new");
