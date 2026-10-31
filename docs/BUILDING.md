@@ -2,7 +2,7 @@
 
 Use the pinned global.json, .node-version and packageManager. Linux supports portable Core and frontend/test builds; it cannot execute WinUI or qualify MAUI Android without a device. Keep the cloud image free of native workloads. README lists the commands verified in this image.
 
-Windows CI installs only the maui-windows workload on windows-latest and builds the Windows target with the app-only GitPadTargetFramework selector to avoid restoring Android. The stable MAUI reference is 10.0.120. This repository's native build commands are candidates until their actual CI outcome is recorded; native runtime remains a separate gate.
+Windows CI installs only the maui-windows workload on windows-latest and builds the Windows target with the app-only GitPadTargetFramework selector to avoid restoring Android. The stable MAUI reference is 10.0.120. The Windows command below passed in CI at implementation commit e8719718d7bf430e2d6b039f743ff0d84885bfb3; native runtime remains a separate gate. The Android command remains unexecuted because its dedicated runner is unavailable.
 
 ```powershell
 pnpm install --frozen-lockfile
