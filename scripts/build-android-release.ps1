@@ -30,7 +30,7 @@ try {
     $env:GITPAD_PLUGIN_REGISTRY=$registry
     & pnpm build 2>&1 | Tee-Object (Join-Path $output 'web-build.log')
     if($LASTEXITCODE -ne 0){throw 'Embedded editor build failed'}
-    $modeArguments=if($QuickProbe){@('-p:GitPadAndroidReleaseUniversal=false','-p:RuntimeIdentifier=android-x64','-p:RunAOTCompilation=false')}else{@('-p:GitPadAndroidReleaseUniversal=true')}
+    [string[]]$modeArguments=if($QuickProbe){@('-p:GitPadAndroidReleaseUniversal=false','-p:RuntimeIdentifier=android-x64','-p:RunAOTCompilation=false')}else{@('-p:GitPadAndroidReleaseUniversal=true')}
     $modeArguments+=if($QuickProbe){'-p:RestoreLockedMode=false'}else{'-p:RestoreLockedMode=true'}
     $protectedPassword=(Get-Content -LiteralPath ($key+'.password.dpapi') -Raw).Trim()
     $secure=ConvertTo-SecureString -String $protectedPassword
