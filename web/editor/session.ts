@@ -2,6 +2,7 @@
 import type { Anchor, Block, LocalState, Note, SaveRequest } from '../bridge/types';
 /** One writer queue per note. A late response never replaces the user's newer buffer. */
 export class DocumentSession {
+  readonly instanceId = crypto.randomUUID();
   body: string;
   title: string;
   blocks: Block[];

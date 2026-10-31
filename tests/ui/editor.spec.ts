@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 import { test, expect, type APIRequestContext } from '@playwright/test';
-import { readdirSync, readFileSync } from 'node:fs';
+import { readdirSync, readFileSync, appendFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 async function call(request:APIRequestContext,method:string,params:unknown={}) {
@@ -43,10 +43,14 @@ test('unknown directives survive an edit to another block',async({page,request})
   await call(request,'documents.save',{id:note.header.id,body,title:note.header.title,tags:[],expectedRevision:note.sidecar.revision,expectedHash:note.sidecar.contentHash,blocks:[],selections:[]});
   await page.goto('/');await page.getByRole('textbox',{name:'Search notes'}).fill('Unknown fixture');await page.getByRole('navigation',{name:'Notes'}).getByRole('button').click();
   await expect(page.locator('[data-gitpad-unknown]')).toBeVisible();const paragraph=page.locator('.ProseMirror p').last();await paragraph.click();await page.keyboard.press('End');await page.keyboard.type(' changed');await page.getByRole('button',{name:'Save',exact:true}).click();
+  // The click starts an asynchronous durable save. Wait for its public completion
+  // state before a separate HTTP client reads the authoritative source pair.
+  await expect(page.getByRole('status')).toContainText('Local: Saved');
   const loaded=await call(request,'documents.load',{id:note.header.id});expect(loaded.body).toContain(':::future[Unknown]{z="last" a="first"}\nkeep **everything**\n:::');expect(loaded.body).toContain('Editable changed');
 });
 test('clear data requires a separate confirmation and preserves data on cancel',async({page})=>{
   await page.goto('/');await page.getByRole('button',{name:'New note',exact:true}).click();await expect(page.locator('.ProseMirror')).toBeVisible();
+  await page.getByRole('button',{name:'Save',exact:true}).click();await expect(page.getByRole('status')).toContainText('Local: Saved');
   await page.getByRole('button',{name:'Settings',exact:true}).click();await page.getByRole('button',{name:'Clear Local GitPad+ Data',exact:true}).click();await expect(page.getByRole('alertdialog')).toContainText('1 notes');await page.getByRole('button',{name:'Cancel',exact:true}).click();
   await page.getByRole('button',{name:'Clear Local GitPad+ Data',exact:true}).click();await page.getByRole('button',{name:'Confirm permanent deletion'}).click();await expect(page.getByRole('heading',{name:'A place for today’s thoughts'})).toBeVisible();await expect(page.getByRole('tab')).toHaveCount(0);
 });
@@ -93,4 +97,47 @@ test('imports an image into the real vault and renders its local persisted conte
   const chooser=page.waitForEvent('filechooser');await page.getByRole('button',{name:'Image',exact:true}).click();await(await chooser).setFiles({name:'pixel.png',mimeType:'image/png',buffer:Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aZyoAAAAASUVORK5CYII=','base64')});
   const image=page.getByRole('img',{name:'pixel.png'});await expect(image).toBeVisible();await expect.poll(()=>image.evaluate((element:HTMLImageElement)=>element.complete&&element.naturalWidth>0)).toBe(true);
   await page.getByRole('button',{name:'Save',exact:true}).click();const notes=await call(request,'documents.list');const saved=await call(request,'documents.load',{id:notes[0].id});expect(saved.body).toContain('../Assets/');expect(saved.body).not.toContain('data:image');expect(readdirSync(join(process.env.GITPAD_TEST_VAULT!,'Assets'))).toHaveLength(1);
+});
+
+test('two distinct editable panes save independently and restore after restart',async({page,request})=>{
+  const first=await call(request,'documents.create',{date:'2026-10-31',title:'First pane'}),second=await call(request,'documents.create',{date:'2026-10-31',title:'Second pane'});
+  await page.goto('/');await page.getByRole('navigation',{name:'Notes'}).getByRole('button').filter({hasText:'First pane'}).click();
+  await expect(page.locator('.ProseMirror')).toHaveCount(1);await page.getByRole('combobox',{name:'Open beside'}).selectOption(second.header.id);
+  await expect(page.locator('.ProseMirror')).toHaveCount(2);await page.locator('.ProseMirror').first().fill('Primary 中文');await page.locator('.ProseMirror').last().fill('Secondary 👩🏽‍💻');
+  await page.getByRole('button',{name:'Save',exact:true}).click();
+  expect((await call(request,'documents.load',{id:first.header.id})).body).toContain('Primary 中文');expect((await call(request,'documents.load',{id:second.header.id})).body).toContain('Secondary 👩🏽‍💻');
+  await expect.poll(async()=>(await call(request,'workspace.get')).secondaryId).toBe(second.header.id);
+  await page.reload();await expect(page.locator('.ProseMirror')).toHaveCount(2);await expect(page.locator('.ProseMirror').first()).toContainText('Primary 中文');await expect(page.locator('.ProseMirror').last()).toContainText('Secondary 👩🏽‍💻');
+});
+
+test('image file drop and paste persist through the real storage bridge',async({page,request})=>{
+  await page.goto('/');await page.getByRole('button',{name:'New note',exact:true}).click();const editor=page.locator('.ProseMirror');await expect(editor).toBeVisible();
+  for(const kind of ['drop','paste']){
+    await editor.evaluate((element,eventKind)=>{
+      const transfer=new DataTransfer(),bytes=Uint8Array.from(atob('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aZyoAAAAASUVORK5CYII='),character=>character.charCodeAt(0));
+      transfer.items.add(new File([bytes],eventKind+'.png',{type:'image/png'}));
+      element.dispatchEvent(eventKind==='drop'?new DragEvent('drop',{bubbles:true,cancelable:true,dataTransfer:transfer}):new ClipboardEvent('paste',{bubbles:true,cancelable:true,clipboardData:transfer}));
+    },kind);
+    await expect(editor.getByRole('img',{name:kind+'.png'})).toBeVisible();
+  }
+  await page.getByRole('button',{name:'Save',exact:true}).click();await expect(page.locator('footer [role=status]').first()).toHaveText('Local: Saved');
+  const id=await page.getByRole('tab',{selected:true}).getAttribute('title');const saved=await call(request,'documents.load',{id});
+  expect(saved.body.match(/\.\.\/Assets\//g)).toHaveLength(2);expect(saved.body).not.toContain('data:image');
+  expect(readdirSync(join(process.env.GITPAD_TEST_VAULT!,'Assets'))).toHaveLength(1);
+  await page.reload();await expect(page.locator('.ProseMirror').getByRole('img',{name:'drop.png',exact:true})).toBeVisible();await expect(page.locator('.ProseMirror').getByRole('img',{name:'paste.png',exact:true})).toBeVisible();
+});
+
+test('external Markdown is compared, archived and explicitly reconciled through the UI',async({page,request})=>{
+  const note=await call(request,'documents.create',{date:'2026-10-31',title:'External recovery'});
+  await page.goto('/');await page.getByRole('navigation',{name:'Notes'}).getByRole('button').click();await expect(page.locator('.ProseMirror')).toBeVisible();await page.getByRole('button',{name:'Save',exact:true}).click();
+  appendFileSync(join(process.env.GITPAD_TEST_VAULT!,'Journal',note.header.id+'.md'),'External 中文\n');
+  await page.getByRole('button',{name:'Check recovery'}).click();await page.getByRole('button',{name:'Compare retained versions'}).click();
+  await expect(page.getByRole('dialog',{name:'Reconcile external changes'})).toBeVisible();const merged=page.getByRole('textbox',{name:'Merged Markdown'});await expect(merged).toContainText('External 中文');
+  await page.getByRole('button',{name:'Archive versions and apply'}).click();await expect(page.getByRole('dialog',{name:'Reconcile external changes'})).toBeHidden();await expect(page.locator('.ProseMirror')).toContainText('External 中文');
+  expect(readdirSync(join(process.env.GITPAD_TEST_VAULT!,'.gitpad','recovery'))).toHaveLength(1);
+});
+
+test('plugin disabled preference persists after restart',async({page})=>{
+  await page.goto('/');await page.getByRole('button',{name:'Settings',exact:true}).click();await page.getByLabel('Official toolbar',{exact:true}).uncheck();await page.getByRole('button',{name:'Close settings'}).click();
+  await page.reload();await page.getByRole('button',{name:'Settings',exact:true}).click();await expect(page.getByLabel('Official toolbar',{exact:true})).not.toBeChecked();
 });

@@ -14,6 +14,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:ui": "playwright test",
+    "test:release": "node --test tests/release-gate.test.mjs",
     "lint": "eslint web packages plugins tests --max-warnings 0",
     "check:release": "node scripts/release-gate.mjs"
   },

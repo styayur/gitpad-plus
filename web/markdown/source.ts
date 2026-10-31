@@ -13,9 +13,22 @@ export interface SourceRange { start: number; end: number; kind: string }
 export class SourceDocument {
   readonly tree: Root;
   readonly ranges: SourceRange[];
+  readonly blockRanges: SourceRange[];
   constructor(readonly raw: string) {
     this.tree = markdown.parse(raw);
     this.ranges = this.tree.children.map(n => ({start: n.position?.start.offset ?? 0, end: n.position?.end.offset ?? raw.length, kind: n.type}));
+    this.blockRanges = [];
+    const visit = (node: {type: string; name?: string; ordered?: boolean; data?: {directiveLabel?: boolean}; position?: {start: {offset?: number}; end: {offset?: number}}; children?: unknown[]},tableHeader=false) => {
+      if (node.data?.directiveLabel) return;
+      const image=node.type==='paragraph'&&node.children?.length===1&&['image','imageReference'].includes((node.children[0] as {type:string}).type);
+      const names: Record<string,string> = {paragraph:image?'image-block':'paragraph',heading:'heading',blockquote:'blockquote',list:node.ordered?'ordered_list':'bullet_list',listItem:'list_item',code:'code_block',thematicBreak:'hr',table:'table',tableRow:tableHeader?'table_header_row':'table_row',tableCell:tableHeader?'table_header':'table_cell',containerDirective:node.name==='fold'?'gitpad_fold':'gitpad_unknown',leafDirective:'gitpad_unknown'};
+      if (names[node.type]) this.blockRanges.push({kind:names[node.type],start:node.position?.start.offset??0,end:node.position?.end.offset??0});
+      // Milkdown wraps each cell's inline content in a paragraph; mdast does not.
+      if(node.type==='tableCell')this.blockRanges.push({kind:'paragraph',start:node.position?.start.offset??0,end:node.position?.end.offset??0});
+      if(node.type==='table'){for(const [index,child] of (node.children??[]).entries())visit(child as Parameters<typeof visit>[0],index===0);return;}
+      if (names[node.type]!=='gitpad_unknown') for (const child of node.children??[])visit(child as Parameters<typeof visit>[0],tableHeader);
+    };
+    visit(this.tree);
   }
   slice(index: number): string {
     const range = this.ranges[index];
@@ -35,18 +48,17 @@ export class SourceDocument {
 
 /** Keeps untouched top-level source slices exact after an editor serialization. */
 export function preserveSource(previous: string, serialized: string): string {
+  if(previous===serialized)return previous;
   const before = new SourceDocument(previous), after = new SourceDocument(serialized);
   const semantic = (node: unknown): string => JSON.stringify(node, (key, value: unknown) => key === 'position' ? undefined : value);
-  const used = new Set<number>();
-  let result = serialized;
-  for (let index = after.tree.children.length - 1; index >= 0; index--) {
-    const key = semantic(after.tree.children[index]);
-    const match = before.tree.children.findIndex((n, i) => !used.has(i) && semantic(n) === key);
-    if (match >= 0) {
-      used.add(match);
-      const range = after.ranges[index];
-      result = result.slice(0, range.start) + before.slice(match) + result.slice(range.end);
-    }
+  const originals=new Map<string,number[]>(),next=new Map<string,number>();
+  before.tree.children.forEach((node,index)=>{const key=semantic(node),queue=originals.get(key)??[];queue.push(index);originals.set(key,queue);});
+  const parts:string[]=[];let cursor=0;
+  for(let index=0;index<after.tree.children.length;index++){
+    const key=semantic(after.tree.children[index]),offset=next.get(key)??0,match=originals.get(key)?.[offset],range=after.ranges[index];
+    parts.push(serialized.slice(cursor,range.start),match===undefined?serialized.slice(range.start,range.end):before.slice(match));
+    if(match!==undefined)next.set(key,offset+1);
+    cursor=range.end;
   }
-  return result;
+  parts.push(serialized.slice(cursor));return parts.join('');
 }

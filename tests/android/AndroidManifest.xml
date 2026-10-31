@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="io.github.styayur.gitpadplus.acceptance">
+  <uses-sdk android:minSdkVersion="26" android:targetSdkVersion="36"/>
+  <application android:label="GitPad Acceptance Tests" android:debuggable="false"/>
+  <instrumentation android:name="io.github.styayur.gitpadplus.acceptance.AcceptanceInstrumentation" android:targetPackage="io.github.styayur.gitpadplus" android:functionalTest="true"/>
+</manifest>

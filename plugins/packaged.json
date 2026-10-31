@@ -1,0 +1,4 @@
+[
+  {"id":"official-toolbar","module":"plugins/official-toolbar/index.ts","permissions":["commands","editor"],"methods":[]},
+  {"id":"official-calendar-stats","module":"plugins/official-calendar-stats/index.ts","permissions":["calendar.read","calendar.decorate","storage"],"methods":["calendar.query"]}
+]

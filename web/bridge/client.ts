@@ -15,13 +15,13 @@ export class RpcClient {
       else entry.resolve(response.result);
     });
   }
-  call<T>(method: string, params: unknown = {}, signal?: AbortSignal): Promise<T> {
+  call<T>(method: string, params: unknown = {}, signal?: AbortSignal, timeoutMs=this.timeoutMs): Promise<T> {
     if (signal?.aborted) return Promise.reject(new DOMException('Aborted', 'AbortError'));
     return new Promise<T>((resolve, reject) => {
       const requestId = v7();
       const clean = () => { clearTimeout(timer); signal?.removeEventListener('abort', abort); this.pending.delete(requestId); };
       const abort = () => { clean(); reject(new DOMException('Aborted (native operation may already have committed)', 'AbortError')); };
-      const timer = setTimeout(() => { clean(); reject(new Error('Bridge timed out; reload before retrying a write')); }, this.timeoutMs);
+      const timer = setTimeout(() => { clean(); reject(new Error('Bridge timed out; reload before retrying a write')); }, timeoutMs);
       this.pending.set(requestId, {resolve: (x) => resolve(x as T), reject, clean});
       signal?.addEventListener('abort', abort, {once: true});
       try { this.transport.send({protocolVersion: 1, requestId, method, params}); }

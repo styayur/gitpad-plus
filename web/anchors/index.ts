@@ -14,8 +14,11 @@ export function parseLink(value: string) {
 }
 export function createAnchor(blockId: string, text: string, start: number, end: number): Anchor {
   requireId(blockId);
-  if (start < 0 || end <= start || end > text.length) throw new Error('Invalid selection');
-  return {id: v7(), blockId, exact: text.slice(start, end), prefix: text.slice(Math.max(0, start - 32), start), suffix: text.slice(end, end + 32), start, end, normalizationVersion: 1};
+  const boundary=(offset:number)=>offset===0||offset===text.length||!(text.charCodeAt(offset-1)>=0xd800&&text.charCodeAt(offset-1)<=0xdbff&&text.charCodeAt(offset)>=0xdc00&&text.charCodeAt(offset)<=0xdfff);
+  if (!Number.isInteger(start)||!Number.isInteger(end)||start < 0 || end <= start || end > text.length||!boundary(start)||!boundary(end)) throw new Error('Invalid selection');
+  let prefixStart=Math.max(0,start-32),suffixEnd=Math.min(text.length,end+32);
+  if(!boundary(prefixStart))prefixStart--;if(!boundary(suffixEnd))suffixEnd++;
+  return {id: v7(), blockId, exact: text.slice(start, end), prefix: text.slice(prefixStart, start), suffix: text.slice(end, suffixEnd), start, end, normalizationVersion: 1};
 }
 export type Resolution = {state: 'resolved'; start: number; end: number} | {state: 'ambiguous'; candidates: number[]} | {state: 'missing'};
 export function resolveAnchor(anchor: Anchor, text: string): Resolution {
@@ -57,4 +60,27 @@ export class SelectionSession {
     this.doc.transact(() => { this.text.delete(start, previous.length - start - end); this.text.insert(start, next.slice(start, next.length - end)); });
   }
   dispose() { this.doc.destroy(); }
+}
+
+/** Session positions are never persisted or reconstructed from saved offsets. */
+export class LiveAnchors {
+  private blocks = new Map<string, SelectionSession>();
+  private positions = new Map<string, {blockId:string; start:ReturnType<SelectionSession['relative']>; end:ReturnType<SelectionSession['relative']>}>();
+  update(blockId:string,text:string) {
+    const current=this.blocks.get(blockId);
+    if(current)current.update(text);
+  }
+  track(anchor:Anchor,text:string) {
+    if(!this.blocks.has(anchor.blockId))this.blocks.set(anchor.blockId,new SelectionSession(text));else this.update(anchor.blockId,text);const session=this.blocks.get(anchor.blockId)!;
+    this.positions.set(anchor.id,{blockId:anchor.blockId,start:session.relative(anchor.start),end:session.relative(anchor.end)});
+  }
+  resolve(anchor:Anchor,text:string):Resolution {
+    const live=this.positions.get(anchor.id),session=this.blocks.get(anchor.blockId);
+    if(live&&session&&live.blockId===anchor.blockId){
+      const start=session.resolve(live.start),end=session.resolve(live.end);
+      if(start!==null&&end!==null&&end>start&&text.slice(start,end)===anchor.exact)return {state:'resolved',start,end};
+    }
+    return resolveAnchor(anchor,text);
+  }
+  dispose(){for(const session of this.blocks.values())session.dispose();this.blocks.clear();this.positions.clear();}
 }

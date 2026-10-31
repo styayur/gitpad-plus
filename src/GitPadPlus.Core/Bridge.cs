@@ -14,7 +14,10 @@ public record QueryParams(string? Date = null, string? Search = null);
 public record ClearParams(string Confirmation);
 public record ImageParams(string Filename, string Base64);
 public record ImagePathParams(string Path);
+public record NativePickedFile(string Filename,byte[] Bytes);
+public record PickedMarkdown(string Filename,string Text);
 public record PluginParams(string PluginId);
+public record PluginWriteParams(string PluginId, PluginData Data);
 public record PluginInvocation(string PluginId, string Method, JsonElement Params);
 public record PluginInfo(string Id, bool Enabled, string[] Permissions);
 public record PersistAnchorParams(Guid DocumentId, SelectionAnchor Anchor, long ExpectedRevision, string ExpectedHash);
@@ -30,7 +33,10 @@ public record ResolveAnchorParams(Guid DocumentId, Guid SelectionId, string Rend
 [JsonSerializable(typeof(ClearParams))]
 [JsonSerializable(typeof(ImageParams))]
 [JsonSerializable(typeof(ImagePathParams))]
+[JsonSerializable(typeof(PickedMarkdown))]
 [JsonSerializable(typeof(PluginParams))]
+[JsonSerializable(typeof(PluginWriteParams))]
+[JsonSerializable(typeof(ReconcileRequest))]
 [JsonSerializable(typeof(PluginInvocation))]
 [JsonSerializable(typeof(PluginInfo[]))]
 [JsonSerializable(typeof(PersistAnchorParams))]
@@ -44,14 +50,17 @@ public record ResolveAnchorParams(Guid DocumentId, Guid SelectionId, string Rend
 public partial class ProtocolJson : JsonSerializerContext;
 
 /// <summary>Only the first-party WebView gets this RPC entrypoint. Plugins receive capability adapters.</summary>
-public sealed class Bridge(VaultStore store)
+public sealed class Bridge(VaultStore store,PackagedPlugin[]? packagedPlugins=null,Func<byte[]>? clipboardImage=null,Func<string,NativePickedFile?>? pickFile=null)
 {
     public const int Version = 1;
     public bool HasUnsavedChanges { get; private set; }
     public event Action<string>? StateChanged;
     private readonly HashSet<string> activePlugins = [];
     private readonly object pluginGate = new();
-    private static readonly Dictionary<string, string[]> PluginMethods = new() { ["official-toolbar"] = [], ["official-calendar-stats"] = ["calendar.query"] };
+    private readonly Dictionary<string,PackagedPlugin> pluginRegistry=(packagedPlugins??[
+        new("official-toolbar","",["commands","editor"],[]),new("official-calendar-stats","",["calendar.read","calendar.decorate","storage"],["calendar.query"])
+    ]).ToDictionary(plugin=>plugin.Id);
+    private static readonly Dictionary<string,string> PluginCapabilities=new(){["calendar.query"]="calendar.read",["documents.load"]="documents.read",["documents.save"]="documents.write"};
     private static readonly JsonSerializerOptions Options = new(JsonSerializerDefaults.Web)
     {
         UnmappedMemberHandling = JsonUnmappedMemberHandling.Disallow,
@@ -82,8 +91,17 @@ public sealed class Bridge(VaultStore store)
     }
     private JsonElement Dispatch(string method, JsonElement parameters)
     {
+        if(store.ClearPending)throw new RecoveryRequiredException("Restart to complete the confirmed clear before writing new data.");
         switch (method)
         {
+            case "media.pickImage":
+                var picked=(pickFile??throw new InvalidOperationException("Native picker unavailable."))("image");return Element(picked is null?null:store.ImportImage(picked.Filename,picked.Bytes));
+            case "files.pickMarkdown":
+                var markdown=(pickFile??throw new InvalidOperationException("Native picker unavailable."))("markdown");return Element(markdown is null?null:new PickedMarkdown(markdown.Filename,new System.Text.UTF8Encoding(false,true).GetString(markdown.Bytes)));
+            case "app.ready": StateChanged?.Invoke("Ready"); return Element(true);
+            case "app.flushed":
+                if(HasUnsavedChanges)throw new InvalidOperationException("Unsaved changes remain.");
+                StateChanged?.Invoke("Flushed");return Element(true);
             case "documents.list":
             case "calendar.query":
                 var query = Get<QueryParams>(parameters);
@@ -94,7 +112,6 @@ public sealed class Bridge(VaultStore store)
             case "documents.load": return Element(store.Load(Get<IdParams>(parameters).Id));
             case "documents.save":
                 var saved = store.Save(Get<SaveRequest>(parameters));
-                HasUnsavedChanges = false;
                 StateChanged?.Invoke("Saved");
                 return Element(saved);
             case "documents.delete":
@@ -106,14 +123,20 @@ public sealed class Bridge(VaultStore store)
                 StateChanged?.Invoke(HasUnsavedChanges ? "Unsaved" : "Saved");
                 return Element(true);
             case "settings.get": return Element(store.GetSettings());
-            case "settings.update": return Element(store.SetSettings(Get<AppSettings>(parameters)));
+            case "settings.update":
+                var settings=store.SetSettings(Get<AppSettings>(parameters));StateChanged?.Invoke("Settings");return Element(settings);
             case "workspace.get": return Element(store.GetWorkspace());
             case "workspace.save": return Element(store.SetWorkspace(Get<WorkspaceState>(parameters)));
             case "git.status": return Element(new GitStatus());
-            case "recovery.list": return Element(store.RecoveryIssues.ToArray());
+            case "recovery.list": store.RebuildIndex(); return Element(store.RecoveryIssues.ToArray());
+            case "recovery.inspect": return Element(store.InspectRecovery(Get<IdParams>(parameters).Id));
+            case "recovery.reconcile": return Element(store.Reconcile(Get<ReconcileRequest>(parameters)));
             case "media.import":
                 var image = Get<ImageParams>(parameters);
                 return Element(store.ImportImage(image.Filename, Convert.FromBase64String(image.Base64)));
+            case "media.importClipboard":
+                if(clipboardImage is null)throw new InvalidOperationException("Native clipboard unavailable.");
+                return Element(store.ImportImage("clipboard",clipboardImage()));
             case "media.read":
                 var relative = Get<ImagePathParams>(parameters).Path;
                 if (!System.Text.RegularExpressions.Regex.IsMatch(relative, @"^\.\./Assets/[a-f0-9]{64}\.(png|jpg|gif)$")) throw new UnauthorizedAccessException();
@@ -137,13 +160,27 @@ public sealed class Bridge(VaultStore store)
                 if (targetAnchor is null || !targetNote.Sidecar.Blocks.Any(b => b.Id == targetAnchor.BlockId && !b.Deleted)) return Element(new AnchorResolution("missing", null, null, []));
                 return Element(AnchorEngine.Resolve(targetAnchor, resolve.RenderedBlockText));
             case "plugins.list":
-                lock (pluginGate) return Element(PluginMethods.Select(p => new PluginInfo(p.Key, activePlugins.Contains(p.Key), p.Value)).ToArray());
+                lock (pluginGate) return Element(pluginRegistry.Values.Select(p => new PluginInfo(p.Id, activePlugins.Contains(p.Id), p.Permissions)).ToArray());
+            case "plugins.storage.read":
+                var readPlugin = Get<PluginParams>(parameters).PluginId;
+                lock (pluginGate)
+                {
+                    if (!activePlugins.Contains(readPlugin)||!pluginRegistry[readPlugin].Permissions.Contains("storage")) throw new UnauthorizedAccessException();
+                    return Element(store.ReadPluginData(readPlugin));
+                }
+            case "plugins.storage.write":
+                var writePlugin = Get<PluginWriteParams>(parameters);
+                lock (pluginGate)
+                {
+                    if (!activePlugins.Contains(writePlugin.PluginId)||!pluginRegistry[writePlugin.PluginId].Permissions.Contains("storage")) throw new UnauthorizedAccessException();
+                    return Element(store.WritePluginData(writePlugin.PluginId, writePlugin.Data));
+                }
             case "plugins.activate":
             case "plugins.deactivate":
                 var plugin = Get<PluginParams>(parameters).PluginId;
                 lock (pluginGate)
                 {
-                    if (!PluginMethods.ContainsKey(plugin)) throw new UnauthorizedAccessException("Only reviewed bundled plugins are supported.");
+                    if (!pluginRegistry.ContainsKey(plugin)) throw new UnauthorizedAccessException("Only reviewed bundled plugins are supported.");
                     if (method == "plugins.activate") activePlugins.Add(plugin); else activePlugins.Remove(plugin);
                 }
                 return Element(true);
@@ -151,7 +188,7 @@ public sealed class Bridge(VaultStore store)
                 var invocation = Get<PluginInvocation>(parameters);
                 lock (pluginGate)
                 {
-                    if (!activePlugins.Contains(invocation.PluginId) || !PluginMethods.TryGetValue(invocation.PluginId, out var allowed) || !allowed.Contains(invocation.Method)) throw new UnauthorizedAccessException("Plugin capability denied by native core.");
+                    if (!activePlugins.Contains(invocation.PluginId) || !pluginRegistry.TryGetValue(invocation.PluginId,out var bundle) || !bundle.Methods.Contains(invocation.Method)||!PluginCapabilities.TryGetValue(invocation.Method,out var permission)||!bundle.Permissions.Contains(permission)) throw new UnauthorizedAccessException("Plugin capability denied by native core.");
                     return Dispatch(invocation.Method, invocation.Params);
                 }
             default: throw new ArgumentException("Method not permitted.");

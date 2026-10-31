@@ -8,14 +8,25 @@
     <ApplicationDisplayVersion>0.1.0</ApplicationDisplayVersion><ApplicationVersion>1</ApplicationVersion>
     <ApplicationDisplayVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">0.1.0-alpha.1</ApplicationDisplayVersion>
     <WindowsPackageType>None</WindowsPackageType>
+    <SelfContained Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">true</SelfContained>
+    <WindowsAppSDKSelfContained Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">true</WindowsAppSDKSelfContained>
     <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">26.0</SupportedOSPlatformVersion>
     <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.19041.0</SupportedOSPlatformVersion>
     <TargetPlatformMinVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.19041.0</TargetPlatformMinVersion>
     <AndroidPackageFormats>apk</AndroidPackageFormats>
+    <GitPadSourceCommit Condition="'$(GitPadSourceCommit)' == ''">unverified</GitPadSourceCommit>
+    <AndroidManifestPlaceholders>gitpadSourceCommit=$(GitPadSourceCommit)</AndroidManifestPlaceholders>
+    <GitPadPackagedRegistry Condition="'$(GitPadPackagedRegistry)' == ''">../../plugins/packaged.json</GitPadPackagedRegistry>
+    <NuGetLockFilePath Condition="'$(GitPadTargetFramework)' == 'net10.0-windows10.0.19041.0'">$(MSBuildThisFileDirectory)packages.windows.lock.json</NuGetLockFilePath>
+    <NuGetLockFilePath Condition="'$(GitPadTargetFramework)' == 'net10.0-android' and '$(GitPadAndroidReleaseUniversal)' == 'true'">$(MSBuildThisFileDirectory)packages.android.lock.json</NuGetLockFilePath>
+    <NuGetLockFilePath Condition="'$(GitPadTargetFramework)' == 'net10.0-android' and '$(GitPadAndroidReleaseUniversal)' != 'true'">$(MSBuildThisFileDirectory)packages.android.probe.lock.json</NuGetLockFilePath>
+    <RuntimeIdentifiers Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android' and '$(GitPadAndroidReleaseUniversal)' == 'true'">android-arm64;android-x64</RuntimeIdentifiers>
   </PropertyGroup>
   <ItemGroup>
+    <AssemblyMetadata Include="GitPadSourceCommit" Value="$(GitPadSourceCommit)"/>
+    <EmbeddedResource Include="$(GitPadPackagedRegistry)" LogicalName="GitPadPlus.PackagedPlugins.json"/>
     <PackageReference Include="Microsoft.Maui.Controls" Version="10.0.120"/>
-    <ProjectReference Include="../../src/GitPadPlus.Core/GitPadPlus.Core.csproj"/>
+    <ProjectReference Include="../../src/GitPadPlus.Core/GitPadPlus.Core.csproj" GlobalPropertiesToRemove="RuntimeIdentifier;RuntimeIdentifiers;SelfContained"/>
     <MauiIcon Include="Resources/AppIcon/appicon.svg" Color="#306C52"/>
     <MauiSplashScreen Include="Resources/Splash/splash.svg" Color="#306C52" BaseSize="128,128"/>
     <MauiAsset Include="../../web-dist/**/*" LogicalName="wwwroot/%(RecursiveDir)%(Filename)%(Extension)"/>

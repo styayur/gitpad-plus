@@ -20,3 +20,15 @@ Milkdown/Crepe, React, ProseMirror, Yjs, uuid, unified/remark and Vite retain th
 `xunit.abstractions` 2.0.3 declares a `licenseUrl`, not an SPDX expression. Its exact source tag is `xunit/abstractions.xunit:2.0.3` (object `aafc368765b30c3c9ed2e953a61fe084c078302f`). The nuspec points to `xunit/xunit/master/license.txt`. The last revision of that license before its August 2018 package publication is `8d0cdc1cf585f5cf285d221e0c8ff793e6aeea30`, declaring Apache-2.0. That [contemporaneous license](docs/licenses/xunit-abstractions-2.0.3.txt) is retained as the specific reviewed exception to missing-expression detection. Unknown packages remain blocked.
 
 No proprietary Diarium/Typora code, third-party product screenshots, or external image/font designs were copied. The simple app icon and splash SVGs are original project artwork.
+
+## Native inventory and release review
+
+`scripts/native-license-inventory.mjs` augments the portable SPDX inventory using snapshots of the actual Windows and Android restores, plus the distributed .NET/Mono and Android runtime packs. It retains upstream NuGet license/notice files, separate Microsoft license texts and exact package versions. `scripts/bundle-notices.mjs` collects distinct retained texts into an offline `public/THIRD_PARTY_LICENSES.txt` for inclusion in the embedded app assets. Candidate packaging must also retain the notices at the ZIP root. Inventory generation alone does not pass the license gate.
+
+The WebView2 **SDK package** 1.0.4258.31 ships a BSD-3-Clause license; the separately installed Evergreen browser runtime is a Windows prerequisite. Windows App SDK self-contained components retain their Microsoft distribution terms, including the package's express provision for files binplaced into self-contained applications. Windows SDK tooling/projections retain their SDK terms. These components are not relicensed under AGPL.
+
+**Unresolved:** Microsoft.Graphics.Win2D 1.4.0 declares the legacy `eula_win2d_10012014.htm` binary-license URL, which now redirects away from its terms. An archived copy of that vendor page and its provenance are retained in `docs/licenses/win2d-legacy-eula.txt`; the current upstream source MIT license is retained separately in `docs/licenses/win2d-LICENSE.txt`. Source MIT metadata cannot establish the applicable terms for this prebuilt binary. Authoritative applicability and redistribution review remains required before the Windows binary license gate can pass. Do not substitute a permissive license label or silently waive this item.
+
+## Fonts and media
+
+Bundled KaTeX font files carry **OFL-1.1**, independently of the npm package's MIT license. Their actual font metadata notices and the OFL text are retained in `docs/licenses/katex-fonts-OFL-1.1.txt`. The generated font/media inventory records paths and SHA-256 values. Application SVG icon/splash artwork is original AGPL project source. System fonts selected by CSS are not redistributed. Acceptance images are generated disposable test fixtures, not product artwork or third-party screenshots.

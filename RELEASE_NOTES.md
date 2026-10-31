@@ -1,0 +1,15 @@
+# GitPad+ v0.1.0-alpha.1 — Early Alpha candidate
+
+This local candidate is not approved for publication. See `docs/acceptance/v0.1.0-alpha.1.md` and the candidate's `acceptance.json` for actual qualification and blocking gates.
+
+GitPad+ stores notes as Markdown with UUIDv7 sidecars and a rebuildable SQLite index. This alpha includes calendar navigation, multiple notes per date, tabs, two independently editable panes, WYSIWYG editing, source peek, callouts and nested folds, document/block/selection links, image import, native image clipboard paste, and trusted bundled plugins. External-file reconciliation archives conflicting source/metadata and the open editor buffer before an explicit choice is applied. Plugin settings and named object identities persist across restart and survive disable/removal.
+
+For Windows x64, extract the entire ZIP into a writable new directory and run `GitPadPlus.App.exe`. The ZIP contains .NET and Windows App SDK components. Windows 10 build 19041 or newer and working Evergreen WebView2 are required; actual runtime testing is on Windows 11. The executable is unsigned. Optional local `gitpadplus://` registration uses `scripts/register-windows-uri.ps1` with the exact extracted executable path; existing unrelated registrations are refused.
+
+For Android, install the signed Release APK. Minimum API is 26 and target SDK is 36; the universal candidate includes arm64-v8a and x86_64. Acceptance on Android 16/API 36 x86_64 is emulator-only. Physical-device, manufacturer battery policies and Chinese IME composition have not been verified. Clipboard-pasted Chinese/emoji input is a narrower test. The separately signed acceptance test APK is not a product asset.
+
+Choose a date and create a note. Local save state appears in the status bar. Keep a backup of the entire vault, including sidecars and attachments; do not edit live source pairs concurrently. Check recovery before choosing how to reconcile an external change. Clear Local GitPad+ Data previews the app-managed contents and requires a separate permanent-deletion confirmation. It removes notes, attachments, index, workspace, settings, plugin state and local trash; it does not delete remote repositories or external vaults. Enabled plugins subsequently initialize fresh default state.
+
+Packaged plugins are trusted code sharing the application realm, not a security sandbox. Arbitrary downloaded JavaScript plugins, remote GitHub/GitLab synchronization, Graph, Canvas, Bases and E2EE are not implemented. Long documents use full-source transport; recorded local performance observations are not universal responsiveness guarantees. Unknown HTML/body frontmatter is preserved read-only.
+
+Original application source is AGPL-3.0-only. Your diary content does not inherit the application's source license. Third-party components retain their licenses; ship the complete offline notices and SPDX SBOM. The Win2D prebuilt-binary license review remains unresolved and blocks publication. No stable-release or public-download verification is claimed.

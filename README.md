@@ -6,28 +6,26 @@ A local-first Markdown journal with calendar navigation, WYSIWYG editing and per
 
 ## Status: development toward v0.1.0-alpha.1
 
-**Unreleased. There is no verified Windows installer, Android Release APK or pre-release download.** The Linux browser integration harness is a developer test tool, not the native product. Native runtime acceptance and Android signing remain blocked. Do not use this development version as the only copy of important notes.
+**Unreleased. No public pre-release download is approved.** Actual Windows 11 and signed Android Release development probes have run locally; exact final-candidate acceptance and the native license gate remain incomplete. Android evidence is emulator-only. Do not use this development version as the only copy of important notes.
 
 Implemented and tested in the portable core/browser workflow:
 
-- Calendar, multiple notes per date, switchable/closable tabs with restart restoration, title editing and local FTS5 search.
+- Calendar, multiple notes per date, switchable/closable tabs, two distinct editable document panes with restart restoration, title editing and local FTS5 search.
 - Real Milkdown Crepe editing, GFM, formatting toolbar, directive marks, fold containers, callouts and opaque unknown-directive preservation.
 - A three-second peek into actual Markdown source slices, with a separate apply action for source edits.
 - RFC 9562 UUIDv7 identities, ProseMirror block tracking, W3C quote/context anchors, strict note/block/selection URIs, session-scoped Yjs positions and Text Fragment export.
 - Markdown + hash/revision sidecars, serialized autosave, stale-write rejection, interrupted-save recovery, recoverable deletion and rebuildable SQLite indexes.
 - Image import/deduplication, managed-vault path checks, dirty-state protection and a separate clear-data confirmation.
-- Two official SDK plugins, lifecycle disposal, host capabilities and native-core checks on the packaged plugin RPC route.
+- Two official SDK plugins, durable plugin settings/object UUIDs, persisted disable preferences, lifecycle disposal, host capabilities and native-core checks on the packaged plugin RPC route.
 
-MAUI 10/WinUI 3/Android shell source and CI builds are provided. A build is not evidence of native operation. See the [acceptance report](docs/acceptance/v0.1.0-alpha.1.md) for the current evidence and remaining v0.1 gaps. Windows/Android screenshots will be added only after real runtime acceptance.
+MAUI 10/WinUI 3/Android shell source and CI builds are provided. The local native probes cover Windows materials, native pickers/bitmap clipboard, URI routing, workspace/plugin restoration, external conflict recovery, disposable clear and large-library rendering; Android probes cover native input, intents, lifecycle and storage. See the [acceptance report](docs/acceptance/v0.1.0-alpha.1.md) for package-specific evidence, measured limits and remaining v0.1 gates. Browser tests are separate from native evidence.
 
 ## Development
 
 Pinned versions: .NET SDK 10.0.403, Node.js 24.19.0 LTS, Corepack 0.34.6, pnpm 12.16.1. Run from the existing checkout; each cloud task is already isolated and needs no additional worktree.
 
 ```bash
-# In the prepared Codex cloud image:
-source /workspace/.gitpad-env/activate.sh
-cd /workspace/gitpad-plus
+# From the repository root, with the pinned tools on PATH:
 pnpm install --frozen-lockfile
 pnpm typecheck
 pnpm lint
@@ -42,13 +40,13 @@ pnpm test:ui
 
 The browser suite starts an isolated temporary .NET host and Vite, edits real files, then stops both processes. No persistent server is needed for either native application. A constrained execution sandbox may require the platform-approved context for VSTest sockets, browser processes and network access. The cloud image does not install native platform SDKs.
 
-To try the test workflow, use `pnpm test:ui --headed` on a machine with a display. It creates disposable test notes. Native build prerequisites and candidate commands are in [BUILDING](docs/BUILDING.md); commands not executed on a native runner are explicitly labelled. There are no verified end-user installation commands yet.
+To try the test workflow, use `pnpm test:ui --headed` on a machine with a display. It creates disposable test notes. Native prerequisites and candidate commands are in [BUILDING](docs/BUILDING.md). The [candidate release notes](RELEASE_NOTES.md) describe installation, first use and limits; they do not approve a public release.
 
 ## Architecture and data
 
 `apps/GitPadPlus.App` is the native shell; `web` contains the embedded React/Milkdown UI. `src/GitPadPlus.Core` holds independently tested storage/domain/protocol code. `packages/sdk` is the public extension contract; `plugins` contains official consumers. The small `GitPadPlus.DevHost` adapts the same core to browser integration tests only.
 
-Markdown in `Vault/Journal` and JSON in `Vault/.gitpad/anchors` are authoritative. SQLite is disposable. External Markdown modifications cause a recovery-required error instead of silently overwriting content; interactive reconciliation remains unfinished. Back up the whole vault before experimenting.
+Markdown in `Vault/Journal` and JSON in `Vault/.gitpad/anchors` are authoritative. SQLite is disposable. External Markdown modifications cause a recovery-required error instead of silently overwriting content; the Recovery interface compares current/staged/previous versions, archives every input, and applies explicitly chosen Markdown with stale-preview protection. Reconciled block links require repair rather than guessed relocation. Back up the whole vault before experimenting.
 
 Plugins are reviewed/bundled code in this alpha. The permission adapter is not a sandbox for arbitrary JavaScript; no remote plugin execution or marketplace exists. See [PLUGIN-SDK](docs/PLUGIN-SDK.md) and [SECURITY](docs/SECURITY.md).
 
