@@ -6,7 +6,7 @@ import type { Anchor } from '../bridge/types';
 export function requireId(id: string): string { if (!validate(id) || version(id) !== 7) throw new Error('UUIDv7 required'); return id.toLowerCase(); }
 export function parseLink(value: string) {
   const uri = new URL(value);
-  if (uri.protocol !== 'gitpadplus:' || uri.hostname !== 'note' || uri.username || uri.password || uri.port || uri.hash || uri.pathname.split('/').length !== 2) throw new Error('Invalid note URI');
+  if (uri.protocol !== 'gitpadplus:' || uri.hostname !== 'note' || uri.username || uri.password || uri.port || value.includes('#') || uri.pathname.split('/').length !== 2) throw new Error('Invalid note URI');
   const id = requireId(uri.pathname.slice(1));
   const entries = [...uri.searchParams];
   if (entries.length > 1 || entries.some(([key]) => key !== 'block' && key !== 'selection')) throw new Error('Invalid link target');
@@ -24,6 +24,9 @@ export function resolveAnchor(anchor: Anchor, text: string): Resolution {
   let offset = text.indexOf(anchor.exact);
   while (offset >= 0) { matches.push(offset); offset = text.indexOf(anchor.exact, offset + 1); }
   const contextual = matches.filter(start => text.slice(Math.max(0, start - anchor.prefix.length), start) === anchor.prefix && text.slice(start + anchor.exact.length, start + anchor.exact.length + anchor.suffix.length) === anchor.suffix);
+  // A lone quote in a different context may be a surviving duplicate after the
+  // original selection was deleted. Uniqueness alone must not silently retarget it.
+  if (!contextual.length && matches.length && (anchor.prefix || anchor.suffix)) return {state:'ambiguous',candidates:matches};
   const candidates = contextual.length ? contextual : matches;
   // Stored positions are hints, never sufficient to choose among duplicate quotations.
   if (candidates.length === 1) return {state: 'resolved', start: candidates[0], end: candidates[0] + anchor.exact.length};

@@ -45,6 +45,7 @@ describe('Persistent anchors and session positions',()=>{
     const text='one same two';const anchor=createAnchor(v7(),text,4,8);expect(resolveAnchor(anchor,'same '+text).state).toBe('resolved');
   });
   it('reports deletion and normalization mismatch',()=>{const anchor=createAnchor(v7(),'hello',0,5);expect(resolveAnchor(anchor,'gone').state).toBe('missing');});
+  it('requires repair if only a quote in different context survives',()=>{const text='left same right',anchor=createAnchor(v7(),text,5,9);expect(resolveAnchor(anchor,'unrelated same elsewhere').state).toBe('ambiguous');});
   it('relative positions survive an insertion only inside their original Y.Doc',()=>{
     const session=new SelectionSession('hello'),position=session.relative(3);session.text.insert(0,'prefix ');expect(session.resolve(position)).toBe(10);
     const reopened=new SelectionSession(session.text.toString());expect(reopened.resolve(position)).toBeNull();session.dispose();reopened.dispose();

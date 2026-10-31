@@ -6,6 +6,7 @@
     <OutputType>Exe</OutputType><RootNamespace>GitPadPlus.App</RootNamespace><UseMaui>true</UseMaui><SingleProject>true</SingleProject>
     <ApplicationTitle>GitPad+</ApplicationTitle><ApplicationId>io.github.styayur.gitpadplus</ApplicationId>
     <ApplicationDisplayVersion>0.1.0</ApplicationDisplayVersion><ApplicationVersion>1</ApplicationVersion>
+    <ApplicationDisplayVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">0.1.0-alpha.1</ApplicationDisplayVersion>
     <WindowsPackageType>None</WindowsPackageType>
     <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">26.0</SupportedOSPlatformVersion>
     <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.19041.0</SupportedOSPlatformVersion>

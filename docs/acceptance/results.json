@@ -10,7 +10,7 @@
       "skipped": 0
     },
     "vitest": {
-      "passed": 37,
+      "passed": 38,
       "failed": 0,
       "skipped": 0
     },
@@ -36,7 +36,8 @@
   "notes": [
     "Browser integration is not native acceptance.",
     "No release tag or assets published.",
-    "Repository metadata edit was denied HTTP 403 by connected integration; push/read CI succeeded."
+    "Repository metadata edit was denied HTTP 403 by connected integration; push/read CI succeeded.",
+    "Final resolver safety regression rejects a unique quote if its stored context no longer matches; valid selection reload was retested in the browser."
   ],
   "standalonePluginHost": "passed: built plugin registered, executed and unloaded through actual PluginHost without Core edits",
   "ciRuns": [

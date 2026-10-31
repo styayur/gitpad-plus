@@ -34,13 +34,16 @@ public static class Identity
     {
         var uri = new Uri(value, UriKind.Absolute);
         if (uri.Scheme != "gitpadplus" || uri.Host != "note" || uri.Port != -1 || uri.UserInfo != "" || uri.Fragment != "") throw new ArgumentException("Invalid note URI.");
-        var id = Require(Guid.Parse(uri.AbsolutePath.Trim('/')));
+        var segments = uri.AbsolutePath.Split('/');
+        if (segments.Length != 2 || !Guid.TryParseExact(segments[1], "D", out var documentId)) throw new ArgumentException("Invalid note path.");
+        var id = Require(documentId);
         Guid? block = null, selection = null;
         foreach (var pair in uri.Query.TrimStart('?').Split('&', StringSplitOptions.RemoveEmptyEntries))
         {
             var bits = pair.Split('=');
             if (bits.Length != 2) throw new ArgumentException("Invalid link query.");
-            var target = Require(Guid.Parse(Uri.UnescapeDataString(bits[1])));
+            if (!Guid.TryParseExact(Uri.UnescapeDataString(bits[1]), "D", out var parsedTarget)) throw new ArgumentException("Invalid target UUID.");
+            var target = Require(parsedTarget);
             if (bits[0] == "block" && block is null) block = target;
             else if (bits[0] == "selection" && selection is null) selection = target;
             else throw new ArgumentException("Unknown or repeated link target.");

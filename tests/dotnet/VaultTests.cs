@@ -182,6 +182,8 @@ public sealed class VaultTests : IDisposable
         Assert.Equal(block, Identity.ParseLink($"gitpadplus://note/{doc}?block={block}").BlockId);
         Assert.Throws<ArgumentException>(() => Identity.ParseLink($"gitpadplus://note/{doc}?block={block}&selection={Guid.CreateVersion7()}"));
         Assert.Throws<ArgumentException>(() => Identity.ParseLink($"gitpadplus://note/{Guid.NewGuid()}"));
+        Assert.Throws<ArgumentException>(() => Identity.ParseLink($"gitpadplus://note/{doc}/"));
+        Assert.Throws<ArgumentException>(() => Identity.ParseLink($"gitpadplus://note/{doc:N}"));
     }
     [Fact] public void NativeCoreEnforcesPackagedPluginCapabilities()
     {
@@ -212,6 +214,7 @@ public sealed class VaultTests : IDisposable
         Assert.Equal("missing", AnchorEngine.Resolve(anchor, "gone").State);
         var contextual = anchor with { Prefix = "left ", Suffix = " right" };
         Assert.Equal(10, AnchorEngine.Resolve(contextual, "same left same right").Start);
+        Assert.Equal("ambiguous", AnchorEngine.Resolve(contextual, "unrelated same elsewhere").State);
     }
     [Fact] public void InvalidNoteDoesNotPreventReadingOtherNotes()
     {

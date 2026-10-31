@@ -12,6 +12,7 @@ public static class AnchorEngine
         var contextual = candidates.Where(start =>
             renderedBlockText[Math.Max(0, start - anchor.Prefix.Length)..start] == anchor.Prefix &&
             renderedBlockText[(start + anchor.Exact.Length)..Math.Min(renderedBlockText.Length, start + anchor.Exact.Length + anchor.Suffix.Length)] == anchor.Suffix).ToArray();
+        if (contextual.Length == 0 && candidates.Count > 0 && (anchor.Prefix.Length > 0 || anchor.Suffix.Length > 0)) return new("ambiguous", null, null, candidates.ToArray());
         var matches = contextual.Length > 0 ? contextual : candidates.ToArray();
         return matches.Length switch { 0 => new("missing", null, null, []), 1 => new("resolved", matches[0], matches[0] + anchor.Exact.Length, matches), _ => new("ambiguous", null, null, matches) };
     }

@@ -1,79 +1,81 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<testsuites name="vitest tests" tests="37" failures="0" errors="0" time="0.06671327">
-    <testsuite name="tests/web/core.test.ts" timestamp="2026-10-31T04:00:23.609Z" hostname="fb10a0c6d554" tests="37" failures="0" errors="0" skipped="0" time="0.06671327">
-        <testcase classname="tests/web/core.test.ts" name="Markdown source fidelity &gt; preserves exact bytes: callout.md" time="0.012616604">
+<testsuites name="vitest tests" tests="38" failures="0" errors="0" time="0.078044115">
+    <testsuite name="tests/web/core.test.ts" timestamp="2026-10-31T04:05:15.217Z" hostname="fb10a0c6d554" tests="38" failures="0" errors="0" skipped="0" time="0.078044115">
+        <testcase classname="tests/web/core.test.ts" name="Markdown source fidelity &gt; preserves exact bytes: callout.md" time="0.014994284">
         </testcase>
-        <testcase classname="tests/web/core.test.ts" name="Markdown source fidelity &gt; preserves exact bytes: code.md" time="0.002444843">
+        <testcase classname="tests/web/core.test.ts" name="Markdown source fidelity &gt; preserves exact bytes: code.md" time="0.002908692">
         </testcase>
-        <testcase classname="tests/web/core.test.ts" name="Markdown source fidelity &gt; preserves exact bytes: crlf.md" time="0.004657876">
+        <testcase classname="tests/web/core.test.ts" name="Markdown source fidelity &gt; preserves exact bytes: crlf.md" time="0.005898805">
         </testcase>
-        <testcase classname="tests/web/core.test.ts" name="Markdown source fidelity &gt; preserves exact bytes: directives.md" time="0.00588863">
+        <testcase classname="tests/web/core.test.ts" name="Markdown source fidelity &gt; preserves exact bytes: directives.md" time="0.007751516">
         </testcase>
-        <testcase classname="tests/web/core.test.ts" name="Markdown source fidelity &gt; preserves exact bytes: frontmatter.md" time="0.001789565">
+        <testcase classname="tests/web/core.test.ts" name="Markdown source fidelity &gt; preserves exact bytes: frontmatter.md" time="0.002074204">
         </testcase>
-        <testcase classname="tests/web/core.test.ts" name="Markdown source fidelity &gt; preserves exact bytes: html.md" time="0.001257415">
+        <testcase classname="tests/web/core.test.ts" name="Markdown source fidelity &gt; preserves exact bytes: html.md" time="0.001338817">
         </testcase>
-        <testcase classname="tests/web/core.test.ts" name="Markdown source fidelity &gt; preserves exact bytes: lists.md" time="0.003826103">
+        <testcase classname="tests/web/core.test.ts" name="Markdown source fidelity &gt; preserves exact bytes: lists.md" time="0.004595913">
         </testcase>
-        <testcase classname="tests/web/core.test.ts" name="Markdown source fidelity &gt; preserves exact bytes: math.md" time="0.001921184">
+        <testcase classname="tests/web/core.test.ts" name="Markdown source fidelity &gt; preserves exact bytes: math.md" time="0.002247775">
         </testcase>
-        <testcase classname="tests/web/core.test.ts" name="Markdown source fidelity &gt; preserves exact bytes: table.md" time="0.002762121">
+        <testcase classname="tests/web/core.test.ts" name="Markdown source fidelity &gt; preserves exact bytes: table.md" time="0.003296976">
         </testcase>
-        <testcase classname="tests/web/core.test.ts" name="Markdown source fidelity &gt; preserves exact bytes: unicode.md" time="0.001490315">
+        <testcase classname="tests/web/core.test.ts" name="Markdown source fidelity &gt; preserves exact bytes: unicode.md" time="0.001869256">
         </testcase>
-        <testcase classname="tests/web/core.test.ts" name="Markdown source fidelity &gt; preserves exact bytes: unknown.md" time="0.002134225">
+        <testcase classname="tests/web/core.test.ts" name="Markdown source fidelity &gt; preserves exact bytes: unknown.md" time="0.00307388">
         </testcase>
-        <testcase classname="tests/web/core.test.ts" name="Markdown source fidelity &gt; preserves exact bytes: whitespace.md" time="0.001010753">
+        <testcase classname="tests/web/core.test.ts" name="Markdown source fidelity &gt; preserves exact bytes: whitespace.md" time="0.001120177">
         </testcase>
-        <testcase classname="tests/web/core.test.ts" name="Markdown source fidelity &gt; retains untouched raw marker styles while editing another block" time="0.001024203">
+        <testcase classname="tests/web/core.test.ts" name="Markdown source fidelity &gt; retains untouched raw marker styles while editing another block" time="0.00112865">
         </testcase>
-        <testcase classname="tests/web/core.test.ts" name="Markdown source fidelity &gt; source replacement does not normalize surrounding CRLF or whitespace" time="0.000892384">
+        <testcase classname="tests/web/core.test.ts" name="Markdown source fidelity &gt; source replacement does not normalize surrounding CRLF or whitespace" time="0.001094679">
         </testcase>
-        <testcase classname="tests/web/core.test.ts" name="Persistent anchors and session positions &gt; relocates after insertion without confusing UTF-16 emoji offsets" time="0.001279798">
+        <testcase classname="tests/web/core.test.ts" name="Persistent anchors and session positions &gt; relocates after insertion without confusing UTF-16 emoji offsets" time="0.001224505">
         </testcase>
-        <testcase classname="tests/web/core.test.ts" name="Persistent anchors and session positions &gt; does not silently choose duplicate quotations even if old offsets still match" time="0.000158108">
+        <testcase classname="tests/web/core.test.ts" name="Persistent anchors and session positions &gt; does not silently choose duplicate quotations even if old offsets still match" time="0.00015926">
         </testcase>
-        <testcase classname="tests/web/core.test.ts" name="Persistent anchors and session positions &gt; uses context to disambiguate repeated strings" time="0.000174082">
+        <testcase classname="tests/web/core.test.ts" name="Persistent anchors and session positions &gt; uses context to disambiguate repeated strings" time="0.000130838">
         </testcase>
-        <testcase classname="tests/web/core.test.ts" name="Persistent anchors and session positions &gt; reports deletion and normalization mismatch" time="0.000120472">
+        <testcase classname="tests/web/core.test.ts" name="Persistent anchors and session positions &gt; reports deletion and normalization mismatch" time="0.000160291">
         </testcase>
-        <testcase classname="tests/web/core.test.ts" name="Persistent anchors and session positions &gt; relative positions survive an insertion only inside their original Y.Doc" time="0.003210335">
+        <testcase classname="tests/web/core.test.ts" name="Persistent anchors and session positions &gt; requires repair if only a quote in different context survives" time="0.000258078">
         </testcase>
-        <testcase classname="tests/web/core.test.ts" name="Persistent anchors and session positions &gt; minimal replacement retains position identity outside the edit" time="0.000640495">
+        <testcase classname="tests/web/core.test.ts" name="Persistent anchors and session positions &gt; relative positions survive an insertion only inside their original Y.Doc" time="0.003097646">
         </testcase>
-        <testcase classname="tests/web/core.test.ts" name="Persistent anchors and session positions &gt; strictly parses each link level and encodes fragment separators" time="0.00148061">
+        <testcase classname="tests/web/core.test.ts" name="Persistent anchors and session positions &gt; minimal replacement retains position identity outside the edit" time="0.000726995">
         </testcase>
-        <testcase classname="tests/web/core.test.ts" name="ProseMirror block identities &gt; ordinary text edits preserve IDs" time="0.002317952">
+        <testcase classname="tests/web/core.test.ts" name="Persistent anchors and session positions &gt; strictly parses each link level and encodes fragment separators" time="0.001618898">
         </testcase>
-        <testcase classname="tests/web/core.test.ts" name="ProseMirror block identities &gt; split retains first ID and allocates a new second ID" time="0.000736829">
+        <testcase classname="tests/web/core.test.ts" name="ProseMirror block identities &gt; ordinary text edits preserve IDs" time="0.002481698">
         </testcase>
-        <testcase classname="tests/web/core.test.ts" name="ProseMirror block identities &gt; copy gets a new ID and preserves original" time="0.000450899">
+        <testcase classname="tests/web/core.test.ts" name="ProseMirror block identities &gt; split retains first ID and allocates a new second ID" time="0.000800656">
         </testcase>
-        <testcase classname="tests/web/core.test.ts" name="ProseMirror block identities &gt; move keeps identity; merge tombstones the secondary ID" time="0.001169902">
+        <testcase classname="tests/web/core.test.ts" name="ProseMirror block identities &gt; copy gets a new ID and preserves original" time="0.000486323">
         </testcase>
-        <testcase classname="tests/web/core.test.ts" name="ProseMirror block identities &gt; reload uses persisted identities and never resurrects tombstones" time="0.000285299">
+        <testcase classname="tests/web/core.test.ts" name="ProseMirror block identities &gt; move keeps identity; merge tombstones the secondary ID" time="0.001358216">
         </testcase>
-        <testcase classname="tests/web/core.test.ts" name="Markdown Peek state machine &gt; shows actual source for 3000ms and cancels timeout on editing" time="0.002103929">
+        <testcase classname="tests/web/core.test.ts" name="ProseMirror block identities &gt; reload uses persisted identities and never resurrects tombstones" time="0.000348865">
         </testcase>
-        <testcase classname="tests/web/core.test.ts" name="Plugin SDK &gt; loads official plugins through SDK and disposes all registrations" time="0.001018755">
+        <testcase classname="tests/web/core.test.ts" name="Markdown Peek state machine &gt; shows actual source for 3000ms and cancels timeout on editing" time="0.002204471">
         </testcase>
-        <testcase classname="tests/web/core.test.ts" name="Plugin SDK &gt; denies ungranted permissions and incompatible API versions" time="0.000813666">
+        <testcase classname="tests/web/core.test.ts" name="Plugin SDK &gt; loads official plugins through SDK and disposes all registrations" time="0.001083933">
         </testcase>
-        <testcase classname="tests/web/core.test.ts" name="Plugin SDK &gt; enforces capabilities at use and invalidates retained contexts on unload" time="0.000293623">
+        <testcase classname="tests/web/core.test.ts" name="Plugin SDK &gt; denies ungranted permissions and incompatible API versions" time="0.000864052">
         </testcase>
-        <testcase classname="tests/web/core.test.ts" name="Plugin SDK &gt; isolates a failing command and failing deactivate while releasing resources" time="0.00057073">
+        <testcase classname="tests/web/core.test.ts" name="Plugin SDK &gt; enforces capabilities at use and invalidates retained contexts on unload" time="0.000343447">
         </testcase>
-        <testcase classname="tests/web/core.test.ts" name="Plugin SDK &gt; does not register late calendar results after unloading" time="0.000234173">
+        <testcase classname="tests/web/core.test.ts" name="Plugin SDK &gt; isolates a failing command and failing deactivate while releasing resources" time="0.000527625">
         </testcase>
-        <testcase classname="tests/web/core.test.ts" name="Bridge client &gt; matches concurrent out-of-order responses by request ID" time="0.000472011">
+        <testcase classname="tests/web/core.test.ts" name="Plugin SDK &gt; does not register late calendar results after unloading" time="0.000267453">
         </testcase>
-        <testcase classname="tests/web/core.test.ts" name="Bridge client &gt; cancels pending requests and ignores late responses" time="0.000508797">
+        <testcase classname="tests/web/core.test.ts" name="Bridge client &gt; matches concurrent out-of-order responses by request ID" time="0.00044541">
         </testcase>
-        <testcase classname="tests/web/core.test.ts" name="Bridge client &gt; rejects protocol mismatches and disconnects" time="0.000422987">
+        <testcase classname="tests/web/core.test.ts" name="Bridge client &gt; cancels pending requests and ignores late responses" time="0.000540054">
         </testcase>
-        <testcase classname="tests/web/core.test.ts" name="Serialized autosave &gt; never lets an older response replace a newer buffer; follows with latest revision" time="0.000517119">
+        <testcase classname="tests/web/core.test.ts" name="Bridge client &gt; rejects protocol mismatches and disconnects" time="0.000420353">
         </testcase>
-        <testcase classname="tests/web/core.test.ts" name="Serialized autosave &gt; retains unsaved content after storage failure" time="0.000298109">
+        <testcase classname="tests/web/core.test.ts" name="Serialized autosave &gt; never lets an older response replace a newer buffer; follows with latest revision" time="0.000447083">
+        </testcase>
+        <testcase classname="tests/web/core.test.ts" name="Serialized autosave &gt; retains unsaved content after storage failure" time="0.002541418">
         </testcase>
     </testsuite>
 </testsuites>
