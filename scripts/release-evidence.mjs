@@ -33,6 +33,12 @@ export function readZip(bytes) {
   return entries;
 }
 
+export function verifyAndroidBadging(badging) {
+  if(!badging.includes("name='io.github.styayur.gitpadplus'")||!badging.includes("versionName='0.1.0-alpha.1'")||!badging.includes("versionCode='1'")||badging.includes('application-debuggable'))fail('Wrong package/version or Debug APK');
+  const abis=/^native-code:\s*(.+)\r?$/m.exec(badging)?.[1]??'';
+  if(!/^(?:minSdkVersion|sdkVersion):'26'\r?$/m.test(badging)||!/^targetSdkVersion:'36'\r?$/m.test(badging)||!abis.includes("'arm64-v8a'")||!abis.includes("'x86_64'"))fail('Wrong minimum/target SDK or missing distributed Android ABI');
+}
+
 export function inspectAndroid(apk, evidence) {
   const sdk=process.env.ANDROID_SDK_ROOT??process.env.ANDROID_HOME;
   if(!sdk)fail('ANDROID_SDK_ROOT is required for actual APK verification');
@@ -41,8 +47,7 @@ export function inspectAndroid(apk, evidence) {
   const badging=execFileSync(resolve(tools,'aapt2'+suffix),['dump','badging',apk],{encoding:'utf8'});
   const certificate=execFileSync('java',['-jar',resolve(tools,'lib','apksigner.jar'),'verify','--verbose','--print-certs',apk],{encoding:'utf8'});
   const manifest=execFileSync(resolve(tools,'aapt2'+suffix),['dump','xmltree',apk,'--file','AndroidManifest.xml'],{encoding:'utf8'});
-  if(!badging.includes("name='io.github.styayur.gitpadplus'")||!badging.includes("versionName='0.1.0-alpha.1'")||!badging.includes("versionCode='1'")||badging.includes('application-debuggable'))fail('Wrong package/version or Debug APK');
-  if(!badging.includes("sdkVersion:'26'")||!badging.includes("targetSdkVersion:'36'")||!badging.includes("'arm64-v8a'")||!badging.includes("'x86_64'"))fail('Wrong minimum/target SDK or missing distributed Android ABI');
+  verifyAndroidBadging(badging);
   if(/CN=Android Debug/i.test(certificate))fail('Debug signing identity');
   if(!new RegExp('gitpadplus\\.sourceCommit[\\s\\S]{0,600}'+evidence.sourceCommit).test(manifest))fail('APK source commit stamp mismatch');
   const fingerprint=/certificate SHA-256 digest:\s*([a-f0-9]{64})/i.exec(certificate)?.[1]?.toLowerCase();
@@ -80,13 +85,14 @@ export function verifyEvidence(directory, sourceCommit, inspectApk=inspectAndroi
   if(sbom.spdxVersion!=='SPDX-2.3'||!sbom.packages?.length||evidence.licenses?.scope!=='native-and-web')fail('Missing native/web SPDX inventory');
   if(!Array.isArray(evidence.licenses.unresolved)||evidence.licenses.unresolved.length)fail('Unresolved native redistribution review');
   const windows=readZip(files.get('GitPadPlus-Windows-x64.zip').bytes),exe=windows.get('GitPadPlus.App.exe');
+  if(new Set([...windows.keys()].map(name=>name.toLowerCase())).size!==windows.size)fail('Windows ZIP contains case-colliding paths');
   if([...windows.keys()].some(name=>/\.exe\.WebView2\/|(^|\/)EBWebView\/|(^|\/)Vault\/|\.keystore$|\.password\.dpapi$/i.test(name)))fail('Windows ZIP contains runtime profile, user data or signing material');
   if(!exe||exe.toString('ascii',0,2)!=='MZ')fail('Missing Windows executable at ZIP root');
   const pe=exe.readUInt32LE(0x3c);
   if(exe.readUInt32LE(pe)!==0x4550||exe.readUInt16LE(pe+4)!==0x8664)fail('Windows executable is not x64 PE');
   const runtime=JSON.parse(windows.get('GitPadPlus.App.runtimeconfig.json')??'{}');
   if(!windows.get('GitPadPlus.App.dll')?.includes(Buffer.from(sourceCommit)))fail('Windows binary source commit stamp mismatch');
-  if(runtime.runtimeOptions?.framework||runtime.runtimeOptions?.frameworks||!runtime.runtimeOptions?.includedFrameworks?.length||!windows.has('Microsoft.UI.Xaml.dll'))fail('Windows ZIP is not .NET/Windows App SDK self-contained');
+  if(runtime.runtimeOptions?.framework||runtime.runtimeOptions?.frameworks||!runtime.runtimeOptions?.includedFrameworks?.length||![...windows.keys()].some(name=>name.toLowerCase()==='microsoft.ui.xaml.dll'))fail('Windows ZIP is not .NET/Windows App SDK self-contained');
   if(!windows.get('THIRD_PARTY_LICENSES.txt')?.length||!windows.get('THIRD_PARTY_NOTICES.md')?.equals(files.get('THIRD_PARTY_NOTICES.md').bytes))fail('Windows ZIP lacks bundled third-party texts/notices');
   if(evidence.windows?.packagedExecutableSha256!==hash(exe)||evidence.windows?.cleanExtractionTested!==true||!['unsigned','trusted-authenticode'].includes(evidence.windows?.signature))fail('Windows packaged executable has not been qualified');
   const apk=files.get('GitPadPlus-Android-Release.apk'),apkEntries=readZip(apk.bytes);

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Executes in the real Release WebView through separately signed instrumentation.
 void(async()=>{
-  const checks=[],started=new Date().toISOString();
+  const checks=[],saves=[],saveRequests=new Map(),started=new Date().toISOString();
   const wait=ms=>new Promise(resolve=>setTimeout(resolve,ms));
   const until=async(predicate,label,attempts=180)=>{for(let i=0;i<attempts;i++){const value=await predicate();if(value)return value;await wait(250);}throw Error('Timeout: '+label);};
   const check=(name,value)=>{if(!value)throw Error(name);checks.push({name,passed:true});};
@@ -19,6 +19,14 @@ void(async()=>{
     await until(()=>window.HybridWebView&&button('Settings'),'real app startup');
     await until(()=>document.documentElement.dataset.workspaceReady==='true','workspace restoration completed');
     check('Actual Android Release HybridWebView loaded',!!window.HybridWebView);
+    const originalSend=window.HybridWebView.SendRawMessage.bind(window.HybridWebView);
+    window.HybridWebView.SendRawMessage=message=>{
+      try{const request=JSON.parse(message);if(request.method==='documents.save'){
+        const params=request.params,record={requestId:request.requestId,bodyLength:params.body.length,blocks:params.blocks.length,payloadLength:message.length,invalidRanges:params.blocks.filter(block=>block.start<0||block.end<block.start||block.end>params.body.length).length,duplicateIds:params.blocks.length-new Set(params.blocks.map(block=>block.id)).size,started:performance.now()};saves.push(record);saveRequests.set(request.requestId,record);
+      }}catch{/* Diagnostics cannot replace the actual transport result. */}
+      originalSend(message);
+    };
+    window.addEventListener('HybridWebViewMessageReceived',event=>{try{const response=JSON.parse(event.detail.message),record=saveRequests.get(response.requestId);if(record){record.elapsedMs=performance.now()-record.started;record.error=response.error;record.revision=response.result?.sidecar?.revision;}}catch{/* Ignore unrelated native notifications. */}});
     checks.push({name:'Loaded embedded module',scripts:[...document.querySelectorAll('script[src]')].map(node=>node.getAttribute('src'))});
     const phase=window.__acceptancePhase;await wait(1500);
     if(phase==='smoke'){
@@ -78,7 +86,9 @@ void(async()=>{
       persisted.values.nativeAcceptance=state;
       await rpc('plugins.storage.write',{pluginId:'native-qualification-example',data:persisted});
     }else if(phase==='inspect'){
-      checks.push({name:'Native inspection',title:document.querySelector('input[aria-label="Note title"]')?.value,selection:getSelection()?.toString(),editorState:document.querySelector('.ProseMirror')?.pmViewDesc?.view?.state.selection.toJSON(),generatedPluginStorageSha256:NativeAcceptance.pluginStorageDigest()});
+      const id=document.querySelector('[role=tab][aria-selected=true]')?.title;
+      const loaded=id?await rpc('documents.load',{id}):null;await wait(3000);
+      checks.push({name:'Native inspection',title:document.querySelector('input[aria-label="Note title"]')?.value,selection:getSelection()?.toString(),editorState:document.querySelector('.ProseMirror')?.pmViewDesc?.view?.state.selection.toJSON(),generatedPluginStorageSha256:NativeAcceptance.pluginStorageDigest(),footer:document.querySelector('footer')?.textContent,message:document.querySelector('[role=alert]')?.textContent,note:loaded?{id,bodyLength:loaded.body.length,revision:loaded.sidecar.revision,blocks:loaded.sidecar.blocks.length}:null});
     }else if(phase==='uninstall'){
       check('Removed generated plugin has no command in the default bundle',![...document.querySelectorAll('.format-toolbar button')].some(node=>node.textContent.startsWith('SDK ')));
       check('Removed generated plugin storage remains on disk',/^[a-f0-9]{64}$/.test(NativeAcceptance.pluginStorageDigest()));
@@ -171,6 +181,6 @@ void(async()=>{
       check('Generated plugin activation count persisted',Number(current[1])>Number(previous[1]));
       await NativeAcceptance.screenshot('process-restart-restored');
     }else throw Error('Unsupported phase '+phase);
-    window.__nativeAcceptanceReport={passed:true,phase,started,finished:new Date().toISOString(),userAgent:navigator.userAgent,checks,scope:'Actual signed Release APK; emulator only; clipboard Unicode input does not establish Chinese IME composition'};
-  }catch(error){try{NativeAcceptance.screenshot('scenario-failure');}catch{/* Preserve original error. */}window.__nativeAcceptanceReport={passed:false,phase:window.__acceptancePhase,started,checks,error:String(error),stack:error.stack};}
+    window.__nativeAcceptanceReport={passed:true,phase,started,finished:new Date().toISOString(),userAgent:navigator.userAgent,checks,saves,scope:'Actual signed Release APK; emulator only; clipboard Unicode input does not establish Chinese IME composition'};
+  }catch(error){try{NativeAcceptance.screenshot('scenario-failure');}catch{/* Preserve original error. */}window.__nativeAcceptanceReport={passed:false,phase:window.__acceptancePhase,started,checks,saves,error:String(error),stack:error.stack,footer:document.querySelector('footer')?.textContent,message:document.querySelector('[role=alert]')?.textContent};}
 })();

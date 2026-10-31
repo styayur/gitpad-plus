@@ -7,7 +7,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createHash } from 'node:crypto';
 import { crc32 } from 'node:zlib';
-import { requiredGates, verifyEvidence } from '../scripts/release-evidence.mjs';
+import { requiredGates, verifyEvidence, readZip, verifyAndroidBadging } from '../scripts/release-evidence.mjs';
 const digest=b=>createHash('sha256').update(b).digest('hex');
 function zip(entries){
   const bodies=[],central=[];let offset=0;
@@ -22,7 +22,7 @@ function zip(entries){
 function fixture(){
   const directory=mkdtempSync(join(tmpdir(),'gitpad-gate-unit-')),sha='a'.repeat(40),exe=Buffer.alloc(256);exe.write('MZ');exe.writeUInt32LE(128,0x3c);exe.writeUInt32LE(0x4550,128);exe.writeUInt16LE(0x8664,132);
   const assets={
-    'GitPadPlus-Windows-x64.zip':{role:'windows-zip',data:zip({'GitPadPlus.App.exe':exe,'GitPadPlus.App.dll':sha,'GitPadPlus.App.runtimeconfig.json':JSON.stringify({runtimeOptions:{includedFrameworks:[{name:'synthetic'}]}}),'Microsoft.UI.Xaml.dll':'unit fixture','THIRD_PARTY_LICENSES.txt':'Synthetic license text','THIRD_PARTY_NOTICES.md':'Synthetic unit fixture'})},
+    'GitPadPlus-Windows-x64.zip':{role:'windows-zip',data:zip({'GitPadPlus.App.exe':exe,'GitPadPlus.App.dll':sha,'GitPadPlus.App.runtimeconfig.json':JSON.stringify({runtimeOptions:{includedFrameworks:[{name:'synthetic'}]}}),'Microsoft.ui.xaml.dll':'unit fixture','THIRD_PARTY_LICENSES.txt':'Synthetic license text','THIRD_PARTY_NOTICES.md':'Synthetic unit fixture'})},
     'GitPadPlus-Android-Release.apk':{role:'android-release-apk',data:zip({'AndroidManifest.xml':'unit fixture','classes.dex':'unit fixture','assets/wwwroot/THIRD_PARTY_LICENSES.txt':'Synthetic license text'})},
     'SBOM.spdx.json':{role:'sbom',data:JSON.stringify({spdxVersion:'SPDX-2.3',packages:[{name:'synthetic fixture'}]})},
     'THIRD_PARTY_NOTICES.md':{role:'notices',data:'Synthetic unit fixture'},'RELEASE_NOTES.md':{role:'release-notes',data:'Synthetic unit fixture'},'test.log':{role:'evidence',data:'Synthetic unit fixture; no native acceptance performed'},
@@ -37,6 +37,10 @@ function fixture(){
   save();return {directory,sha,evidence,assets,save,cleanup:()=>rmSync(directory,{recursive:true,force:true})};
 }
 test('valid structural unit fixture reaches the independently injected APK inspector',()=>{const f=fixture();try{let called=false;verifyEvidence(f.directory,f.sha,()=>{called=true;});assert.equal(called,true);}finally{f.cleanup();}});
+const androidBadging="package: name='io.github.styayur.gitpadplus' versionCode='1' versionName='0.1.0-alpha.1'\nminSdkVersion:'26'\ntargetSdkVersion:'36'\nnative-code: 'arm64-v8a' 'x86_64'\n";
+test('accepts actual aapt2 minimum-SDK field names with LF or CRLF',()=>{for(const badging of [androidBadging,androidBadging.replace('minSdkVersion','sdkVersion').replaceAll('\n','\r\n')])assert.doesNotThrow(()=>verifyAndroidBadging(badging));});
+test('rejects wrong Android SDK/ABI fields and Debug badging',()=>{for(const badging of [androidBadging.replace("minSdkVersion:'26'","minSdkVersion:'25'"),androidBadging.replace("targetSdkVersion:'36'","targetSdkVersion:'35'"),androidBadging.replace(" 'x86_64'",''),androidBadging+'application-debuggable\n'])assert.throws(()=>verifyAndroidBadging(badging),/SDK|Debug/);});
+test('rejects Windows ZIP entries that collide on a case-insensitive filesystem',()=>{const f=fixture();try{const entries=Object.fromEntries(readZip(f.assets['GitPadPlus-Windows-x64.zip'].data));entries['Microsoft.UI.Xaml.dll']='collision';f.assets['GitPadPlus-Windows-x64.zip'].data=zip(entries);f.save();assert.throws(()=>verifyEvidence(f.directory,f.sha,()=>{}),/case-colliding/);}finally{f.cleanup();}});
 for(const [name,change,pattern] of [
   ['wrong commit',f=>{f.evidence.sourceCommit='c'.repeat(40);},/Commit/],
   ['wrong version',f=>{f.evidence.version='0.1.0';},/version/],

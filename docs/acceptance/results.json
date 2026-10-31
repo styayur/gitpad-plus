@@ -25,7 +25,7 @@
     },
     "releaseGate": {
       "skipped": 0,
-      "passed": 13,
+      "passed": 16,
       "failed": 0
     },
     "standalonePlugin": {
@@ -117,5 +117,19 @@
   "generatedPluginUninstall": {
     "android": "Passed; default bundle has no command/RPC authority and native storage SHA256 unchanged",
     "sha256": "700b1d14cef5aa978dd176e4b7c7e66ba90a69f689f02974252bb086d6dc233e"
+  },
+  "cleanSourceAndroidCandidate": {
+    "sourceCommit": "762355c863f9eaa386efde555257e626a0193613",
+    "firstPerformanceAttempt": "Timed out alongside concurrent AOT build; failure retained",
+    "runtime": "Unicode, restart, verified recreation/resume and features passed; isolated reseeded performance passed",
+    "physicalDeviceVerified": false,
+    "isolatedPerformance": {
+      "openLongDocumentMs": 11624.6,
+      "saveResponseMs": 3751.5,
+      "appProcessPssKB": 224401
+    },
+    "note": "Later tooling-only commits need new candidate source stamps; this is a specifically identified intermediate candidate.",
+    "sha256": "ce57c434110bc4e0dd010c5e4aa0a32ff102ebeadbe6f0c0a9658c5f0c309174",
+    "bytes": 34306088
   }
 }
