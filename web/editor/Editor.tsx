@@ -6,7 +6,7 @@ import { $prose } from '@milkdown/kit/utils';
 import { toggleStrongCommand, toggleEmphasisCommand, wrapInBulletListCommand, blockquoteSchema, toggleLinkCommand, insertImageCommand } from '@milkdown/kit/preset/commonmark';
 import { toggleStrikethroughCommand } from '@milkdown/kit/preset/gfm';
 import { toggleMark, wrapIn } from '@milkdown/kit/prose/commands';
-import { Plugin, TextSelection } from '@milkdown/kit/prose/state';
+import { Plugin, TextSelection, type SelectionBookmark } from '@milkdown/kit/prose/state';
 import { prosemirrorToYXmlFragment } from 'y-prosemirror';
 import * as Y from 'yjs';
 import { identityPlugin, blockKey, sourceBlocks } from './identity';
@@ -64,7 +64,10 @@ export function Editor({session, settings, handle, upload, imageUrl, pasteImage,
         if (body !== session.body||JSON.stringify(blocks)!==JSON.stringify(session.blocks)) session.edit(body, blocks);
       });
     };
-    editor.editor.use($prose(() => new Plugin({view: () => ({update: (view, previous) => {
+    const pendingNativeDrops=new Map<string,SelectionBookmark>();
+    editor.editor.use($prose(() => new Plugin({state:{init:()=>null,apply:transaction=>{
+      for(const [id,bookmark] of pendingNativeDrops)pendingNativeDrops.set(id,bookmark.map(transaction.mapping));return null;
+    }},view: () => ({update: (view, previous) => {
       if (!view.state.doc.eq(previous.doc)) capture(editor.getMarkdown());
     }})})));
     const onDoubleClick = (event: MouseEvent) => {
@@ -87,10 +90,33 @@ export function Editor({session, settings, handle, upload, imageUrl, pasteImage,
     };
     const importFiles=(files:File[])=>{void(async()=>{try{for(const file of files){const src=await upload(file);if(alive)editor.editor.action(ctx=>ctx.get(commandsCtx).call(insertImageCommand.key,{src,alt:file.name}));}}catch(e){if(alive)setFailure(String(e));}})();};
     const onPaste=(event:ClipboardEvent)=>{const files=[...event.clipboardData?.files??[]];if(!files.length)return;event.preventDefault();event.stopPropagation();importFiles(files);};
-    const onDrop=(event:DragEvent)=>{const files=[...event.dataTransfer?.files??[]];if(!files.length)return;event.preventDefault();event.stopPropagation();importFiles(files);};
+    const nativeWindowsDrop=!import.meta.env.DEV&&!!(window as Window&{chrome?:{webview?:unknown}}).chrome?.webview;
+    const onDrop=(event:DragEvent)=>{if(nativeWindowsDrop){event.preventDefault();event.stopPropagation();return;}const files=[...event.dataTransfer?.files??[]];if(!files.length)return;event.preventDefault();event.stopPropagation();importFiles(files);};
     const onDragOver=(event:DragEvent)=>{if(event.dataTransfer?.types.includes('Files')){event.preventDefault();event.dataTransfer.dropEffect='copy';}};
+    const onNativeDrop=(event:Event)=>{
+      const raw=(event as CustomEvent<{message:string}>).detail?.message;
+      if(typeof raw!=='string'||!/^\{\s*"type"\s*:\s*"native-drop-/.test(raw))return;
+      let message:{type:string;id:string;x?:number;y?:number;files?:{filename:string;path:string}[];message?:string};
+      try{message=JSON.parse(raw);}catch{return;}
+      if(!alive||!initialized||typeof message.id!=='string')return;
+      if(message.type==='native-drop-start'){
+        if(!Number.isFinite(message.x)||!Number.isFinite(message.y))return;
+        const x=message.x!*innerWidth,y=message.y!*innerHeight,target=document.elementFromPoint(x,y);
+        if(!target||!root.current?.contains(target))return;
+        setFailure('');
+        // Keep the text insertion point without moving focus inside the OS drag
+        // loop. Later cursor movement must not move the pending drop's target.
+        editor.editor.action(ctx=>{const view=ctx.get(editorViewCtx),position=view.posAtCoords({left:x,top:y})?.pos;if(position!=null)pendingNativeDrops.set(message.id,TextSelection.near(view.state.doc.resolve(position)).getBookmark());});
+      }else if(message.type==='native-drop-complete'&&pendingNativeDrops.has(message.id)){
+        const bookmark=pendingNativeDrops.get(message.id)!;pendingNativeDrops.delete(message.id);
+        if(!Array.isArray(message.files)||message.files.some(file=>typeof file.filename!=='string'||!/^\.\.\/Assets\/[a-f0-9]{64}\.(png|jpg|gif)$/.test(file.path))){setFailure('Invalid native image drop response');return;}
+        editor.editor.action(ctx=>{const view=ctx.get(editorViewCtx);view.dispatch(view.state.tr.setSelection(bookmark.resolve(view.state.doc)));view.focus();});
+        for(const file of message.files)editor.editor.action(ctx=>ctx.get(commandsCtx).call(insertImageCommand.key,{src:file.path,alt:file.filename}));
+      }else if(message.type==='native-drop-error'&&pendingNativeDrops.delete(message.id))setFailure(message.message??'Native image drop failed');
+    };
     root.current?.addEventListener('dblclick', onDoubleClick); root.current?.addEventListener('click', onClick);
     root.current?.addEventListener('paste',onPaste,true);root.current?.addEventListener('drop',onDrop,true);root.current?.addEventListener('dragover',onDragOver);
+    window.addEventListener('HybridWebViewMessageReceived',onNativeDrop);
     void editor.create().then(() => {
       if (!alive) { void editor.destroy(); return; }
       initialized = true; setReady(true);
@@ -147,7 +173,7 @@ export function Editor({session, settings, handle, upload, imageUrl, pasteImage,
         blockLink() { return editor.editor.action(ctx => { const view=ctx.get(editorViewCtx); const block=[...blockKey.getState(view.state)?.live??[]].reverse().find(b => b.pos<=view.state.selection.from && view.state.selection.from <= b.pos+b.node.nodeSize); if(!block)return null; session.edit(session.body, sourceBlocks(blockKey.getState(view.state),session.body)); return `gitpadplus://note/${session.note.header.id}?block=${block.id}`; }); },
       });
     }).catch(e => { if (alive) setFailure(String(e)); });
-    return () => { alive = false; initialized = false; peek.current?.dispose(); handle(null);root.current?.removeEventListener('dblclick',onDoubleClick); root.current?.removeEventListener('click',onClick);root.current?.removeEventListener('paste',onPaste,true);root.current?.removeEventListener('drop',onDrop,true);root.current?.removeEventListener('dragover',onDragOver); void editor.destroy(); ySession.dispose(); yTree.destroy(); };
+    return () => { alive = false; initialized = false;pendingNativeDrops.clear();window.removeEventListener('HybridWebViewMessageReceived',onNativeDrop); peek.current?.dispose(); handle(null);root.current?.removeEventListener('dblclick',onDoubleClick); root.current?.removeEventListener('click',onClick);root.current?.removeEventListener('paste',onPaste,true);root.current?.removeEventListener('drop',onDrop,true);root.current?.removeEventListener('dragover',onDragOver); void editor.destroy(); ySession.dispose(); yTree.destroy(); };
   // A document instance owns one editor/undo history. Settings changes reopen only after flush in the parent.
   }, [session]);
   return <section className="editor-pane" aria-label="Markdown editor">

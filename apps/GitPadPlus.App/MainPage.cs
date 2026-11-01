@@ -37,12 +37,8 @@ public sealed class MainPage : ContentPage
         bridge = new Bridge(vault,JsonSerializer.Deserialize(registry,DataJson.Default.PackagedPluginArray),NativeClipboard.ReadImage,NativeFilePicker.Pick);
         editor = new HybridWebView { HybridRoot = "wwwroot", DefaultFile = "index.html" };
 #if WINDOWS
-        editor.HandlerChanged+=(_,_)=>
-        {
-            // WinUI defaults AllowDrop to false, preventing HTML file-drop handlers
-            // from ever receiving Explorer drops in the HybridWebView.
-            if(editor.Handler?.PlatformView is Microsoft.UI.Xaml.Controls.WebView2 webView)webView.AllowDrop=true;
-        };
+        var editorHost=new Grid();editorHost.Add(editor);
+        var nativeFileDrop=new NativeFileDrop(editorHost,editor,vault);
 #endif
         var attached=true;
         editor.RawMessageReceived += async (_, args) =>
@@ -67,7 +63,11 @@ public sealed class MainPage : ContentPage
         }
         Action<string> stateChanged=state => MainThread.BeginInvokeOnMainThread(() => {if(!attached)return;if(state=="Ready"){ready=true;Activate();}else if(state=="Flushed")Flushed?.Invoke();else if(state=="Settings")ApplyTheme();else local.Text = "Local: " + state;});
         bridge.StateChanged+=stateChanged;
-        detach=()=>{attached=false;ActivationRouter.Changed-=Activate;bridge.StateChanged-=stateChanged;};
+        detach=()=>{attached=false;ActivationRouter.Changed-=Activate;bridge.StateChanged-=stateChanged;
+#if WINDOWS
+            nativeFileDrop.Dispose();
+#endif
+        };
         try{ApplyTheme();}catch(Exception ex)when(ex is IOException or JsonException){/* Settings RPC reports retained corrupt data without blocking the editor. */}
         var nativeCalendar = new CalendarHost { HeightRequest = 300, IsVisible=false };
         nativeCalendar.DateSelected += date => editor.SendRawMessage(JsonSerializer.Serialize(new { type = "native-date", date = date.ToString("yyyy-MM-dd") }));
@@ -90,7 +90,12 @@ public sealed class MainPage : ContentPage
 #endif
         var status = new HorizontalStackLayout { Padding = new Thickness(12, 6), Spacing = 24, Children = { local, new Label { Text = "Git: NotConfigured" } } };
         var grid = new Grid { RowDefinitions = { new RowDefinition(GridLength.Auto), new RowDefinition(GridLength.Auto), new RowDefinition(GridLength.Star), new RowDefinition(GridLength.Auto) } };
-        grid.Add(showCalendar, 0, 0); grid.Add(nativeCalendar, 0, 1); grid.Add(editor, 0, 2);
+        grid.Add(showCalendar, 0, 0); grid.Add(nativeCalendar, 0, 1);
+#if WINDOWS
+        grid.Add(editorHost, 0, 2);
+#else
+        grid.Add(editor, 0, 2);
+#endif
 #if ANDROID
         grid.Add(status, 0, 0); showCalendar.IsVisible = false;
 #else

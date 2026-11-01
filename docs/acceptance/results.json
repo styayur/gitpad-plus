@@ -19,13 +19,12 @@
     },
     "playwright": {
       "skipped": 0,
-      "passed": 28,
+      "passed": 30,
       "evidence": [
-        "artifacts/local-audit/midnight-deadline-playwright.log",
-        "artifacts/local-audit/delayed-acknowledgement-regression.log"
+        "artifacts/local-audit/native-drop-preview-all-playwright.log"
       ],
       "failed": 0,
-      "mode": "27 full suite plus one focused new delayed-ACK regression; new full CI run pending"
+      "mode": "Full 30-test local suite; native drop ownership and mapped insertion position under edits/zoom/scroll; not an OS drag gesture; matching new CI pending"
     },
     "releaseGate": {
       "skipped": 0,
@@ -80,7 +79,7 @@
     ]
   },
   "remaining": [
-    "External Explorer image drop fix native retest",
+    "Exact-candidate external image drop, cancellation and native handler rebinding qualification",
     "Final source review and clean commit; matching main CI",
     "Final universal APK, unsigned Windows ZIP, exact-package runtime evidence and hashes",
     "Win2D binary license applicability review; mandatory fail-closed gate",
@@ -142,5 +141,14 @@
     "regression": "Committed response deliberately held for 12000ms, real source persisted and buffer reached Saved",
     "newDocumentSaveDeadlineMs": 60000,
     "previousDeadlineMs": 10000
+  },
+  "nativeExternalDrop": {
+    "date": "2026-11-01",
+    "scope": "Development Windows package; two actual Explorer drops and Escape cancellation",
+    "userResult": "No residue after insertion or cancellation",
+    "persistedImageLinks": 2,
+    "pairAndAssetHashesVerified": true,
+    "evidence": "artifacts/native/windows/native-drop-container-acceptance.json",
+    "additionalChange": "Retained exact WinRT delegate instances and skipped handled events after observing stale busy notice; exact candidate qualification pending"
   }
 }

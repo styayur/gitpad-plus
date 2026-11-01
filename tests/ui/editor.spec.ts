@@ -128,6 +128,48 @@ test('image file drop and paste persist through the real storage bridge',async({
   await page.reload();await expect(page.locator('.ProseMirror').getByRole('img',{name:'drop.png',exact:true})).toBeVisible();await expect(page.locator('.ProseMirror').getByRole('img',{name:'paste.png',exact:true})).toBeVisible();
 });
 
+test('native drop messages target the original pane and ignore completion after it closes',async({page,request})=>{
+  // This verifies the native/web contract with real persisted assets, not an OS drag gesture.
+  const first=await call(request,'documents.create',{date:fixtureDate(),title:'Drop primary'}),second=await call(request,'documents.create',{date:fixtureDate(),title:'Drop secondary'});
+  const path=await call(request,'media.import',{filename:'native.png',base64:'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aZyoAAAAASUVORK5CYII='});
+  await page.goto('/');await page.getByRole('navigation',{name:'Notes'}).getByRole('button').filter({hasText:'Drop primary'}).click();
+  await page.getByRole('combobox',{name:'Open beside'}).selectOption(second.header.id);
+  const secondary=page.getByRole('region',{name:'Second document pane'}).locator('.ProseMirror');await expect(secondary).toBeVisible();
+  const start=async(id:string)=>secondary.evaluate((element,dropId)=>{const rect=element.getBoundingClientRect();window.dispatchEvent(new CustomEvent('HybridWebViewMessageReceived',{detail:{message:JSON.stringify({type:'native-drop-start',id:dropId,x:(rect.left+20)/innerWidth,y:(rect.top+15)/innerHeight})}}));},id);
+  const complete=async(id:string,filename:string)=>page.evaluate(message=>window.dispatchEvent(new CustomEvent('HybridWebViewMessageReceived',{detail:{message:JSON.stringify(message)}})),{type:'native-drop-complete',id,files:[{filename,path}]});
+  await start('accepted');await complete('accepted','native.png');await expect(secondary.getByRole('img',{name:'native.png',exact:true})).toBeVisible();
+  await page.getByRole('button',{name:'Save second pane',exact:true}).click();
+  await expect.poll(async()=>(await call(request,'documents.load',{id:second.header.id})).body).toContain(`![native.png](${path})`);
+  expect((await call(request,'documents.load',{id:first.header.id})).body).not.toContain('../Assets/');
+  await start('closed');await page.getByRole('button',{name:'Close second pane',exact:true}).click();await expect(secondary).toHaveCount(0);
+  await complete('closed','late.png');await page.getByRole('combobox',{name:'Open beside'}).selectOption(second.header.id);await expect(secondary.locator('img')).toHaveCount(1);
+  await expect.poll(()=>secondary.locator('img').evaluate((image:HTMLImageElement)=>image.complete&&image.naturalWidth>0)).toBe(true);
+  expect((await call(request,'documents.load',{id:second.header.id})).body).not.toContain('late.png');
+  await page.reload();await expect(secondary.locator('img')).toHaveCount(1);
+  await expect(page.locator('.ProseMirror').first().locator('img')).toHaveCount(0);
+  expect((await call(request,'documents.load',{id:first.header.id})).body).not.toContain('../Assets/');
+});
+
+test('native drop retains its text position across cursor movement, edits, zoom and scrolling',async({page,request})=>{
+  const note=await call(request,'documents.create',{date:fixtureDate(),title:'Drop position'});
+  const body=Array.from({length:35},(_,i)=>`Paragraph ${i}`).join('\n\n')+'\n\nTarget here\n\nAfter paragraph\n';
+  await call(request,'documents.save',{id:note.header.id,body,title:note.header.title,tags:[],expectedRevision:note.sidecar.revision,expectedHash:note.sidecar.contentHash,blocks:[],selections:[]});
+  const path=await call(request,'media.import',{filename:'anchor.png',base64:'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aZyoAAAAASUVORK5CYII='});
+  await page.goto('/');await page.getByRole('navigation',{name:'Notes'}).getByRole('button').click();const editor=page.locator('.ProseMirror');await expect(editor).toBeVisible();
+  await page.evaluate(()=>{document.documentElement.style.zoom='1.25';});
+  const target=editor.locator('p').filter({hasText:/^Target here$/});await target.scrollIntoViewIfNeeded();
+  const focusUnchanged=await target.evaluate(element=>{const focused=document.activeElement,range=document.createRange();range.setStart(element.firstChild!,7);range.collapse(true);const rect=range.getBoundingClientRect();
+    window.dispatchEvent(new CustomEvent('HybridWebViewMessageReceived',{detail:{message:JSON.stringify({type:'native-drop-start',id:'position',x:rect.left/innerWidth,y:(rect.top+rect.height/2)/innerHeight})}}));return document.activeElement===focused;});
+  expect(focusUnchanged).toBe(true);
+  // Import is asynchronous: the user may edit another paragraph before it completes.
+  await editor.locator('p').first().click();await page.keyboard.press('Home');await page.keyboard.type('prefix ');
+  await page.evaluate(message=>window.dispatchEvent(new CustomEvent('HybridWebViewMessageReceived',{detail:{message:JSON.stringify(message)}})),{type:'native-drop-complete',id:'position',files:[{filename:'anchor.png',path}]});
+  await expect(target.getByRole('img',{name:'anchor.png',exact:true})).toBeVisible();await expect(editor.locator('p').first().locator('img')).toHaveCount(0);
+  await page.getByRole('button',{name:'Save',exact:true}).click();
+  await expect.poll(async()=>(await call(request,'documents.load',{id:note.header.id})).body).toContain(`Target ![anchor.png](${path})here`);
+  expect((await call(request,'documents.load',{id:note.header.id})).body).toContain('prefix Paragraph 0');
+});
+
 test('external Markdown is compared, archived and explicitly reconciled through the UI',async({page,request})=>{
   const note=await call(request,'documents.create',{date:fixtureDate(),title:'External recovery'});
   await page.goto('/');await page.getByRole('navigation',{name:'Notes'}).getByRole('button').click();await expect(page.locator('.ProseMirror')).toBeVisible();await page.getByRole('button',{name:'Save',exact:true}).click();
