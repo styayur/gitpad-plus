@@ -126,7 +126,9 @@ export function Editor({session, settings, handle, upload, imageUrl, pasteImage,
         const view=ctx.get(editorViewCtx),transaction=view.state.tr;
         const tails=session.blocks.filter(b=>!b.deleted&&b.kind==='paragraph'&&b.start===session.body.length&&b.end===session.body.length&&b.path?.length===1).sort((a,b)=>a.path![0]-b.path![0]);
         for(const tail of tails)if(tail.path![0]===transaction.doc.childCount)transaction.insert(transaction.doc.content.size,view.state.schema.nodes.paragraph.create());
-        if(transaction.docChanged)view.dispatch(transaction.setMeta(blockKey,'restoreSavedTail').setMeta('addToHistory',false));
+        // Native view plugins may already have appended the empty node. Its ID
+        // still needs restoring even when no structural insertion was needed.
+        if(transaction.docChanged||tails.length)view.dispatch(transaction.setMeta(blockKey,'restoreSavedTail').setMeta('addToHistory',false));
       });
       initialized = true; setReady(true);
       // Persist reconstructed identities without normalizing the untouched source.

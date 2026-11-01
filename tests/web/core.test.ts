@@ -96,6 +96,18 @@ const schema=new Schema({nodes:{doc:{content:'paragraph+'},paragraph:{content:'t
 const paragraph=(text:string)=>schema.node('paragraph',null,text?schema.text(text):undefined);
 const state=(...values:string[])=>EditorState.create({schema,doc:schema.node('doc',null,values.map(paragraph)),plugins:[identityPlugin()]});
 describe('ProseMirror block identities',()=>{
+  it('restores a saved empty tail that a view plugin already appended during startup',()=>{
+    const first=v7(),tail=v7();
+    let current=EditorState.create({schema,doc:schema.node('doc',null,[paragraph('content')]),plugins:[history(),identityPlugin([
+      {id:first,kind:'paragraph',start:0,end:7,deleted:false,path:[0]},
+      {id:tail,kind:'paragraph',start:8,end:8,deleted:false,path:[1]},
+    ])]});
+    current=current.apply(current.tr.insert(current.doc.content.size,paragraph('')).setMeta('addToHistory',false));
+    expect(blockKey.getState(current)!.live[1].id).not.toBe(tail);
+    current=current.apply(current.tr.setMeta(blockKey,'restoreSavedTail').setMeta('addToHistory',false));
+    expect(blockKey.getState(current)!.live.map(b=>b.id)).toEqual([first,tail]);
+    expect(undo(current,()=>{})).toBe(false);
+  });
   it('does not confuse identical document content from different undo events',()=>{
     let current=EditorState.create({schema,doc:schema.node('doc',null,[paragraph('same'),paragraph('other')]),plugins:[history(),identityPlugin()]});
     const original=blockKey.getState(current)!.live.map(b=>b.id),dispatch=(tr:typeof current.tr)=>{current=current.apply(tr);};

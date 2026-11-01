@@ -13,8 +13,8 @@
     },
     "vitest": {
       "skipped": 0,
-      "passed": 48,
-      "evidence": "artifacts/vitest-windows.xml",
+      "passed": 49,
+      "evidence": "artifacts/local-audit/tail-existing-node-vitest.log",
       "failed": 0
     },
     "playwright": {
@@ -24,7 +24,7 @@
       "evidence": [
         "artifacts/local-audit/trailing-identity-all-playwright.log"
       ],
-      "mode": "Full local real-storage suite, including the native-observed zero-width image-tail identity regression. Exact packaged qualification is separate."
+      "mode": "Full 31-test suite at 441e2f7; final startup-order follow-up separately passed three relevant browser cases. Final post-commit CI and exact package results are recorded in generated evidence."
     },
     "releaseGate": {
       "skipped": 0,
@@ -157,7 +157,10 @@
     "reproduced": "artifacts/local-audit/trailing-identity-persisted-before-fix.log",
     "fixed": "Contiguous saved empty tails recreated and rebound to their existing IDs before initial editor capture; no history event",
     "passed": "artifacts/local-audit/trailing-identity-after-fix.log",
-    "fullSuite": "31 passed; no skipped/failed/flaky tests"
+    "fullSuite": "31 passed; no skipped/failed/flaky tests",
+    "nativeStartupOrder": "441e2f7 native startup already appended its empty tail; unconditional saved-tail identity restoration fixed this branch",
+    "nativeProbe": "artifacts/native/windows/development-tail-existing-node-result.json; byte-identical source pairs after load, settings rebuild and process restart; development-only modified resources",
+    "unitTests": "49 passed, including already-created tail restoration with no Undo event"
   },
   "latestCompletedCandidate": {
     "sourceCommit": "45054ad38714d52d75ed6a1409c6ac318ae97d00",
