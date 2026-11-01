@@ -3,7 +3,7 @@
   "releaseVersion": "0.1.0-alpha.1",
   "releaseGate": "blocked",
   "environment": "Windows 11 Home build 26200 x64",
-  "sourceState": "Local closeout branch; candidate sourceCommit must be recorded after clean commit/build",
+  "sourceState": "Follow-up source fixes persisted empty-tail reconstruction. Final clean-source package stamps and qualification belong in generated candidate acceptance.json, not this pre-commit narrative.",
   "tests": {
     "dotnet": {
       "skipped": 0,
@@ -18,13 +18,13 @@
       "failed": 0
     },
     "playwright": {
-      "skipped": 0,
-      "passed": 30,
-      "evidence": [
-        "artifacts/local-audit/native-drop-preview-all-playwright.log"
-      ],
+      "passed": 31,
       "failed": 0,
-      "mode": "Full 30-test local suite; native drop ownership and mapped insertion position under edits/zoom/scroll; not an OS drag gesture; matching new CI pending"
+      "skipped": 0,
+      "evidence": [
+        "artifacts/local-audit/trailing-identity-all-playwright.log"
+      ],
+      "mode": "Full local real-storage suite, including the native-observed zero-width image-tail identity regression. Exact packaged qualification is separate."
     },
     "releaseGate": {
       "skipped": 0,
@@ -40,9 +40,9 @@
   "native": {
     "windowsPackaging": "Self-contained unsigned x64 ZIP built through locked restore; clean extraction and large-library GUI run",
     "androidReleaseSigning": "Permanent user-authorized protected key; certificate verified",
-    "androidRuntime": "Emulator development probes passed covered scenarios; final universal candidate pending",
-    "androidBuild": "Signed non-debug Release development probes built and installed",
-    "windowsRuntime": "Development probe passed covered scenarios; final exact candidate pending"
+    "androidRuntime": "Exact signed universal 45054ad APK passed covered emulator scenarios; source changed for empty-tail reconstruction and requires freshly stamped candidate qualification.",
+    "androidBuild": "Permanent-signed universal arm64/x64 AOT Release candidate 45054ad built, inspected and installed byte-for-byte; follow-up build required.",
+    "windowsRuntime": "Exact clean 45054ad ZIP completed covered native entrypoints; further restart comparison exposed empty-tail identity loss. Follow-up source fixed it; new candidate runtime qualification required."
   },
   "devices": {
     "android": {
@@ -144,11 +144,26 @@
   },
   "nativeExternalDrop": {
     "date": "2026-11-01",
-    "scope": "Development Windows package; two actual Explorer drops and Escape cancellation",
-    "userResult": "No residue after insertion or cancellation",
-    "persistedImageLinks": 2,
+    "sourceCommit": "45054ad38714d52d75ed6a1409c6ac318ae97d00",
+    "scope": "Exact clean Windows ZIP; user performed two or more Explorer imports plus Escape cancellation",
+    "userResult": "No residue or stale busy notice",
+    "persistedImageLinks": 4,
     "pairAndAssetHashesVerified": true,
-    "evidence": "artifacts/native/windows/native-drop-container-acceptance.json",
-    "additionalChange": "Retained exact WinRT delegate instances and skipped handled events after observing stale busy notice; exact candidate qualification pending"
+    "evidence": "artifacts/native/windows/candidate-45054ad-external-drop.json"
+  },
+  "emptyTailRegression": {
+    "before": "Persisted zero-width paragraph after image disappeared on reconstruction",
+    "nativeFailure": "artifacts/native/windows/candidate-45054ad-final-entrypoints.json",
+    "reproduced": "artifacts/local-audit/trailing-identity-persisted-before-fix.log",
+    "fixed": "Contiguous saved empty tails recreated and rebound to their existing IDs before initial editor capture; no history event",
+    "passed": "artifacts/local-audit/trailing-identity-after-fix.log",
+    "fullSuite": "31 passed; no skipped/failed/flaky tests"
+  },
+  "latestCompletedCandidate": {
+    "sourceCommit": "45054ad38714d52d75ed6a1409c6ac318ae97d00",
+    "ci": "https://github.com/styayur/gitpad-plus/actions/runs/41278491363",
+    "android": "Covered emulator scenarios passed; no physical device",
+    "windows": "Covered runtime scenarios passed; subsequently discovered empty-tail reconstruction issue prevents full block-identity qualification",
+    "licenseGate": "blocked: Win2D binary terms"
   }
 }

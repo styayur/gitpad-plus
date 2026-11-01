@@ -55,6 +55,14 @@ export function identityPlugin(saved: Block[] = []) {
         }), deleted: saved.filter(b => b.deleted)};
       },
       apply: (transaction, before) => {
+        if(transaction.getMeta(blockKey)==='restoreSavedTail'){
+          const byPath=new Map(saved.filter(b=>!b.deleted&&b.path).map(b=>[b.path!.join('.'),b]));
+          const current=new Map(before.live.map(b=>[b.pos,b]));
+          return {live:blocks(transaction.doc).map(node=>{
+            const candidate=byPath.get(node.path.join('.')),previous=candidate?.kind===node.node.type.name?candidate:undefined,existing=current.get(node.pos);
+            return {...node,id:previous?.id??existing?.id??v7(),aliases:[...previous?.aliases??existing?.aliases??[]]};
+          }),deleted:before.deleted};
+        }
         if (!transaction.docChanged) return before;
         const nodes = blocks(transaction.doc), used = new Set<string>(), assigned = new Map<number, LiveBlock>();
         const byPosition=new Map(nodes.map(node=>[node.pos,node]));

@@ -2,6 +2,7 @@
 import { test, expect, type APIRequestContext } from '@playwright/test';
 import { readdirSync, readFileSync, appendFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { v7 } from 'uuid';
 const fixtureDate=()=>{const now=new Date();return `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;};
 
 async function call(request:APIRequestContext,method:string,params:unknown={}) {
@@ -109,6 +110,30 @@ test('two distinct editable panes save independently and restore after restart',
   await expect.poll(async()=>(await call(request,'documents.load',{id:first.header.id})).body).toContain('Primary 中文');await expect.poll(async()=>(await call(request,'documents.load',{id:second.header.id})).body).toContain('Secondary 👩🏽‍💻');
   await expect.poll(async()=>(await call(request,'workspace.get')).secondaryId).toBe(second.header.id);
   await page.reload();await expect(page.locator('.ProseMirror')).toHaveCount(2);await expect(page.locator('.ProseMirror').first()).toContainText('Primary 中文');await expect(page.locator('.ProseMirror').last()).toContainText('Secondary 👩🏽‍💻');
+});
+
+test('image trailing paragraph keeps its identity through settings rebuild and restart',async({page,request})=>{
+  const note=await call(request,'documents.create',{date:fixtureDate(),title:'Trailing identity'});
+  const asset=await call(request,'media.import',{filename:'pixel.png',base64:'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aZyoAAAAASUVORK5CYII='});
+  await call(request,'documents.save',{id:note.header.id,body:`Before image\n\n![pixel](${asset})\n`,title:note.header.title,tags:[],expectedRevision:note.sidecar.revision,expectedHash:note.sidecar.contentHash,blocks:[],selections:[]});
+  await page.goto('/');await page.getByRole('navigation',{name:'Notes'}).getByRole('button').filter({hasText:'Trailing identity'}).click();
+  await expect(page.locator('.ProseMirror')).toContainText('Before image');
+  await expect.poll(async()=>(await call(request,'documents.load',{id:note.header.id})).sidecar.blocks.length).toBe(2);
+  const initial=await call(request,'documents.load',{id:note.header.id});
+  // This zero-width tail is present in the persisted native image-note fixture.
+  // Markdown parsing cannot express it, but its existing identity remains authority.
+  const tail={id:v7(),kind:'paragraph',start:initial.body.length,end:initial.body.length,deleted:false,aliases:[],path:[2]};
+  const before=await call(request,'documents.save',{id:note.header.id,body:initial.body,title:initial.header.title,tags:[],expectedRevision:initial.sidecar.revision,expectedHash:initial.sidecar.contentHash,blocks:[...initial.sidecar.blocks,tail],selections:[]});
+  await page.reload();await expect(page.locator('.ProseMirror > p').last()).toBeEmpty();
+  await page.getByRole('button',{name:'Settings',exact:true}).click();await page.getByRole('button',{name:'Save settings',exact:true}).click();
+  await expect(page.locator('.ProseMirror > p').last()).toBeEmpty();
+  await page.getByRole('button',{name:'Save',exact:true}).click();await expect(page.getByRole('status')).toContainText('Local: Saved');
+  const rebuilt=await call(request,'documents.load',{id:note.header.id});
+  expect(rebuilt.sidecar.blocks).toEqual(before.sidecar.blocks);expect(rebuilt.header.updatedAt).toBe(before.header.updatedAt);
+  await page.reload();await expect(page.locator('.ProseMirror > p').last()).toBeEmpty();
+  await page.getByRole('button',{name:'Save',exact:true}).click();await expect(page.getByRole('status')).toContainText('Local: Saved');
+  const restored=await call(request,'documents.load',{id:note.header.id});
+  expect(restored.sidecar.blocks).toEqual(before.sidecar.blocks);expect(restored.header.updatedAt).toBe(before.header.updatedAt);
 });
 
 test('image file drop and paste persist through the real storage bridge',async({page,request})=>{
