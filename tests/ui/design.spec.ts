@@ -81,7 +81,9 @@ test('native appearance notifications preserve content and choose readable accen
 test('writing chrome stays reachable at 100, 125, 150 and 200 percent render scale',async({browser},testInfo)=>{
   for(const scale of [1,1.25,1.5,2]){
     const context=await browser.newContext({viewport:{width:Math.floor(1920/scale),height:Math.floor(1080/scale)},deviceScaleFactor:scale});
-    const page=await context.newPage();await page.goto('/');await page.getByRole('button',{name:'New note',exact:true}).click();await expect(page.locator('.ProseMirror')).toBeVisible();
+    const page=await context.newPage();await page.goto('/');await expect(page.locator('html')).toHaveAttribute('data-workspace-ready','true');
+    const openCount=await page.getByRole('tab').count();await page.getByRole('button',{name:'New note',exact:true}).click();
+    await expect(page.getByRole('tab')).toHaveCount(openCount+1);await expect(page.locator('.ProseMirror')).toBeVisible();
     await page.getByRole('textbox',{name:'Note title',exact:true}).fill('A day, clearly remembered');
     const rect=await page.locator('.editor-pane').boundingBox();expect(rect!.height).toBeGreaterThan(160);
     await expect(page.getByRole('button',{name:'Save',exact:true})).toBeInViewport();await expect(page.getByLabel('Note actions',{exact:true})).toBeInViewport();
