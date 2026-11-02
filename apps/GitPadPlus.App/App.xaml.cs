@@ -21,6 +21,18 @@ public partial class App : Application
             if (window.Handler?.PlatformView is Microsoft.UI.Xaml.Window native)
             {
                 page.AttachAppearance(native);
+                // MAUI sizes the window in DIPs; AppWindow bounds are physical
+                // pixels. Clamp once to the actual work area so a high-DPI
+                // desktop never starts with the status bar below the screen.
+                var appWindow=native.AppWindow;
+                var area=Microsoft.UI.Windowing.DisplayArea.GetFromWindowId(appWindow.Id,Microsoft.UI.Windowing.DisplayAreaFallback.Nearest)?.WorkArea;
+                if(area is { Width: >0, Height: >0 } work)
+                {
+                    var width=Math.Min(appWindow.Size.Width,work.Width);
+                    var height=Math.Min(appWindow.Size.Height,work.Height);
+                    var bounds=new Windows.Graphics.RectInt32(Math.Clamp(appWindow.Position.X,work.X,work.X+work.Width-width),Math.Clamp(appWindow.Position.Y,work.Y,work.Y+work.Height-height),width,height);
+                    appWindow.MoveAndResize(bounds);
+                }
                 var closingAfterSave=false;
                 native.AppWindow.Closing += (_, args) => { if (page.HasUnsavedChanges) { args.Cancel = true;closingAfterSave=true; page.RequestFlush(); } };
                 page.Flushed+=()=>{if(closingAfterSave){closingAfterSave=false;native.Close();}};
