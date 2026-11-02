@@ -2,6 +2,8 @@
 namespace GitPadPlus.App;
 public partial class App : Application
 {
+    internal static AppTheme EffectiveTheme => Current?.UserAppTheme is AppTheme.Light or AppTheme.Dark
+        ? Current.UserAppTheme : Current?.RequestedTheme??AppTheme.Light;
     public App()
     {
         InitializeComponent();
@@ -18,7 +20,7 @@ public partial class App : Application
         {
             if (window.Handler?.PlatformView is Microsoft.UI.Xaml.Window native)
             {
-                if (Microsoft.UI.Composition.SystemBackdrops.MicaController.IsSupported()) native.SystemBackdrop = new Microsoft.UI.Xaml.Media.MicaBackdrop { Kind=Microsoft.UI.Composition.SystemBackdrops.MicaKind.BaseAlt };
+                page.AttachAppearance(native);
                 var closingAfterSave=false;
                 native.AppWindow.Closing += (_, args) => { if (page.HasUnsavedChanges) { args.Cancel = true;closingAfterSave=true; page.RequestFlush(); } };
                 page.Flushed+=()=>{if(closingAfterSave){closingAfterSave=false;native.Close();}};

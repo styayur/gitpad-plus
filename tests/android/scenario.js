@@ -5,7 +5,7 @@ void(async()=>{
   const wait=ms=>new Promise(resolve=>setTimeout(resolve,ms));
   const until=async(predicate,label,attempts=180)=>{for(let i=0;i<attempts;i++){const value=await predicate();if(value)return value;await wait(250);}throw Error('Timeout: '+label);};
   const check=(name,value)=>{if(!value)throw Error(name);checks.push({name,passed:true});};
-  const button=label=>[...document.querySelectorAll('button')].find(node=>node.textContent.trim()===label);
+  const button=label=>[...document.querySelectorAll('button')].find(node=>(node.getAttribute('aria-label')??node.textContent.trim())===label);
   const click=label=>{const node=button(label);if(!node)throw Error('Missing button: '+label);node.click();};
   let sequence=0;
   const rpc=(method,params={})=>new Promise((resolve,reject)=>{
@@ -29,7 +29,29 @@ void(async()=>{
     window.addEventListener('HybridWebViewMessageReceived',event=>{try{const response=JSON.parse(event.detail.message),record=saveRequests.get(response.requestId);if(record){record.elapsedMs=performance.now()-record.started;record.error=response.error;record.revision=response.result?.sidecar?.revision;}}catch{/* Ignore unrelated native notifications. */}});
     checks.push({name:'Loaded embedded module',scripts:[...document.querySelectorAll('script[src]')].map(node=>node.getAttribute('src'))});
     const phase=window.__acceptancePhase;await wait(1500);
-    if(phase==='smoke'){
+    if(phase==='ui-design'){
+      await until(()=>document.querySelector('.milkdown .ProseMirror'),'restored writing surface');
+      const id=document.querySelector('[role=tab][aria-selected=true]').title,before=await rpc('documents.load',{id});
+      NativeAcceptance.hideKeyboard();
+      const theme=async value=>{click('Settings');const select=await until(()=>document.querySelector('dialog select[aria-label=Theme]'),'theme control');select.value=value;select.dispatchEvent(new Event('change',{bubbles:true}));await until(()=>document.documentElement.dataset.theme===value,'applied theme');await wait(800);NativeAcceptance.screenshot('ui-settings-'+value);click('Save settings');await until(()=>!document.querySelector('dialog[open]'),'settings closed');await until(()=>document.querySelector('.milkdown .ProseMirror'),'editor rebuilt');await wait(300);};
+      await theme('light');await wait(800);NativeAcceptance.screenshot('ui-editor-light');
+      await theme('dark');await wait(800);NativeAcceptance.screenshot('ui-editor-dark');
+      const toggle=document.querySelector('button.calendar-toggle');toggle.click();await wait(300);
+      const day=document.querySelector('.calendar button').getBoundingClientRect();
+      check('Android calendar touch targets are at least 44 by 44 CSS pixels',day.width>=44&&day.height>=44);
+      NativeAcceptance.screenshot('ui-calendar-dark');toggle.click();await wait(300);
+      const fullHeight=innerHeight,active=document.querySelector('.milkdown .ProseMirror'),rect=active.getBoundingClientRect();
+      NativeAcceptance.press(rect.x+30,Math.max(rect.y+15,document.querySelector('.editor-pane').getBoundingClientRect().y+15),innerWidth,80);
+      await until(()=>NativeAcceptance.keyboardVisible()&&innerHeight<fullHeight-80,'actual Android IME and resized WebView');await wait(1000);
+      check('Native IME is visible',NativeAcceptance.keyboardVisible());
+      const pane=document.querySelector('.editor-pane').getBoundingClientRect(),toolbar=document.querySelector('.format-toolbar').getBoundingClientRect();
+      check('Keyboard-resized editor retains a usable viewport',pane.height>=80&&pane.bottom<=innerHeight+1);
+      check('Formatting stays above the visible editor',toolbar.bottom<=pane.top+1);
+      check('Mobile layout has no document-level horizontal overflow',document.documentElement.scrollWidth<=innerWidth);
+      NativeAcceptance.screenshot('ui-keyboard-visible');NativeAcceptance.hideKeyboard();
+      const after=await rpc('documents.load',{id});
+      check('Theme and layout changes preserve exact Markdown and block identities',before.body===after.body&&JSON.stringify(before.sidecar.blocks)===JSON.stringify(after.sidecar.blocks));
+    }else if(phase==='smoke'){
       const previous=document.querySelector('.milkdown .ProseMirror');click('New note');
       const editor=await until(()=>{const node=document.querySelector('.milkdown .ProseMirror');return node?.isConnected&&node!==previous?node:null;},'default-bundle editor');
       editor.scrollIntoView({block:'center'});await wait(500);const rect=editor.getBoundingClientRect();NativeAcceptance.press(rect.x+30,rect.y+15,innerWidth,80);await wait(500);
@@ -51,7 +73,7 @@ void(async()=>{
       check('Official plugin activation count advanced',data.values.activations>saved.activations);
       NativeAcceptance.hideKeyboard();NativeAcceptance.screenshot('candidate-restored-'+phase);
     }else if(phase==='initial'){
-      const toggle=document.querySelector('button.mobile-calendar-toggle');
+      const toggle=document.querySelector('button.calendar-toggle');
       if(toggle?.getAttribute('aria-expanded')==='false'){toggle.click();await wait(300);}
       check('Full mobile calendar renders all dates',document.querySelectorAll('.calendar button').length>=28);
       check('Calendar retains usable height',document.querySelector('.calendar').getBoundingClientRect().height>150);
@@ -146,7 +168,7 @@ void(async()=>{
       await wait(300);
       check('Selection uses the current target editor',editor.isConnected);
       checks.push({name:'Selection before toolbar touch',quote:getSelection()?.toString(),focusedElement:document.activeElement?.tagName,editorSelection:editor.pmViewDesc?.view?.state.selection.toJSON()});
-      const linkButton=button('Selection link');linkButton.scrollIntoView({block:'center'});await wait(300);const rect=linkButton.getBoundingClientRect();NativeAcceptance.press(rect.x+rect.width/2,rect.y+rect.height/2,innerWidth,80);
+      const actions=document.querySelector('summary[aria-label="Note actions"]');if(actions){const ar=actions.getBoundingClientRect();NativeAcceptance.press(ar.x+ar.width/2,ar.y+ar.height/2,innerWidth,80);await until(()=>actions.parentElement.open,'note actions expanded');}const linkButton=button('Selection link');linkButton.scrollIntoView({block:'center'});await wait(300);const rect=linkButton.getBoundingClientRect();NativeAcceptance.press(rect.x+rect.width/2,rect.y+rect.height/2,innerWidth,80);
       await until(()=>{const alert=document.querySelector('.message')?.textContent;if(alert?.includes('Error'))throw Error(alert);return alert?.includes('Link copied');},'selection link copied by native touch');
       const link=NativeAcceptance.clipboardText();check('Persistent selection link copied',link.includes('?selection='));
       NativeAcceptance.openUri(link);
@@ -160,7 +182,7 @@ void(async()=>{
       click('Settings');await until(()=>document.querySelector('[role=dialog][aria-label=Settings]'),'settings');
       const generated=phase==='features',label=generated?'Example command':'Official toolbar';
       const example=[...document.querySelectorAll('[role=dialog] label')].find(node=>node.textContent===label);
-      const command=()=>[...document.querySelectorAll('.format-toolbar button')].some(node=>generated?node.textContent.startsWith('SDK '):node.textContent==='Bold');
+      const command=()=>[...document.querySelectorAll('.format-toolbar button')].some(node=>generated?node.textContent.startsWith('SDK '):(node.getAttribute('aria-label')??node.textContent)==='Bold');
       example.querySelector('input').click();await until(()=>!command(),'packaged plugin deactivation');
       check(label+' commands disposed on disable',true);example.querySelector('input').click();
       await until(command,'packaged plugin reactivation');
