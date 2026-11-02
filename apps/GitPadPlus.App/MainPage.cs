@@ -20,6 +20,11 @@ public sealed class MainPage : ContentPage
     public event Action? Flushed;
     public MainPage()
     {
+#if ANDROID
+        // MAUI 10 defaults to edge-to-edge; include soft-input insets so the
+        // real HybridWebView viewport shrinks above Android's software keyboard.
+        SafeAreaEdges=Microsoft.Maui.SafeAreaEdges.All;
+#endif
         var overrideVault=Environment.GetEnvironmentVariable("GITPAD_ACCEPTANCE_VAULT");
 #if ANDROID
         // Android's OS-provided /data/user/0 alias can itself be a symlink.

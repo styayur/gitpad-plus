@@ -45,8 +45,10 @@ void(async()=>{
       await until(()=>NativeAcceptance.keyboardVisible()&&innerHeight<fullHeight-80,'actual Android IME and resized WebView');await wait(1000);
       check('Native IME is visible',NativeAcceptance.keyboardVisible());
       const pane=document.querySelector('.editor-pane').getBoundingClientRect(),toolbar=document.querySelector('.format-toolbar').getBoundingClientRect();
+      checks.push({name:'Native keyboard viewport measurements',fullHeight,keyboardViewportHeight:innerHeight,editorHeight:pane.height,nativeGeometry:NativeAcceptance.geometry()});
       check('Keyboard-resized editor retains a usable viewport',pane.height>=80&&pane.bottom<=innerHeight+1);
       check('Formatting stays above the visible editor',toolbar.bottom<=pane.top+1);
+      check('Local and Git status remain above the keyboard',document.querySelector('footer').getBoundingClientRect().bottom<=innerHeight+1);
       check('Mobile layout has no document-level horizontal overflow',document.documentElement.scrollWidth<=innerWidth);
       NativeAcceptance.screenshot('ui-keyboard-visible');NativeAcceptance.hideKeyboard();
       const after=await rpc('documents.load',{id});
