@@ -76,6 +76,38 @@ public sealed class VaultTests : IDisposable
         File.AppendAllText(store.Safe("Journal", note.Header.Id + ".md"), "changed externally");
         Assert.Throws<RecoveryRequiredException>(() => store.Load(note.Header.Id));
     }
+    [Theory] [InlineData("markdown")] [InlineData("sidecar")] [InlineData("both")]
+    public void ReconciliationArchivesAllInputsAndRejectsStalePreview(string mode)
+    {
+        var store=Store();var note=store.Save(Edit(store.Create("2026-10-31","Recovery"),"original"));
+        var markdown=store.Safe("Journal",note.Header.Id+".md");var sidecar=store.Safe(".gitpad","anchors",note.Header.Id+".json");
+        if(mode!="sidecar")File.AppendAllText(markdown," external");
+        if(mode!="markdown")File.AppendAllText(sidecar," ");
+        Assert.Throws<RecoveryRequiredException>(()=>store.Load(note.Header.Id));
+        var preview=store.InspectRecovery(note.Header.Id);File.AppendAllText(markdown," newer");
+        Assert.Throws<RevisionConflictException>(()=>store.Reconcile(new(note.Header.Id,preview.Fingerprint,preview.Versions[0].Markdown)));
+        preview=store.InspectRecovery(note.Header.Id);var chosen=preview.Versions[0].Markdown;
+        var restored=store.Reconcile(new(note.Header.Id,preview.Fingerprint,chosen));
+        Assert.Equal(Frontmatter.Decode(chosen).Body,restored.Body);Assert.Equal(restored.Body,Store().Load(note.Header.Id).Body);
+        var archived=Directory.GetFiles(store.Safe(".gitpad","recovery"),"0.md",SearchOption.AllDirectories);Assert.Single(archived);Assert.Equal(chosen,File.ReadAllText(archived[0]));
+    }
+    [Fact] public void SidecarChangesDuringInterruptedTransactionCannotBeOverwritten()
+    {
+        var note=Store().Create("2026-10-31","Conflict");var faulty=Store(point=>{if(point=="Staged")throw new IOException("stop");});
+        Assert.Throws<IOException>(()=>faulty.Save(Edit(note,"staged")));
+        var path=Path.Combine(Root,".gitpad","anchors",note.Header.Id+".json");File.AppendAllText(path," ");var external=File.ReadAllText(path);
+        var recovered=Store();Assert.Equal(external,File.ReadAllText(path));Assert.NotEmpty(recovered.RecoveryIssues);
+        var preview=recovered.InspectRecovery(note.Header.Id);Assert.Equal(3,preview.Versions.Length);
+        recovered.Reconcile(new(note.Header.Id,preview.Fingerprint,preview.Versions.Single(v=>v.Name.EndsWith("/staged",StringComparison.Ordinal)).Markdown));
+        Assert.Equal("staged",Store().Load(note.Header.Id).Body);Assert.NotEmpty(Directory.GetFiles(recovered.Safe(".gitpad","recovery"),"previous.md",SearchOption.AllDirectories));
+    }
+    [Fact] public void PluginStateIsDurableAndIsolated()
+    {
+        var store=Store();var id=Guid.CreateVersion7();var data=new PluginData(1,"1.0",new(){["text"]=JsonSerializer.SerializeToElement("中文")},new(){["widget"]=id});
+        store.WritePluginData("first-plugin",data);Assert.Null(store.ReadPluginData("second-plugin"));
+        var restored=Store().ReadPluginData("first-plugin")!;Assert.Equal(id,restored.ObjectIds["widget"]);Assert.Equal("中文",restored.Values["text"].GetString());
+        Assert.Throws<ArgumentException>(()=>store.WritePluginData("../escape",data));
+    }
     [Fact] public void IndexCanBeRebuiltAfterDeletion()
     {
         var store = Store(); var note = store.Create("2026-10-31", "Search");
@@ -109,11 +141,20 @@ public sealed class VaultTests : IDisposable
         Assert.Throws<UnauthorizedAccessException>(() => Store());
         Assert.Equal("keep", File.ReadAllText(Path.Combine(Root, "private.txt")));
     }
-    [Fact] public void SymbolicLinkCannotEscapeOrBeCleared()
+    [Fact] public void ReparsePointCannotEscapeOrBeCleared()
     {
         var store = Store(); var outside = Path.Combine(parent, "outside"); Directory.CreateDirectory(outside);
         File.WriteAllText(Path.Combine(outside, "private.txt"), "keep");
-        var link = Path.Combine(Root, "Assets", "linked"); Directory.CreateSymbolicLink(link, outside);
+        var link = Path.Combine(Root, "Assets", "linked");
+        if(OperatingSystem.IsWindows())
+        {
+            // NTFS junctions exercise the same reparse-point rejection without
+            // requiring Developer Mode or the symlink privilege on user machines.
+            var start=new System.Diagnostics.ProcessStartInfo("cmd.exe"){UseShellExecute=false,CreateNoWindow=true,RedirectStandardOutput=true,RedirectStandardError=true};
+            foreach(var argument in new[]{"/d","/c","mklink","/J",link,outside})start.ArgumentList.Add(argument);
+            using var process=System.Diagnostics.Process.Start(start)!;process.WaitForExit();Assert.Equal(0,process.ExitCode);
+        }
+        else Directory.CreateSymbolicLink(link, outside);
         Assert.Throws<UnauthorizedAccessException>(() => store.Safe("Assets", "linked", "private.txt"));
         Assert.Throws<UnauthorizedAccessException>(() => store.PreviewClear(false));
         Assert.Equal("keep", File.ReadAllText(Path.Combine(outside, "private.txt")));
@@ -129,6 +170,45 @@ public sealed class VaultTests : IDisposable
         Assert.Throws<UnauthorizedAccessException>(() => store.Clear(preview.Confirmation, false));
         store.Clear(store.PreviewClear(false).Confirmation, false);
         Assert.Empty(store.List()); Assert.True(File.Exists(Path.Combine(Root, ".gitpad-owned")));
+    }
+    [Fact] public void TrustedOsBaseStillRejectsLinksInsideOwnedVault()
+    {
+        Directory.CreateDirectory(parent);
+        Assert.Throws<ArgumentException>(()=>new VaultStore(Root,trustedPlatformBase:Root));
+        Assert.Throws<ArgumentException>(()=>new VaultStore(Root,trustedPlatformBase:Path.Combine(parent,"elsewhere")));
+        var store=new VaultStore(Root,trustedPlatformBase:parent);
+        var outside=Path.Combine(parent,"outside-private");Directory.CreateDirectory(outside);
+        File.WriteAllText(Path.Combine(outside,"keep.txt"),"untouched");
+        var link=Path.Combine(Root,"Assets","linked");
+        if(OperatingSystem.IsWindows()){
+            var start=new System.Diagnostics.ProcessStartInfo("cmd.exe"){UseShellExecute=false,CreateNoWindow=true,RedirectStandardOutput=true,RedirectStandardError=true};
+            foreach(var argument in new[]{"/d","/c","mklink","/J",link,outside})start.ArgumentList.Add(argument);
+            using var process=System.Diagnostics.Process.Start(start)!;process.WaitForExit();Assert.Equal(0,process.ExitCode);
+        }else Directory.CreateSymbolicLink(link,outside);
+        try{
+            Assert.Throws<UnauthorizedAccessException>(()=>store.Safe("Assets","linked","keep.txt"));
+            Assert.Throws<UnauthorizedAccessException>(()=>store.PreviewClear(false));
+            Assert.Equal("untouched",File.ReadAllText(Path.Combine(outside,"keep.txt")));
+        }finally{Directory.Delete(link);}
+    }
+    [Fact] public void PackagedRegistryAndNativeClipboardKeepCapabilitiesNarrow()
+    {
+        var store=Store();
+        var bridge=new Bridge(store,[new("sample-plugin","",["commands"],[])],()=>[137,80,78,71,13,10,26,10,0]);
+        JsonElement Call(string method,object parameters)=>JsonDocument.Parse(bridge.Handle(JsonSerializer.Serialize(new{protocolVersion=1,requestId="registry-test",method,@params=parameters}))).RootElement.Clone();
+        Assert.Equal(JsonValueKind.Null,Call("plugins.activate",new{pluginId="sample-plugin"}).GetProperty("error").ValueKind);
+        Assert.NotEqual(JsonValueKind.Null,Call("plugins.storage.read",new{pluginId="sample-plugin"}).GetProperty("error").ValueKind);
+        Assert.NotEqual(JsonValueKind.Null,Call("plugins.invoke",new{pluginId="sample-plugin",method="calendar.query",@params=new{}}).GetProperty("error").ValueKind);
+        var image=Call("media.importClipboard",new{});Assert.Equal(JsonValueKind.Null,image.GetProperty("error").ValueKind);
+        Assert.StartsWith("../Assets/",image.GetProperty("result").GetString());
+        Assert.Single(Directory.GetFiles(store.Safe("Assets")));
+    }
+    [Theory] [InlineData("ClearStaged")] [InlineData("ClearJournalMoved")] [InlineData("ClearAssetsMoved")] [InlineData("ClearMetadataMoved")]
+    public void ConfirmedClearResumesAfterInterruption(string stage)
+    {
+        Store().Create("2026-10-31","Disposable");var faulty=Store(point=>{if(point==stage)throw new IOException("simulated clear interruption");});
+        Assert.Throws<IOException>(()=>faulty.Clear(faulty.PreviewClear(false).Confirmation,false));
+        var restarted=Store();Assert.Empty(restarted.List());Assert.Empty(Directory.GetDirectories(Root,".gitpad-clear-*"));Assert.False(File.Exists(Path.Combine(Root,".gitpad-clear.json")));
     }
     [Fact] public void AnchorIdentitiesAndTombstonesRoundTrip()
     {
@@ -166,6 +246,17 @@ public sealed class VaultTests : IDisposable
             Assert.NotEqual(JsonValueKind.Null, JsonDocument.Parse(bridge.Handle(json)).RootElement.GetProperty("error").ValueKind);
         }
     }
+    [Fact] public void NativePickerImportsValidatedFilesAndCancellationHasNoWrites()
+    {
+        var store=Store();
+        string Invoke(Bridge bridge,string method)=>bridge.Handle(JsonSerializer.Serialize(new{protocolVersion=1,requestId="picker",method,@params=new{}}));
+        var unavailable=JsonDocument.Parse(Invoke(new Bridge(store),"media.pickImage"));Assert.NotEqual(JsonValueKind.Null,unavailable.RootElement.GetProperty("error").ValueKind);
+        var cancel=JsonDocument.Parse(Invoke(new Bridge(store,pickFile:_=>null),"media.pickImage"));Assert.Equal(JsonValueKind.Null,cancel.RootElement.GetProperty("result").ValueKind);Assert.Empty(Directory.GetFiles(store.Safe("Assets")));
+        var bridge=new Bridge(store,pickFile:kind=>kind=="image"?new("pixel.png",[137,80,78,71,13,10,26,10,0]):new("fixture.md",System.Text.Encoding.UTF8.GetBytes("中文\r\n")));
+        var image=JsonDocument.Parse(Invoke(bridge,"media.pickImage"));Assert.Equal(JsonValueKind.Null,image.RootElement.GetProperty("error").ValueKind);Assert.StartsWith("../Assets/",image.RootElement.GetProperty("result").GetString());
+        var markdown=JsonDocument.Parse(Invoke(bridge,"files.pickMarkdown"));Assert.Equal("中文\r\n",markdown.RootElement.GetProperty("result").GetProperty("text").GetString());Assert.Empty(store.List());
+        var corrupt=JsonDocument.Parse(Invoke(new Bridge(store,pickFile:_=>new("bad.md",[0xff])),"files.pickMarkdown"));Assert.NotEqual(JsonValueKind.Null,corrupt.RootElement.GetProperty("error").ValueKind);
+    }
     [Fact] public void BridgeCreateAndDirtyClearProtection()
     {
         var bridge = new Bridge(Store());
@@ -184,6 +275,15 @@ public sealed class VaultTests : IDisposable
         Assert.Throws<ArgumentException>(() => Identity.ParseLink($"gitpadplus://note/{Guid.NewGuid()}"));
         Assert.Throws<ArgumentException>(() => Identity.ParseLink($"gitpadplus://note/{doc}/"));
         Assert.Throws<ArgumentException>(() => Identity.ParseLink($"gitpadplus://note/{doc:N}"));
+    }
+    [Fact] public void UnpackagedActivationExtractsOnlyAValidatedNoteArgument()
+    {
+        var link=$"gitpadplus://note/{Guid.CreateVersion7()}?block={Guid.CreateVersion7()}";
+        Assert.Equal(link,Identity.LinkFromActivationArguments(link));
+        Assert.Equal(link,Identity.LinkFromActivationArguments("\"C:\\Program Files\\GitPad+\\GitPadPlus.App.exe\" \""+link+"\""));
+        Assert.Null(Identity.LinkFromActivationArguments("prefix-"+link));
+        Assert.Null(Identity.LinkFromActivationArguments("gitpadplus://note/"+Guid.NewGuid()));
+        Assert.Null(Identity.LinkFromActivationArguments(null));
     }
     [Fact] public void NativeCoreEnforcesPackagedPluginCapabilities()
     {

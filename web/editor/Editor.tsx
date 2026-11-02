@@ -6,21 +6,21 @@ import { $prose } from '@milkdown/kit/utils';
 import { toggleStrongCommand, toggleEmphasisCommand, wrapInBulletListCommand, blockquoteSchema, toggleLinkCommand, insertImageCommand } from '@milkdown/kit/preset/commonmark';
 import { toggleStrikethroughCommand } from '@milkdown/kit/preset/gfm';
 import { toggleMark, wrapIn } from '@milkdown/kit/prose/commands';
-import { Plugin, TextSelection } from '@milkdown/kit/prose/state';
+import { Plugin, TextSelection, type SelectionBookmark } from '@milkdown/kit/prose/state';
 import { prosemirrorToYXmlFragment } from 'y-prosemirror';
 import * as Y from 'yjs';
 import { identityPlugin, blockKey, sourceBlocks } from './identity';
 import { directives, directiveMark, foldNode, opaqueDirective, calloutBlockquote } from './extensions';
 import { MarkdownPeek } from './peek';
 import { SourceDocument, preserveSource } from '../markdown/source';
-import { createAnchor, resolveAnchor, SelectionSession } from '../anchors';
+import { createAnchor, LiveAnchors } from '../anchors';
 import type { DocumentSession } from './session';
 import type { Settings } from '../bridge/types';
 import '@milkdown/crepe/theme/common/style.css';
 import '@milkdown/crepe/theme/frame.css';
 
-export interface EditorHandle { command(name: string): void; selectionLink(): string | null; blockLink(): string | null; navigate(target: {block?: string; selection?: string}): string }
-export function Editor({session, settings, handle, upload, imageUrl}: {session: DocumentSession; settings: Settings; handle: (value: EditorHandle | null) => void; upload: (file: File) => Promise<string>; imageUrl: (path: string) => Promise<string>}) {
+export interface EditorHandle { command(name: string): void; selectionLink(): string | null; blockLink(): string | null; repairSelection(id:string): boolean; navigate(target: {block?: string; selection?: string}): string }
+export function Editor({session, settings, handle, upload, imageUrl, pasteImage,pickImage}: {session: DocumentSession; settings: Settings; handle: (value: EditorHandle | null) => void; upload: (file: File) => Promise<string>; imageUrl: (path: string) => Promise<string>;pasteImage:()=>Promise<string>;pickImage?:()=>Promise<string|null>}) {
   const root = useRef<HTMLDivElement>(null);
   const [ready, setReady] = useState(false), [failure, setFailure] = useState('');
   const [, redraw] = useState(0);
@@ -29,7 +29,7 @@ export function Editor({session, settings, handle, upload, imageUrl}: {session: 
   const crepeRef = useRef<Crepe | null>(null);
   useEffect(() => {
     let alive = true;
-    const ySession = new SelectionSession(session.body);
+    const ySession = new LiveAnchors();
     const yTree = new Y.Doc();
     peek.current = new MarkdownPeek(() => { if (alive) redraw(n => n + 1); });
     const original = new SourceDocument(session.body);
@@ -53,11 +53,21 @@ export function Editor({session, settings, handle, upload, imageUrl}: {session: 
         const view = ctx.get(editorViewCtx);
         // A ProseMirror/Yjs projection is maintained in the same session. W3C remains persistent authority.
         prosemirrorToYXmlFragment(view.state.doc, yTree.getXmlFragment('prosemirror'));
-        ySession.update(view.state.doc.textContent);
-        if (body !== session.body) session.edit(body, sourceBlocks(blockKey.getState(view.state), body));
+        for(const block of blockKey.getState(view.state)?.live??[])if(block.node.isTextblock)ySession.update(block.id,block.node.textContent);
+        session.selections=session.selections.map(anchor=>{
+          const block=blockKey.getState(view.state)?.live.find(b=>b.id===anchor.blockId&&b.node.isTextblock);if(!block)return anchor;
+          const location=ySession.resolve(anchor,block.node.textContent);
+          if(location.state!=='resolved')return anchor;
+          const rebased={...createAnchor(block.id,block.node.textContent,location.start,location.end),id:anchor.id};ySession.track(rebased,block.node.textContent);return rebased;
+        });
+        const blocks=sourceBlocks(blockKey.getState(view.state), body);
+        if (body !== session.body||JSON.stringify(blocks)!==JSON.stringify(session.blocks)) session.edit(body, blocks);
       });
     };
-    editor.editor.use($prose(() => new Plugin({view: () => ({update: (view, previous) => {
+    const pendingNativeDrops=new Map<string,SelectionBookmark>();
+    editor.editor.use($prose(() => new Plugin({state:{init:()=>null,apply:transaction=>{
+      for(const [id,bookmark] of pendingNativeDrops)pendingNativeDrops.set(id,bookmark.map(transaction.mapping));return null;
+    }},view: () => ({update: (view, previous) => {
       if (!view.state.doc.eq(previous.doc)) capture(editor.getMarkdown());
     }})})));
     const onDoubleClick = (event: MouseEvent) => {
@@ -78,10 +88,51 @@ export function Editor({session, settings, handle, upload, imageUrl}: {session: 
       const anchor = (event.target as HTMLElement).closest('a');
       if (anchor) { event.preventDefault(); if (anchor.getAttribute('href')?.startsWith('gitpadplus:')) window.dispatchEvent(new CustomEvent('gitpad-navigate', {detail: anchor.getAttribute('href')})); }
     };
+    const importFiles=(files:File[])=>{void(async()=>{try{for(const file of files){const src=await upload(file);if(alive)editor.editor.action(ctx=>ctx.get(commandsCtx).call(insertImageCommand.key,{src,alt:file.name}));}}catch(e){if(alive)setFailure(String(e));}})();};
+    const onPaste=(event:ClipboardEvent)=>{const files=[...event.clipboardData?.files??[]];if(!files.length)return;event.preventDefault();event.stopPropagation();importFiles(files);};
+    const nativeWindowsDrop=!import.meta.env.DEV&&!!(window as Window&{chrome?:{webview?:unknown}}).chrome?.webview;
+    const onDrop=(event:DragEvent)=>{if(nativeWindowsDrop){event.preventDefault();event.stopPropagation();return;}const files=[...event.dataTransfer?.files??[]];if(!files.length)return;event.preventDefault();event.stopPropagation();importFiles(files);};
+    const onDragOver=(event:DragEvent)=>{if(event.dataTransfer?.types.includes('Files')){event.preventDefault();event.dataTransfer.dropEffect='copy';}};
+    const onNativeDrop=(event:Event)=>{
+      const raw=(event as CustomEvent<{message:string}>).detail?.message;
+      if(typeof raw!=='string'||!/^\{\s*"type"\s*:\s*"native-drop-/.test(raw))return;
+      let message:{type:string;id:string;x?:number;y?:number;files?:{filename:string;path:string}[];message?:string};
+      try{message=JSON.parse(raw);}catch{return;}
+      if(!alive||!initialized||typeof message.id!=='string')return;
+      if(message.type==='native-drop-start'){
+        if(!Number.isFinite(message.x)||!Number.isFinite(message.y))return;
+        const x=message.x!*innerWidth,y=message.y!*innerHeight,target=document.elementFromPoint(x,y);
+        if(!target||!root.current?.contains(target))return;
+        setFailure('');
+        // Keep the text insertion point without moving focus inside the OS drag
+        // loop. Later cursor movement must not move the pending drop's target.
+        editor.editor.action(ctx=>{const view=ctx.get(editorViewCtx),position=view.posAtCoords({left:x,top:y})?.pos;if(position!=null)pendingNativeDrops.set(message.id,TextSelection.near(view.state.doc.resolve(position)).getBookmark());});
+      }else if(message.type==='native-drop-complete'&&pendingNativeDrops.has(message.id)){
+        const bookmark=pendingNativeDrops.get(message.id)!;pendingNativeDrops.delete(message.id);
+        if(!Array.isArray(message.files)||message.files.some(file=>typeof file.filename!=='string'||!/^\.\.\/Assets\/[a-f0-9]{64}\.(png|jpg|gif)$/.test(file.path))){setFailure('Invalid native image drop response');return;}
+        editor.editor.action(ctx=>{const view=ctx.get(editorViewCtx);view.dispatch(view.state.tr.setSelection(bookmark.resolve(view.state.doc)));view.focus();});
+        for(const file of message.files)editor.editor.action(ctx=>ctx.get(commandsCtx).call(insertImageCommand.key,{src:file.path,alt:file.filename}));
+      }else if(message.type==='native-drop-error'&&pendingNativeDrops.delete(message.id))setFailure(message.message??'Native image drop failed');
+    };
     root.current?.addEventListener('dblclick', onDoubleClick); root.current?.addEventListener('click', onClick);
+    root.current?.addEventListener('paste',onPaste,true);root.current?.addEventListener('drop',onDrop,true);root.current?.addEventListener('dragover',onDragOver);
+    window.addEventListener('HybridWebViewMessageReceived',onNativeDrop);
     void editor.create().then(() => {
       if (!alive) { void editor.destroy(); return; }
+      // Markdown has no syntax for the editable empty paragraph after an image.
+      // Recreate only persisted, contiguous top-level tails before the first
+      // capture, retaining their IDs rather than silently dropping metadata.
+      editor.editor.action(ctx=>{
+        const view=ctx.get(editorViewCtx),transaction=view.state.tr;
+        const tails=session.blocks.filter(b=>!b.deleted&&b.kind==='paragraph'&&b.start===session.body.length&&b.end===session.body.length&&b.path?.length===1).sort((a,b)=>a.path![0]-b.path![0]);
+        for(const tail of tails)if(tail.path![0]===transaction.doc.childCount)transaction.insert(transaction.doc.content.size,view.state.schema.nodes.paragraph.create());
+        // Native view plugins may already have appended the empty node. Its ID
+        // still needs restoring even when no structural insertion was needed.
+        if(transaction.docChanged||tails.length)view.dispatch(transaction.setMeta(blockKey,'restoreSavedTail').setMeta('addToHistory',false));
+      });
       initialized = true; setReady(true);
+      // Persist reconstructed identities without normalizing the untouched source.
+      capture(session.body);
       handle({
         navigate(target) { return editor.editor.action(ctx=>{
           const view=ctx.get(editorViewCtx),live=blockKey.getState(view.state)?.live??[];
@@ -89,12 +140,14 @@ export function Editor({session, settings, handle, upload, imageUrl}: {session: 
           const blockId=anchor?.blockId??target.block;
           const block=live.find(b=>b.id===blockId||b.aliases.includes(blockId??''));
           if(!block)return 'Link target missing or deleted; repair required.';
-          if(anchor){const result=resolveAnchor(anchor,block.node.textContent);if(result.state!=='resolved')return `Selection ${result.state}; repair required.`;view.dispatch(view.state.tr.setSelection(TextSelection.create(view.state.doc,block.pos+1+result.start,block.pos+1+result.end)).scrollIntoView());}
+          if(anchor){const result=ySession.resolve(anchor,block.node.textContent);if(result.state!=='resolved')return `Selection ${result.state}; repair required.`;view.dispatch(view.state.tr.setSelection(TextSelection.create(view.state.doc,block.pos+1+result.start,block.pos+1+result.end)).scrollIntoView());}
           else view.dispatch(view.state.tr.setSelection(TextSelection.near(view.state.doc.resolve(Math.min(block.pos+1,view.state.doc.content.size)))).scrollIntoView());
           view.focus();return anchor?'Selection located.':'Block located.';
         }); },
         command(name) {
-          if (name === 'peek') { editor.editor.action(ctx => { const view = ctx.get(editorViewCtx); const blocks = blockKey.getState(view.state)?.live ?? []; peekIndex.current = Math.max(0, blocks.findIndex(b => b.pos <= view.state.selection.from && view.state.selection.from <= b.pos+b.node.nodeSize)); const text = new SourceDocument(session.body).slice(peekIndex.current); setPeekText(text); peek.current?.show(text); }); return; }
+          if(name==='image'&&pickImage){void pickImage().then(src=>{if(alive&&src)editor.editor.action(ctx=>ctx.get(commandsCtx).call(insertImageCommand.key,{src,alt:'Imported image'}));}).catch(e=>{if(alive)setFailure(String(e));});return;}
+          if(name==='pasteImage'){void pasteImage().then(src=>editor.editor.action(ctx=>ctx.get(commandsCtx).call(insertImageCommand.key,{src,alt:'Clipboard image'}))).catch(e=>setFailure(String(e)));return;}
+          if (name === 'peek') { editor.editor.action(ctx => { const view = ctx.get(editorViewCtx); const blocks = blockKey.getState(view.state)?.live.filter(b=>b.path.length===1) ?? []; peekIndex.current = Math.max(0, blocks.findIndex(b => b.pos <= view.state.selection.from && view.state.selection.from <= b.pos+b.node.nodeSize)); const text = new SourceDocument(session.body).slice(peekIndex.current); setPeekText(text); peek.current?.show(text); }); return; }
           if (name === 'expandAll' || name === 'collapseAll') { editor.editor.action(ctx=>{const view=ctx.get(editorViewCtx),transaction=view.state.tr;view.state.doc.descendants((node,pos)=>{if(node.type.name==='gitpad_fold')transaction.setNodeMarkup(pos,undefined,{...node.attrs,closed:name==='collapseAll'});});view.dispatch(transaction);}); return; }
           editor.editor.action(ctx => {
             const commands = ctx.get(commandsCtx), view = ctx.get(editorViewCtx); view.focus();
@@ -111,18 +164,27 @@ export function Editor({session, settings, handle, upload, imageUrl}: {session: 
         selectionLink() {
           return editor.editor.action(ctx => {
             const view = ctx.get(editorViewCtx), selection = view.state.selection;
-            const block = blockKey.getState(view.state)?.live.find(b => b.pos <= selection.from && selection.to <= b.pos+b.node.nodeSize);
+            const block = blockKey.getState(view.state)?.live.find(b => b.node.isTextblock && b.pos < selection.from && selection.to < b.pos+b.node.nodeSize);
             if (!block || selection.empty || !block.node.isTextblock) return null;
             const anchor = createAnchor(block.id, block.node.textContent, selection.from-block.pos-1, selection.to-block.pos-1);
+            ySession.track(anchor,block.node.textContent);
             session.blocks = sourceBlocks(blockKey.getState(view.state), session.body);
             session.addSelection(anchor);
             return `gitpadplus://note/${session.note.header.id}?selection=${anchor.id}`;
           });
         },
-        blockLink() { return editor.editor.action(ctx => { const view=ctx.get(editorViewCtx); const block=blockKey.getState(view.state)?.live.find(b => b.pos<=view.state.selection.from && view.state.selection.from <= b.pos+b.node.nodeSize); if(!block)return null; session.edit(session.body, sourceBlocks(blockKey.getState(view.state),session.body)); return `gitpadplus://note/${session.note.header.id}?block=${block.id}`; }); },
+        repairSelection(id) { return editor.editor.action(ctx=>{
+          const view=ctx.get(editorViewCtx),selection=view.state.selection;
+          const block=blockKey.getState(view.state)?.live.find(b=>b.node.isTextblock&&b.pos<selection.from&&selection.to<b.pos+b.node.nodeSize);
+          if(!block||selection.empty||!session.selections.some(a=>a.id===id))return false;
+          const repaired={...createAnchor(block.id,block.node.textContent,selection.from-block.pos-1,selection.to-block.pos-1),id};
+          ySession.track(repaired,block.node.textContent);session.selections=session.selections.map(a=>a.id===id?repaired:a);
+          session.edit(session.body,sourceBlocks(blockKey.getState(view.state),session.body));return true;
+        }); },
+        blockLink() { return editor.editor.action(ctx => { const view=ctx.get(editorViewCtx); const block=[...blockKey.getState(view.state)?.live??[]].reverse().find(b => b.pos<=view.state.selection.from && view.state.selection.from <= b.pos+b.node.nodeSize); if(!block)return null; session.edit(session.body, sourceBlocks(blockKey.getState(view.state),session.body)); return `gitpadplus://note/${session.note.header.id}?block=${block.id}`; }); },
       });
     }).catch(e => { if (alive) setFailure(String(e)); });
-    return () => { alive = false; initialized = false; peek.current?.dispose(); handle(null); root.current?.removeEventListener('dblclick',onDoubleClick); root.current?.removeEventListener('click',onClick); void editor.destroy(); ySession.dispose(); yTree.destroy(); };
+    return () => { alive = false; initialized = false;pendingNativeDrops.clear();window.removeEventListener('HybridWebViewMessageReceived',onNativeDrop); peek.current?.dispose(); handle(null);root.current?.removeEventListener('dblclick',onDoubleClick); root.current?.removeEventListener('click',onClick);root.current?.removeEventListener('paste',onPaste,true);root.current?.removeEventListener('drop',onDrop,true);root.current?.removeEventListener('dragover',onDragOver); void editor.destroy(); ySession.dispose(); yTree.destroy(); };
   // A document instance owns one editor/undo history. Settings changes reopen only after flush in the parent.
   }, [session]);
   return <section className="editor-pane" aria-label="Markdown editor">
@@ -132,7 +194,7 @@ export function Editor({session, settings, handle, upload, imageUrl}: {session: 
     {peek.current?.source != null && <div className="peek" role="dialog" aria-label="Markdown source peek"><label>Original Markdown source<textarea aria-label="Original Markdown source" value={peekText} onChange={e => { peek.current?.edit(); setPeekText(e.target.value); }} /></label>
       {peek.current.editing && <button onClick={() => {
         const active=crepeRef.current;if(!active)return;
-        active.editor.action(ctx=>{const view=ctx.get(editorViewCtx),block=blockKey.getState(view.state)?.live[peekIndex.current];if(!block)return;
+        active.editor.action(ctx=>{const view=ctx.get(editorViewCtx),block=blockKey.getState(view.state)?.live.filter(b=>b.path.length===1)[peekIndex.current];if(!block)return;
           const updated=new SourceDocument(session.body).replace(peekIndex.current,peekText).raw,replacement=ctx.get(parserCtx)(peekText);
           // One ordinary editor transaction retains the existing undo history.
           session.body=updated;view.dispatch(view.state.tr.replaceWith(block.pos,block.pos+block.node.nodeSize,replacement.content));

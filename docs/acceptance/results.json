@@ -1,47 +1,93 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "releaseVersion": "0.1.0-alpha.1",
   "releaseGate": "blocked",
-  "environment": "Debian 13 x64",
+  "environment": "Windows 11 Home build 26200 x64",
+  "sourceState": "Follow-up source fixes persisted empty-tail reconstruction. Final clean-source package stamps and qualification belong in generated candidate acceptance.json, not this pre-commit narrative.",
   "tests": {
     "dotnet": {
-      "passed": 30,
-      "failed": 0,
-      "skipped": 0
+      "skipped": 0,
+      "passed": 43,
+      "evidence": "artifacts/dotnet/core-windows.trx",
+      "failed": 0
     },
     "vitest": {
-      "passed": 38,
-      "failed": 0,
-      "skipped": 0
+      "skipped": 0,
+      "passed": 49,
+      "evidence": "artifacts/local-audit/tail-existing-node-vitest.log",
+      "failed": 0
     },
     "playwright": {
-      "passed": 23,
+      "passed": 31,
       "failed": 0,
-      "skipped": 0
+      "skipped": 0,
+      "evidence": [
+        "artifacts/local-audit/trailing-identity-all-playwright.log"
+      ],
+      "mode": "Full 31-test suite at 441e2f7; final startup-order follow-up separately passed three relevant browser cases. Final post-commit CI and exact package results are recorded in generated evidence."
+    },
+    "releaseGate": {
+      "skipped": 0,
+      "passed": 16,
+      "failed": 0
     },
     "standalonePlugin": {
+      "skipped": 0,
       "passed": 1,
-      "failed": 0,
-      "skipped": 0
+      "failed": 0
     }
   },
   "native": {
-    "windowsRuntime": "not_run",
-    "androidBuild": "not_run",
-    "androidRuntime": "not_run",
-    "androidReleaseSigning": "missing",
-    "windowsBuild": "passed"
+    "windowsPackaging": "Self-contained unsigned x64 ZIP built through locked restore; clean extraction and large-library GUI run",
+    "androidReleaseSigning": "Permanent user-authorized protected key; certificate verified",
+    "androidRuntime": "Exact signed universal 45054ad APK passed covered emulator scenarios; source changed for empty-tail reconstruction and requires freshly stamped candidate qualification.",
+    "androidBuild": "Permanent-signed universal arm64/x64 AOT Release candidate 45054ad built, inspected and installed byte-for-byte; follow-up build required.",
+    "windowsRuntime": "Exact clean 45054ad ZIP completed covered native entrypoints; further restart comparison exposed empty-tail identity loss. Follow-up source fixed it; new candidate runtime qualification required."
   },
-  "initialCiRun": "https://github.com/styayur/gitpad-plus/actions/runs/41165509112",
-  "initialCiConclusion": "failed; regression fixes awaiting CI",
-  "notes": [
-    "Browser integration is not native acceptance.",
-    "No release tag or assets published.",
-    "Repository metadata edit was denied HTTP 403 by connected integration; push/read CI succeeded.",
-    "Final resolver safety regression rejects a unique quote if its stored context no longer matches; valid selection reload was retested in the browser."
+  "devices": {
+    "android": {
+      "kind": "emulator",
+      "description": "GitPadPlus_API36_Pixel7; Android 16 API 36 Google APIs x86_64; 720x1600 density 320; 3072 MB RAM; emulator 37.2.13; WHPX; software GPU",
+      "physicalDeviceVerified": false
+    }
+  },
+  "signing": {
+    "windows": "unsigned",
+    "credentialsIncluded": false,
+    "certificateSha256": "4fe4a85c853243d9d7c1b0dc421b5786f1bb89a91f22f8c691fe6840824e9fd0"
+  },
+  "performance": {
+    "android": {
+      "paragraphs": 10000,
+      "nativeHeapAllocatedBytes": 58873728,
+      "searchMs": 154.6,
+      "observedTotalNotes": 1010,
+      "fixtureNotes": 1000,
+      "appProcessPssKB": 212798,
+      "sourceUtf16Length": 250000,
+      "openLongDocumentMs": 10607.3,
+      "listMs": 33,
+      "evidence": "artifacts/native/android/instrumentation-performance-linear-14.log",
+      "scope": "One warm x86_64/no-AOT emulator development run; setup excluded; WebView renderer memory excluded"
+    }
+  },
+  "licenses": {
+    "passed": false,
+    "nativeDependencies": 144,
+    "unresolved": [
+      "Microsoft.Graphics.Win2D 1.4.0 legacy binary EULA applicability/redistribution review"
+    ]
+  },
+  "remaining": [
+    "Exact-candidate external image drop, cancellation and native handler rebinding qualification",
+    "Final source review and clean commit; matching main CI",
+    "Final universal APK, unsigned Windows ZIP, exact-package runtime evidence and hashes",
+    "Win2D binary license applicability review; mandatory fail-closed gate",
+    "User tag/draft approval and separate public approval after all mandatory gates pass"
   ],
-  "standalonePluginHost": "passed: built plugin registered, executed and unloaded through actual PluginHost without Core edits",
-  "ciRuns": [
+  "publicReleaseVerified": false,
+  "tagCreated": false,
+  "historicalCi": [
     {
       "url": "https://github.com/styayur/gitpad-plus/actions/runs/41165509112",
       "portable": "failed before plugin-switch fix",
@@ -60,53 +106,67 @@
       "conclusion": "success"
     }
   ],
-  "verifiedImplementationCommit": "e8719718d7bf430e2d6b039f743ff0d84885bfb3",
-  "finalCi": {
-    "url": "https://github.com/styayur/gitpad-plus/actions/runs/41167153299",
-    "headSha": "e8719718d7bf430e2d6b039f743ff0d84885bfb3",
-    "portable": "passed",
-    "windowsBuild": "passed",
-    "conclusion": "success"
-  },
-  "artifacts": [
-    {
-      "name": "portable-evidence",
-      "role": "CI evidence, not release asset",
-      "artifactId": 13029805797,
-      "bytes": 528729,
-      "sha256": "aedd1dc7a4e3335fb934f4d43962cdaff57d371643a6bad7c6a6b44079baa137",
-      "downloadVerified": true,
-      "url": "https://github.com/styayur/gitpad-plus/actions/runs/41167153299/artifacts/13029805797"
-    },
-    {
-      "name": "windows-build-not-release",
-      "role": "unsigned framework-dependent CI build, not qualified release asset",
-      "artifactId": 13029642120,
-      "bytes": 59924961,
-      "sha256": "944f4317fed9af8d5bc7893800fef996f46ea2c1fcb0a498ee3a7a3d215c34d2",
-      "downloadVerified": true,
-      "peMachine": "0x8664",
-      "embeddedAuthenticodeCertificateBytes": 0,
-      "runtimeFramework": "Microsoft.NETCore.App 10.0.0 (framework-dependent)",
-      "installationVerified": false,
-      "executionVerified": false,
-      "url": "https://github.com/styayur/gitpad-plus/actions/runs/41167153299/artifacts/13029642120"
-    }
+  "notes": [
+    "This summary is not candidate acceptance.json.",
+    "All development probes are stamped development and rejected by the release gate.",
+    "Actual evidence is retained in ignored local artifacts until assembled and hashed into a candidate.",
+    "Pasted Chinese Unicode does not prove Chinese IME composition.",
+    "Personal and Obsidian data remain untouched."
   ],
-  "networkDraft": {
-    "type": "restricted",
-    "domains": [
-      "github.com",
-      "api.github.com",
-      "raw.githubusercontent.com",
-      "release-assets.githubusercontent.com",
-      "registry.npmjs.org",
-      "builds.dotnet.microsoft.com",
-      "api.nuget.org",
-      "globalcdn.nuget.org",
-      "cdn.playwright.dev"
-    ],
-    "runtimeApplication": "not independently verified after draft save",
-    "note": "A later draft read showed unrestricted; explicit required-domain restriction was saved and confirmed. No credentials added."
+  "safeClear": {
+    "android": "Passed disposable emulator preview/cancel/confirm/reload and native files, external sentinel retained",
+    "windows": "Passed disposable GUI preview/cancel/confirm/restart, external sentinel retained"
+  },
+  "generatedPluginUninstall": {
+    "android": "Passed; default bundle has no command/RPC authority and native storage SHA256 unchanged",
+    "sha256": "700b1d14cef5aa978dd176e4b7c7e66ba90a69f689f02974252bb086d6dc233e"
+  },
+  "cleanSourceAndroidCandidate": {
+    "sourceCommit": "762355c863f9eaa386efde555257e626a0193613",
+    "firstPerformanceAttempt": "Timed out alongside concurrent AOT build; failure retained",
+    "runtime": "Unicode, restart, verified recreation/resume and features passed; isolated reseeded performance passed",
+    "physicalDeviceVerified": false,
+    "isolatedPerformance": {
+      "openLongDocumentMs": 11624.6,
+      "saveResponseMs": 3751.5,
+      "appProcessPssKB": 224401
+    },
+    "note": "Later tooling-only commits need new candidate source stamps; this is a specifically identified intermediate candidate.",
+    "sha256": "ce57c434110bc4e0dd010c5e4aa0a32ff102ebeadbe6f0c0a9658c5f0c309174",
+    "bytes": 34306088
+  },
+  "writeAcknowledgement": {
+    "observedResponseMs": 15265.3,
+    "evidence": "artifacts/local-audit/delayed-acknowledgement-regression.log",
+    "regression": "Committed response deliberately held for 12000ms, real source persisted and buffer reached Saved",
+    "newDocumentSaveDeadlineMs": 60000,
+    "previousDeadlineMs": 10000
+  },
+  "nativeExternalDrop": {
+    "date": "2026-11-01",
+    "sourceCommit": "45054ad38714d52d75ed6a1409c6ac318ae97d00",
+    "scope": "Exact clean Windows ZIP; user performed two or more Explorer imports plus Escape cancellation",
+    "userResult": "No residue or stale busy notice",
+    "persistedImageLinks": 4,
+    "pairAndAssetHashesVerified": true,
+    "evidence": "artifacts/native/windows/candidate-45054ad-external-drop.json"
+  },
+  "emptyTailRegression": {
+    "before": "Persisted zero-width paragraph after image disappeared on reconstruction",
+    "nativeFailure": "artifacts/native/windows/candidate-45054ad-final-entrypoints.json",
+    "reproduced": "artifacts/local-audit/trailing-identity-persisted-before-fix.log",
+    "fixed": "Contiguous saved empty tails recreated and rebound to their existing IDs before initial editor capture; no history event",
+    "passed": "artifacts/local-audit/trailing-identity-after-fix.log",
+    "fullSuite": "31 passed; no skipped/failed/flaky tests",
+    "nativeStartupOrder": "441e2f7 native startup already appended its empty tail; unconditional saved-tail identity restoration fixed this branch",
+    "nativeProbe": "artifacts/native/windows/development-tail-existing-node-result.json; byte-identical source pairs after load, settings rebuild and process restart; development-only modified resources",
+    "unitTests": "49 passed, including already-created tail restoration with no Undo event"
+  },
+  "latestCompletedCandidate": {
+    "sourceCommit": "45054ad38714d52d75ed6a1409c6ac318ae97d00",
+    "ci": "https://github.com/styayur/gitpad-plus/actions/runs/41278491363",
+    "android": "Covered emulator scenarios passed; no physical device",
+    "windows": "Covered runtime scenarios passed; subsequently discovered empty-tail reconstruction issue prevents full block-identity qualification",
+    "licenseGate": "blocked: Win2D binary terms"
   }
 }

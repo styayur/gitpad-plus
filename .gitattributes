@@ -1,3 +1,6 @@
 * text=auto
 *.md whitespace=-blank-at-eol
 tests/markdown-fixtures/** -text -whitespace
+# Retain the upstream vendor license RTF byte-for-byte.
+docs/licenses/*.rtf binary
+docs/licenses/win2d-LICENSE.txt -text -whitespace

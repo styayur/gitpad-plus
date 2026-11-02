@@ -4,10 +4,14 @@ import type { Disposable } from '../../packages/sdk/index';
 export function createCalendarStatsPlugin() {
 let stop=()=>{};
 return definePlugin({
-  manifest: {id: 'official-calendar-stats', name: 'Calendar note counts', version: '0.1.0-alpha.1', apiVersion: 1, level: 1, permissions: ['calendar.read', 'calendar.decorate']},
+  manifest: {id: 'official-calendar-stats', name: 'Calendar note counts', version: '0.1.0-alpha.1', apiVersion: 1, level: 1, permissions: ['calendar.read', 'calendar.decorate', 'storage'], storageSchemaVersion:1},
   async activate(api) {
     let alive = true; let generation = 0; let decorations: Disposable[] = [];
     stop=()=>{alive=false;generation++;};
+    await api.objectId('calendar-statistics');
+    if(!alive)return;
+    await api.setSetting('activations',Number(api.getSetting('activations')??0)+1);
+    if(!alive)return;
     const refresh = async () => {
       const current = ++generation; const notes = await api.queryCalendar();
       if (!alive || generation !== current) return;

@@ -1,2 +1,8 @@
 import { defineConfig } from 'vite';
-export default defineConfig({ base: './', define: { __VUE_OPTIONS_API__:true, __VUE_PROD_DEVTOOLS__:false, __VUE_PROD_HYDRATION_MISMATCH_DETAILS__:false }, build: { outDir: 'web-dist', emptyOutDir: true, target: 'es2022' }, server: { host: '127.0.0.1', proxy: { '/rpc': 'http://127.0.0.1:7342' } } });
+import { readFileSync } from 'node:fs';
+import { resolve, relative, isAbsolute } from 'node:path';
+const repository=process.cwd(),registryPath=resolve(process.env.GITPAD_PLUGIN_REGISTRY??'plugins/packaged.json');
+const registry=JSON.parse(readFileSync(registryPath,'utf8')) as {id:string;module:string;permissions:string[];methods:string[]}[];
+for(const entry of registry){const path=relative(repository,resolve(entry.module));if(!/^[a-z0-9][a-z0-9.-]+$/.test(entry.id)||path.startsWith('..')||isAbsolute(path)||!Array.isArray(entry.permissions))throw new Error('Invalid reviewed packaged-plugin entry');}
+const bundleSource=registry.map((entry,i)=>`import p${i} from ${JSON.stringify(resolve(entry.module).replaceAll('\\','/'))};\nif(p${i}.manifest.id!==${JSON.stringify(entry.id)}||JSON.stringify([...p${i}.manifest.permissions].sort())!==${JSON.stringify(JSON.stringify([...entry.permissions].sort()))})throw new Error('Packaged plugin manifest/registry mismatch');`).join('\n')+'\nexport const packagedPlugins=['+registry.map((_,i)=>'p'+i).join(',')+'];';
+export default defineConfig({plugins:[{name:'gitpad-reviewed-packaged-plugins',resolveId:id=>id==='virtual:gitpad-packaged-plugins'?'\0gitpad-packaged-plugins':null,load:id=>id==='\0gitpad-packaged-plugins'?bundleSource:null}], base: './', define: { __VUE_OPTIONS_API__:true, __VUE_PROD_DEVTOOLS__:false, __VUE_PROD_HYDRATION_MISMATCH_DETAILS__:false }, build: { outDir: 'web-dist', emptyOutDir: true, target: 'es2022' }, server: { host: '127.0.0.1', watch:{ignored:['**/obj/**','**/bin/**','**/artifacts/**']}, proxy: { '/rpc': 'http://127.0.0.1:7342' } } });

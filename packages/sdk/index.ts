@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 export type Permission = 'commands' | 'calendar.read' | 'calendar.decorate' | 'documents.read' | 'documents.write' | 'editor' | 'storage' | 'views' | 'theme';
 export interface Disposable { dispose(): void }
-export interface Manifest { id: string; name: string; version: string; apiVersion: 1; level: 1 | 2 | 3; permissions: Permission[] }
+export interface Manifest { id: string; name: string; version: string; apiVersion: 1; level: 1 | 2 | 3; permissions: Permission[]; storageSchemaVersion?: number }
 export interface CalendarDecoration { date: string; label: string; color?: string }
 export interface Command { id: string; title: string; run(): void | Promise<void>; toolbar?: boolean; shortcut?: string }
 export interface PluginContext {
@@ -14,7 +14,8 @@ export interface PluginContext {
   editDocument(id: string, body: string): Promise<void>;
   editorCommand(name: string, payload?: string): void;
   getSetting(key: string): unknown;
-  setSetting(key: string, value: unknown): void;
+  setSetting(key: string, value: unknown): Promise<void>;
+  objectId(key: string): Promise<string>;
   on(event: string, listener: (value: unknown) => void): Disposable;
   theme(): 'system' | 'light' | 'dark';
 }

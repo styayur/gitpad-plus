@@ -3,8 +3,9 @@ import { execFileSync } from 'node:child_process';
 import { readFileSync, writeFileSync, mkdirSync, readdirSync, existsSync, cpSync } from 'node:fs';
 import { join } from 'node:path';
 import { createHash } from 'node:crypto';
-const command=process.platform==='win32'?'pnpm.cmd':'pnpm';
-const groups=JSON.parse(execFileSync(command,['licenses','list','--json'],{encoding:'utf8',maxBuffer:20_000_000}));
+const groups=JSON.parse(process.platform==='win32'
+  ?execFileSync(process.env.ComSpec??'cmd.exe',['/d','/s','/c','pnpm licenses list --json'],{encoding:'utf8',maxBuffer:20_000_000})
+  :execFileSync('pnpm',['licenses','list','--json'],{encoding:'utf8',maxBuffer:20_000_000}));
 mkdirSync('artifacts/third-party',{recursive:true});
 const approved=new Set(['MIT','MIT-0','Apache-2.0','BSD-2-Clause','BSD-3-Clause','ISC','CC0-1.0','BlueOak-1.0.0','MPL-2.0','(MPL-2.0 OR Apache-2.0)']);
 const packages=[],inventory=[];let count=0;

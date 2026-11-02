@@ -4,9 +4,10 @@ import { readFileSync, readdirSync } from 'node:fs';
 import { v7 } from 'uuid';
 import { Schema } from '@milkdown/kit/prose/model';
 import { EditorState } from '@milkdown/kit/prose/state';
+import { history, undo, redo, closeHistory } from '@milkdown/kit/prose/history';
 import { SourceDocument, preserveSource } from '../../web/markdown/source';
-import { createAnchor, resolveAnchor, parseLink, SelectionSession, textFragment } from '../../web/anchors';
-import { identityPlugin, blockKey } from '../../web/editor/identity';
+import { createAnchor, resolveAnchor, parseLink, SelectionSession, LiveAnchors, textFragment } from '../../web/anchors';
+import { identityPlugin, blockKey, sourceBlocks } from '../../web/editor/identity';
 import { MarkdownPeek } from '../../web/editor/peek';
 import { PluginHost } from '../../web/plugin-host/host';
 import type { PluginPort } from '../../web/plugin-host/host';
@@ -28,12 +29,43 @@ describe('Markdown source fidelity',()=>{
   it('retains untouched raw marker styles while editing another block',()=>{
     expect(preserveSource('__bold__\n\nold\n','**bold**\n\nnew\n')).toBe('__bold__\n\nnew\n');
   });
+  it('does not reorder duplicate semantic blocks in an untouched source',()=>{
+    const raw='__same__\r\n\r\n**same**\r\n';expect(preserveSource(raw,raw)).toBe(raw);
+  });
+  it('retains the source styles of repeated blocks in a long edited document',()=>{
+    const blocks=Array.from({length:1000},(_,index)=>index%2?'**same**':'__same__').join('\n\n');
+    expect(preserveSource(blocks+'\n\nold\n',Array(1000).fill('**same**').join('\n\n')+'\n\nnew\n')).toBe(blocks+'\n\nnew\n');
+  });
   it('source replacement does not normalize surrounding CRLF or whitespace',()=>{
     const source=new SourceDocument('  # title\r\n\r\nbody\r\n');expect(source.replace(1,'changed').raw).toBe('  # title\r\n\r\nchanged\r\n');
+  });
+  it('maps table header/body cells and their paragraphs without shifting following source ranges',()=>{
+    const raw='| Left | Right |\n| --- | --- |\n| one | 中文 |\n\nAfter table\n',source=new SourceDocument(raw);
+    expect(source.blockRanges.filter(range=>range.kind==='table_header_row')).toHaveLength(1);
+    expect(source.blockRanges.filter(range=>range.kind==='table_header')).toHaveLength(2);
+    expect(source.blockRanges.filter(range=>range.kind==='table_cell')).toHaveLength(2);
+    const paragraphs=source.blockRanges.filter(range=>range.kind==='paragraph').map(range=>raw.slice(range.start,range.end));
+    expect(paragraphs).toEqual(['| Left ','| Right |','| one ','| 中文 |','After table']);
+  });
+  it('maps standalone image blocks separately from ordinary paragraphs',()=>{
+    const raw='Before\n\n![image](../Assets/pixel.png)\n\nAfter\n',source=new SourceDocument(raw);
+    expect(source.blockRanges.filter(range=>range.kind==='paragraph').map(range=>raw.slice(range.start,range.end))).toEqual(['Before','After']);
+    const image=source.blockRanges.find(range=>range.kind==='image-block')!;expect(raw.slice(image.start,image.end)).toBe('![image](../Assets/pixel.png)');
   });
 });
 
 describe('Persistent anchors and session positions',()=>{
+  it('never splits surrogate pairs at selection or context boundaries',()=>{
+    const text='😀'+'a'.repeat(31)+'quote'+'b'.repeat(31)+'😀',start=text.indexOf('quote'),anchor=createAnchor(v7(),text,start,start+5);
+    expect(anchor.prefix.startsWith('😀')).toBe(true);expect(anchor.suffix.endsWith('😀')).toBe(true);expect(()=>JSON.parse(JSON.stringify(anchor))).not.toThrow();
+    expect(()=>createAnchor(v7(),'😀',1,2)).toThrow('Invalid selection');
+  });
+  it('uses live relative positions after context edits and falls back safely after Y.Doc recreation',()=>{
+    const id=v7(),text='left quote right',anchor=createAnchor(id,text,5,10),live=new LiveAnchors();live.track(anchor,text);
+    live.update(id,'new quote right');expect(live.resolve(anchor,'new quote right')).toEqual({state:'resolved',start:4,end:9});
+    const recreated=new LiveAnchors();expect(recreated.resolve(anchor,'new quote right').state).toBe('ambiguous');
+    live.update(id,'new  right');expect(live.resolve(anchor,'new  right').state).toBe('missing');live.dispose();recreated.dispose();
+  });
   it('relocates after insertion without confusing UTF-16 emoji offsets',()=>{
     const text='中文 👩🏽‍💻 hello café';const start=text.indexOf('hello');const anchor=createAnchor(v7(),text,start,start+5);
     expect(resolveAnchor(anchor,'insert '+text)).toEqual({state:'resolved',start:start+7,end:start+12});
@@ -64,6 +96,43 @@ const schema=new Schema({nodes:{doc:{content:'paragraph+'},paragraph:{content:'t
 const paragraph=(text:string)=>schema.node('paragraph',null,text?schema.text(text):undefined);
 const state=(...values:string[])=>EditorState.create({schema,doc:schema.node('doc',null,values.map(paragraph)),plugins:[identityPlugin()]});
 describe('ProseMirror block identities',()=>{
+  it('restores a saved empty tail that a view plugin already appended during startup',()=>{
+    const first=v7(),tail=v7();
+    let current=EditorState.create({schema,doc:schema.node('doc',null,[paragraph('content')]),plugins:[history(),identityPlugin([
+      {id:first,kind:'paragraph',start:0,end:7,deleted:false,path:[0]},
+      {id:tail,kind:'paragraph',start:8,end:8,deleted:false,path:[1]},
+    ])]});
+    current=current.apply(current.tr.insert(current.doc.content.size,paragraph('')).setMeta('addToHistory',false));
+    expect(blockKey.getState(current)!.live[1].id).not.toBe(tail);
+    current=current.apply(current.tr.setMeta(blockKey,'restoreSavedTail').setMeta('addToHistory',false));
+    expect(blockKey.getState(current)!.live.map(b=>b.id)).toEqual([first,tail]);
+    expect(undo(current,()=>{})).toBe(false);
+  });
+  it('does not confuse identical document content from different undo events',()=>{
+    let current=EditorState.create({schema,doc:schema.node('doc',null,[paragraph('same'),paragraph('other')]),plugins:[history(),identityPlugin()]});
+    const original=blockKey.getState(current)!.live.map(b=>b.id),dispatch=(tr:typeof current.tr)=>{current=current.apply(tr);};
+    dispatch(closeHistory(current.tr.delete(0,current.doc.child(0).nodeSize)));
+    dispatch(closeHistory(current.tr.insert(0,paragraph('same'))));expect(blockKey.getState(current)!.live[0].id).not.toBe(original[0]);
+    undo(current,dispatch);undo(current,dispatch);expect(blockKey.getState(current)!.live.map(b=>b.id)).toEqual(original);
+    redo(current,dispatch);redo(current,dispatch);expect(blockKey.getState(current)!.live[0].id).not.toBe(original[0]);
+  });
+  it('restores deleted, split and merged IDs through actual history Undo/Redo',()=>{
+    let current=EditorState.create({schema,doc:schema.node('doc',null,[paragraph('one'),paragraph('two')]),plugins:[history(),identityPlugin()]});
+    const ids=blockKey.getState(current)!.live.map(b=>b.id);
+    const dispatch=(transaction:typeof current.tr)=>{current=current.apply(transaction);};
+    dispatch(current.tr.delete(0,current.doc.child(0).nodeSize));expect(blockKey.getState(current)!.deleted.map(b=>b.id)).toContain(ids[0]);
+    expect(undo(current,dispatch)).toBe(true);expect(blockKey.getState(current)!.live.map(b=>b.id)).toEqual(ids);expect(blockKey.getState(current)!.deleted).toEqual([]);
+    expect(redo(current,dispatch)).toBe(true);expect(blockKey.getState(current)!.live[0].id).toBe(ids[1]);
+  });
+  it('persists nested heading/fold identities and gives a duplicated subtree fresh IDs',()=>{
+    const nested=new Schema({nodes:{doc:{content:'block+'},paragraph:{content:'text*',group:'block'},heading:{content:'text*',group:'block'},gitpad_fold:{content:'block+',group:'block'},text:{group:'inline'}}});
+    const doc=nested.node('doc',null,[nested.node('gitpad_fold',null,[nested.node('heading',null,nested.text('Title')),nested.node('paragraph',null,nested.text('body'))])]);
+    const before=EditorState.create({schema:nested,doc,plugins:[identityPlugin()]});const live=blockKey.getState(before)!;
+    expect(live.live).toHaveLength(3);const saved=sourceBlocks(live,':::fold\n# Title\n\nbody\n:::');
+    expect(saved[1].start).toBeGreaterThan(saved[0].start);
+    const reloaded=EditorState.create({schema:nested,doc,plugins:[identityPlugin(saved)]});expect(blockKey.getState(reloaded)!.live.map(b=>b.id)).toEqual(live.live.map(b=>b.id));
+    const copied=before.apply(before.tr.insert(doc.content.size,doc.child(0)));expect(new Set(blockKey.getState(copied)!.live.map(b=>b.id)).size).toBe(6);
+  });
   it('ordinary text edits preserve IDs',()=>{const before=state('hello','world'),ids=blockKey.getState(before)!.live.map(b=>b.id);const after=before.apply(before.tr.insertText('!',2));expect(blockKey.getState(after)!.live.map(b=>b.id)).toEqual(ids);});
   it('split retains first ID and allocates a new second ID',()=>{const before=state('hello'),id=blockKey.getState(before)!.live[0].id;const after=before.apply(before.tr.split(3));expect(blockKey.getState(after)!.live[0].id).toBe(id);expect(blockKey.getState(after)!.live[1].id).not.toBe(id);});
   it('copy gets a new ID and preserves original',()=>{const before=state('hello');const id=blockKey.getState(before)!.live[0].id;const after=before.apply(before.tr.insert(before.doc.content.size,paragraph('hello')));const ids=blockKey.getState(after)!.live.map(b=>b.id);expect(ids[0]).toBe(id);expect(new Set(ids).size).toBe(2);});
@@ -81,6 +150,15 @@ describe('Markdown Peek state machine',()=>{
 
 const port:PluginPort={queryCalendar:async()=>[{id:v7(),date:'2026-10-31',title:'Test'}],readDocument:async()=>({body:'read'}),editDocument:async()=>{},editorCommand:()=>{},theme:()=> 'system'};
 describe('Plugin SDK',()=>{
+  it('restores isolated settings and object UUIDs across host restarts, denies stale contexts and schema changes',async()=>{
+    const disk=new Map<string,import('../../web/plugin-host/host').PluginData>();
+    const persistence={load:async(id:string)=>structuredClone(disk.get(id)??null),save:async(id:string,data:import('../../web/plugin-host/host').PluginData)=>{disk.set(id,structuredClone(data));}};
+    let context!:import('../../packages/sdk/index').PluginContext;
+    const plugin=definePlugin({manifest:{id:'persistent-test',name:'Persistent',version:'1',apiVersion:1,level:1,permissions:['storage']},activate:api=>{context=api;}});
+    const first=new PluginHost(port,()=>{},persistence);await first.activate(plugin,['storage']);await context.setSetting('value',{text:'中文'});const id=await context.objectId('widget');const old=context;await first.dispose();expect(()=>old.getSetting('value')).toThrow('denied');
+    const second=new PluginHost(port,()=>{},persistence);await second.activate(plugin,['storage']);expect(context.getSetting('value')).toEqual({text:'中文'});expect(await context.objectId('widget')).toBe(id);await second.dispose();
+    const third=new PluginHost(port,()=>{},persistence);await expect(third.activate({...plugin,manifest:{...plugin.manifest,storageSchemaVersion:2}},['storage'])).rejects.toThrow('schema');expect(disk.get(plugin.manifest.id)!.schemaVersion).toBe(1);
+  });
   it('loads official plugins through SDK and disposes all registrations',async()=>{const host=new PluginHost(port);await host.activate(toolbar,toolbar.manifest.permissions);await host.activate(stats,stats.manifest.permissions);expect(host.commands.size).toBe(11);expect(host.decorations.size).toBe(1);await host.dispose();expect(host.commands.size).toBe(0);expect(host.decorations.size).toBe(0);});
   it('denies ungranted permissions and incompatible API versions',async()=>{const host=new PluginHost(port);await expect(host.activate(toolbar,[])).rejects.toThrow('Permission');await expect(host.activate({...toolbar,manifest:{...toolbar.manifest,apiVersion:2 as 1}},toolbar.manifest.permissions)).rejects.toThrow('Incompatible');});
   it('enforces capabilities at use and invalidates retained contexts on unload',async()=>{
@@ -94,6 +172,7 @@ describe('Plugin SDK',()=>{
     let finish!:(value:{id:string;date:string;title:string}[])=>void;
     const host=new PluginHost({...port,queryCalendar:()=>new Promise(resolve=>{finish=resolve;})});
     const plugin=createCalendarStatsPlugin();const activating=host.activate(plugin,plugin.manifest.permissions);
+    await vi.waitFor(()=>expect(finish).toBeTypeOf('function'));
     await host.deactivate(plugin.manifest.id);finish([{id:v7(),date:'2026-10-31',title:'late'}]);await activating;expect(host.decorations.size).toBe(0);
   });
 });

@@ -1,18 +1,31 @@
 # Building
 
-Use the pinned global.json, .node-version and packageManager. Linux supports portable Core and frontend/test builds; it cannot execute WinUI or qualify MAUI Android without a device. Keep the cloud image free of native workloads. README lists the commands verified in this image.
+Use .NET SDK **10.0.403**, Node **24.19.0**, Corepack **0.34.6**, pnpm **12.16.1** and committed lockfiles. MAUI Controls is pinned to **10.0.120**. Linux supports portable Core/frontend tests; WinUI requires Windows. Native builds and runtime acceptance are separate checks.
 
-Windows CI installs only the maui-windows workload on windows-latest and builds the Windows target with the app-only GitPadTargetFramework selector to avoid restoring Android. The stable MAUI reference is 10.0.120. The Windows command below passed in CI at implementation commit e8719718d7bf430e2d6b039f743ff0d84885bfb3; native runtime remains a separate gate. The Android command remains unexecuted because its dedicated runner is unavailable.
+Windows requires the `maui-windows` workload and Windows SDK 10.0.26100. Use the app-only framework selector to avoid restoring Android. The project enables .NET self-contained deployment, `WindowsAppSDKSelfContained=true` and `WindowsPackageType=None` for Windows.
 
 ```powershell
 pnpm install --frozen-lockfile
 pnpm build
 dotnet workload install maui-windows --version 10.0.400
-dotnet build apps/GitPadPlus.App/GitPadPlus.App.csproj -c Release -f net10.0-windows10.0.19041.0 -p:GitPadTargetFramework=net10.0-windows10.0.19041.0 -p:RuntimeIdentifier=win-x64 -p:WindowsPackageType=None
+$commit=(git rev-parse HEAD).Trim()
+dotnet publish apps/GitPadPlus.App/GitPadPlus.App.csproj -c Release -f net10.0-windows10.0.19041.0 -p:GitPadTargetFramework=net10.0-windows10.0.19041.0 -r win-x64 -p:GitPadSourceCommit=$commit -o artifacts/windows-publish
 ```
 
-Android builds use a dedicated runner labelled self-hosted, linux, android, enabled only after GITPAD_ANDROID_RUNNER_READY=true is configured. The runner must provide matching .NET/MAUI Android workloads, JDK 21 and supported Android build tools/SDK. No NDK/emulator is requested for this Linux cloud image. The manual workflow only produces explicitly labelled Debug build evidence; that is not a Release APK.
+For candidate packaging, run `scripts/build-windows-release.ps1 -OutputDirectory <new-directory>` after generating the portable/native inventories and offline notices. It requires clean committed source and creates the ZIP before runtime-generated WebView2 profiles exist. Package the **whole** publish directory, including native/runtime libraries and third-party notices. Extract the ZIP into a new directory and test that executable. The package still requires Windows x64 10.0.19041 or newer and working Evergreen WebView2. Testing Windows 11 does not qualify every supported OS version. State the publisher signature status explicitly; a self-issued certificate is not a trusted Authenticode publisher certificate.
 
-Signed Release APK generation needs a durable externally managed keystore and secure credentials. They are unavailable. Do not generate a throwaway identity, commit a keystore, or call a debug-signed APK a release. No signing prerequisites are requested until the user provisions a dedicated runner.
+Android requires `maui-android` (local workload installation used `--version 10.0.400`), JDK 21, SDK platform 36 and build-tools 36.0.0. Set `JAVA_HOME`, `ANDROID_HOME` and `ANDROID_SDK_ROOT`. Emulator acceptance also needs platform-tools, the emulator and one compatible x86_64 system image. Local probes use Android 16/API 36 Google APIs. The manual Android CI Debug output is not a release asset.
 
-release.yml accepts a successful candidate run for an exact commit. A candidate must supply hashed native runtime logs, version/architecture/signing evidence, installable Windows ZIP and signed Android Release APK, SHA256SUMS, notices, SBOM and release notes. The gate fails closed when any evidence is absent. No candidate exists yet. It never overwrites an existing tag or release and re-downloads published assets for checksum validation.
+```powershell
+./scripts/build-android-release.ps1 -KeystorePath <outside-repository-keystore> -AndroidSdkDirectory $env:ANDROID_HOME -JavaSdkDirectory $env:JAVA_HOME -OutputDirectory <new-output-directory>
+```
+
+The builder requires clean committed source, builds the editor, produces one arm64-v8a/x86_64 APK, stamps the source commit and verifies manifest/version/signature. It reads the keystore's `.password.dpapi` companion into temporary environment variables. Never supply literal passwords as arguments. DPAPI recovery depends on the original Windows account; keep an independent protected offline copy of the key and credentials. `new-android-release-key.ps1` requires explicit authorization and must never regenerate an existing identity.
+
+`-QuickProbe -AllowDirtyDevelopmentBuild` produces a development-stamped probe that cannot pass the release gate. Install and test the exact candidate APK; retain `apksigner verify --verbose --print-certs`, `aapt2 dump badging`, ABI, source stamp and SHA-256 evidence. Repeat acceptance after candidate changes.
+
+Native locked restores use `apps/GitPadPlus.App/packages.windows.lock.json` for the Windows selector and `packages.android.lock.json` for the universal Android selector. Single-ABI development probes use an ignored separate lockfile. Runtime and self-contained properties are removed from the Core project reference so native restores do not rewrite its portable lockfile. Both candidate builders enable locked restore.
+
+`release.yml` verifies a supplied candidate and does not publish it. `publish-local-release.ps1 -CandidateDirectory <path>` checks clean HEAD, exact GitHub main, successful corresponding CI, the fail-closed gate and checksums without creating a tag. A candidate contains the ZIP/APK, SBOM, notices, release notes, acceptance metadata, hashed evidence and SHA256SUMS.
+
+After the user reviews the complete readiness report, `-StageDraft -ApproveTag` may create/push the annotated tag and draft prerelease. Uploaded assets are independently downloaded and hashed. Separate final user approval is required for `-Publish -ApprovePublication`, which rechecks the draft and all public assets. Existing unrelated tags/releases are refused. Never bypass a mandatory failed gate.

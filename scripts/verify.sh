@@ -13,5 +13,6 @@ dotnet test tests/dotnet/GitPadPlus.Core.Tests.csproj --no-restore -c Release --
 pnpm test:ui
 pnpm audit --json > artifacts/npm-audit.json
 dotnet list src/GitPadPlus.Core/GitPadPlus.Core.csproj package --vulnerable --include-transitive --format json > artifacts/nuget-audit.json
+dotnet list src/GitPadPlus.Core/GitPadPlus.Core.csproj package --include-transitive --format json > artifacts/nuget-audit.inventory.json
 node scripts/security-gate.mjs
 node scripts/licenses.mjs

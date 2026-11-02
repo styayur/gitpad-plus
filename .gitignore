@@ -1,4 +1,7 @@
 node_modules/
+public/THIRD_PARTY_LICENSES.txt
+apps/GitPadPlus.App/packages.lock.json
+apps/GitPadPlus.App/packages.android.probe.lock.json
 web-dist/
 bin/
 obj/
@@ -11,6 +14,9 @@ playwright-report/
 *.user
 *.keystore
 *.jks
+*.p12
+*.pfx
+*.dpapi
 .env*
 !.env.example
 Vault/

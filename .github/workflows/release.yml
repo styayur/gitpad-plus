@@ -1,4 +1,4 @@
-name: Verified Alpha pre-release
+name: Verify uploaded Alpha candidate (no publication)
 on:
   workflow_dispatch:
     inputs:
@@ -32,6 +32,8 @@ jobs:
           gh run list --workflow ci.yml --commit "$EXPECTED" --limit 1 --json headSha,conclusion > ci.json
           node -e 'const r=JSON.parse(require("fs").readFileSync("ci.json"));if(r[0]?.headSha!==process.env.EXPECTED||r[0]?.conclusion!=="success")process.exit(1)'
           gh run download "$RUN_ID" --name release-candidate --dir release-candidate
+      - name: Install APK verification tools
+        run: sdkmanager "build-tools;36.0.0"
       - name: Fail closed on missing native acceptance, signatures or asset checks
         env:
           SOURCE_COMMIT: ${{ inputs.source_commit }}
@@ -40,37 +42,3 @@ jobs:
         with:
           name: verified-candidate
           path: release-candidate/
-  publish:
-    needs: verify
-    environment: release
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      actions: read
-    steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
-        with:
-          ref: ${{ inputs.source_commit }}
-          fetch-depth: 0
-      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
-        with:
-          name: verified-candidate
-          path: release-candidate
-      - name: Publish new immutable tag and pre-release, then re-download assets
-        env:
-          GH_TOKEN: ${{ github.token }}
-          SOURCE_COMMIT: ${{ inputs.source_commit }}
-        run: |
-          set -euo pipefail
-          test "$(git rev-parse HEAD)" = "$SOURCE_COMMIT"
-          node scripts/release-gate.mjs release-candidate
-          if git ls-remote --exit-code --tags origin refs/tags/v0.1.0-alpha.1; then echo 'Tag already exists; refusing replacement'; exit 1; fi
-          if gh release view v0.1.0-alpha.1 >/dev/null 2>&1; then echo 'Release already exists'; exit 1; fi
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git tag -a v0.1.0-alpha.1 "$SOURCE_COMMIT" -m 'GitPad+ v0.1.0-alpha.1 verified early alpha'
-          git push origin refs/tags/v0.1.0-alpha.1
-          gh release create v0.1.0-alpha.1 --verify-tag --prerelease --title 'GitPad+ v0.1.0-alpha.1 — Early Alpha' --notes-file release-candidate/RELEASE_NOTES.md release-candidate/*.zip release-candidate/*.apk release-candidate/SHA256SUMS.txt release-candidate/SBOM.spdx.json
-          gh release download v0.1.0-alpha.1 --dir downloaded
-          cd downloaded
-          sha256sum --check SHA256SUMS.txt
