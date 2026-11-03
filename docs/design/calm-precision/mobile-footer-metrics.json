@@ -1,0 +1,62 @@
+{
+  "text": "Local: SavedGit: NotConfigured",
+  "bounds": {
+    "x": 0,
+    "y": 824,
+    "width": 393,
+    "height": 28,
+    "top": 824,
+    "right": 393,
+    "bottom": 852,
+    "left": 0
+  },
+  "color": "rgb(165, 173, 187)",
+  "background": "rgb(39, 40, 44)",
+  "scrollY": 0,
+  "innerHeight": 852,
+  "theme": "dark",
+  "children": [
+    {
+      "text": "Local: Saved",
+      "rect": {
+        "x": 12,
+        "y": 831.5,
+        "width": 66.921875,
+        "height": 14,
+        "top": 831.5,
+        "right": 78.921875,
+        "bottom": 845.5,
+        "left": 12
+      },
+      "style": "rgb(165, 173, 187)"
+    },
+    {
+      "text": "Git: NotConfigured",
+      "rect": {
+        "x": 285.28125,
+        "y": 831.5,
+        "width": 83.71875,
+        "height": 14,
+        "top": 831.5,
+        "right": 369,
+        "bottom": 845.5,
+        "left": 285.28125
+      },
+      "style": "rgb(165, 173, 187)"
+    },
+    {
+      "text": "",
+      "rect": {
+        "x": 381,
+        "y": 838.5,
+        "width": 0,
+        "height": 0,
+        "top": 838.5,
+        "right": 381,
+        "bottom": 838.5,
+        "left": 381
+      },
+      "style": "rgb(165, 173, 187)"
+    }
+  ]
+}

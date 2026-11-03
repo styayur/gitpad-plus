@@ -1,0 +1,53 @@
+{
+  "passed": true,
+  "phase": "smoke",
+  "started": "2026-11-03T00:43:54.812Z",
+  "finished": "2026-11-03T00:44:01.101Z",
+  "userAgent": "Mozilla/5.0 (Linux; Android 16; sdk_gphone64_x86_64 Build/BE2A.250530.026.F3; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/133.0.6943.137 Mobile Safari/537.36",
+  "checks": [
+    {
+      "name": "Actual Android Release HybridWebView loaded",
+      "passed": true
+    },
+    {
+      "name": "Loaded embedded module",
+      "scripts": [
+        "./assets/index-Dp_howKH.js",
+        "./HybridWebView.js"
+      ]
+    },
+    {
+      "name": "Candidate Unicode source and block IDs saved",
+      "passed": true
+    }
+  ],
+  "saves": [
+    {
+      "requestId": "01a19edc-e215-770b-bed3-86414d16e949",
+      "bodyLength": 0,
+      "blocks": 1,
+      "payloadLength": 445,
+      "invalidRanges": 0,
+      "duplicateIds": 0,
+      "started": 5168.5,
+      "elapsedMs": 291,
+      "error": null,
+      "revision": 2
+    },
+    {
+      "requestId": "01a19edc-e907-71e0-8470-fbe7c8570d8c",
+      "bodyLength": 52,
+      "blocks": 1,
+      "payloadLength": 499,
+      "invalidRanges": 0,
+      "duplicateIds": 0,
+      "started": 6946.699999999255,
+      "elapsedMs": 149.30000000074506,
+      "error": null,
+      "revision": 3
+    }
+  ],
+  "scope": "Actual signed Release APK; emulator only; clipboard Unicode input does not establish Chinese IME composition",
+  "activityRecreationVerified": false,
+  "backgroundForegroundRequested": false
+}

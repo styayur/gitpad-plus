@@ -1,0 +1,8 @@
+{
+  "apkSha256": "cbb0e0ba13c6e9a8a7b71b503ddf805152e1313cb281152193e8bdf6f87938e9",
+  "installedApkSha256": "cbb0e0ba13c6e9a8a7b71b503ddf805152e1313cb281152193e8bdf6f87938e9",
+  "matches": true,
+  "certificateSha256": "4fe4a85c853243d9d7c1b0dc421b5786f1bb89a91f22f8c691fe6840824e9fd0",
+  "scope": "Signed x86_64 development QuickProbe; not universal release",
+  "windowsAssemblySha256": "7c5b205609c18e3f667c0152c510826c96f3147ecbf468226658255017208ece"
+}

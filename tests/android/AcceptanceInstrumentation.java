@@ -60,6 +60,22 @@ public final class AcceptanceInstrumentation extends Instrumentation {
         }
         @JavascriptInterface public void key(int code) {sendKeyDownUpSync(code);}
         @JavascriptInterface public void hideKeyboard(){runOnMainSync(()->((android.view.inputmethod.InputMethodManager)getTargetContext().getSystemService(Context.INPUT_METHOD_SERVICE)).hideSoftInputFromWindow(web.getWindowToken(),0));}
+        @JavascriptInterface public boolean keyboardVisible(){
+            AtomicReference<Boolean> visible=new AtomicReference<>(false);
+            runOnMainSync(()->{if(Build.VERSION.SDK_INT>=30){var insets=web.getRootWindowInsets();visible.set(insets!=null&&insets.isVisible(WindowInsets.Type.ime()));}});
+            return visible.get();
+        }
+        @JavascriptInterface public String layoutDiagnostics(){
+            AtomicReference<String> value=new AtomicReference<>("");
+            runOnMainSync(()->{
+                org.json.JSONArray chain=new org.json.JSONArray();
+                for(View view=web;view!=null;view=view.getParent() instanceof View?(View)view.getParent():null){
+                    chain.put(view.getClass().getName()+" size="+view.getWidth()+"x"+view.getHeight()+" padding="+view.getPaddingLeft()+","+view.getPaddingTop()+","+view.getPaddingRight()+","+view.getPaddingBottom());
+                }
+                var insets=web.getRootWindowInsets();
+                value.set("softInputMode="+(resumed==null?-1:resumed.getWindow().getAttributes().softInputMode)+"; chain="+chain+"; imeBottom="+(Build.VERSION.SDK_INT>=30&&insets!=null?insets.getInsets(WindowInsets.Type.ime()).bottom:-1));
+            });return value.get();
+        }
         @JavascriptInterface public boolean dismissKeyboardOnboarding(){
             var root=getUiAutomation().getRootInActiveWindow();
             if(root==null||!"com.google.android.inputmethod.latin".contentEquals(root.getPackageName())||root.findAccessibilityNodeInfosByText("Try out your stylus").isEmpty())return false;
