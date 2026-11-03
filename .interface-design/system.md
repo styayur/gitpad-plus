@@ -53,6 +53,12 @@ At <=760px, one-column workspace with calendar navigation toggled by Calendar. O
 
 All controls: hover, pressed, focus-visible, disabled. Focus 2px with offset, visible in high contrast. Dialog semantics, form labels, real buttons/select/details. Calendar arrow keys move by day/week, Home/End within week, PageUp/PageDown month, Enter/Space select. Note selection uses aria-current. Overflow regions remain keyboard scrollable. Loading and errors remain textual/live; no fake status. Honor zoom and 320px widths; preserve usable editor line width at 1366/1920 screens and 100/125/150/200% browser scaling. Native DPI and software keyboard require actual native checks, separately documented from browser coverage.
 
+Plugin preference writes serialize at the settings UI boundary. While a native plugin operation is pending, disable all plugin toggles, Save settings and Clear data; show a textual status. A later action must read the completed settings state. Keep errors visible and permit closing the dialog.
+
+Native Windows title text uses MAUI TitleBar.ForegroundColor, with caption buttons owned by AppWindow. Both follow effective app theme or high-contrast system colors. Startup window bounds are clamped once to the actual display work area using physical AppWindow coordinates. Do not change global DPI to compensate for application layout.
+
+Android requires the application-level MAUI WindowSoftInputModeAdjust.Resize policy as well as Page and owning Grid SafeAreaEdges.All. MAUI's default application policy otherwise restores AdjustPan even if a window-level value requests Resize. Acceptance must observe the real viewport shrinking after WindowInsets reports IME visibility, then check toolbar/editor/status geometry and unchanged Markdown/anchors.
+
 ## Review discipline
 
 Methodology: Dammyjay93/interface-design at 2f9be3206855bcb2d1d0af262c8bae25cba6658d; read SKILL.md plus design-review and design-deslop commands. It supplies the review lenses, not a dashboard template. Screenshots must be actual application output. Review focal point, typography/color, surface/depth, composition, states, and reuse independently; record findings and fixes, with untested/native limits explicit. No stock moodboard, decorative artwork or fabricated runtime screenshot is needed for this writing tool.

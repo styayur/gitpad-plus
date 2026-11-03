@@ -1,0 +1,38 @@
+[
+  {
+    "path": "Journal\\01a19bdc-65c1-7270-8d99-ff22707a207a.md",
+    "before": "414705cea786e18cc3caf0a3de7f438ee716e8d68622abc63c2508e2e1c07f93",
+    "after": "414705cea786e18cc3caf0a3de7f438ee716e8d68622abc63c2508e2e1c07f93",
+    "unchanged": true
+  },
+  {
+    "path": "Journal\\01a19bdc-9ebf-797c-867b-81f182bde9b2.md",
+    "before": "611c97ddd722701e3ef6d10ccafb877a23893617552276d625ae4c0c4fc940a2",
+    "after": "611c97ddd722701e3ef6d10ccafb877a23893617552276d625ae4c0c4fc940a2",
+    "unchanged": true
+  },
+  {
+    "path": "Journal\\01a19bdc-b370-75da-a7aa-1a885a25bd53.md",
+    "before": "286142e71200bc149515920349fa9355d83cb69d3d822f6b858bded34b6d456f",
+    "after": "286142e71200bc149515920349fa9355d83cb69d3d822f6b858bded34b6d456f",
+    "unchanged": true
+  },
+  {
+    "path": ".gitpad\\anchors\\01a19bdc-65c1-7270-8d99-ff22707a207a.json",
+    "before": "dfe41695cbb6b20c8dae8297b85066be1dd543b2aa3b0c7ab5cb22b3a38549c3",
+    "after": "dfe41695cbb6b20c8dae8297b85066be1dd543b2aa3b0c7ab5cb22b3a38549c3",
+    "unchanged": true
+  },
+  {
+    "path": ".gitpad\\anchors\\01a19bdc-9ebf-797c-867b-81f182bde9b2.json",
+    "before": "70317dc3391d286cc46f1d62bbc868dbb3f44a361f71c257cbfdc6ee706c0c04",
+    "after": "70317dc3391d286cc46f1d62bbc868dbb3f44a361f71c257cbfdc6ee706c0c04",
+    "unchanged": true
+  },
+  {
+    "path": ".gitpad\\anchors\\01a19bdc-b370-75da-a7aa-1a885a25bd53.json",
+    "before": "52ca14c34f45b0732be5e1a79eb262d6c41656ca15d67303a1b6f0305aa515fe",
+    "after": "52ca14c34f45b0732be5e1a79eb262d6c41656ca15d67303a1b6f0305aa515fe",
+    "unchanged": true
+  }
+]

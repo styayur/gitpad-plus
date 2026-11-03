@@ -190,7 +190,7 @@ void(async()=>{
       const command=()=>[...document.querySelectorAll('.format-toolbar button')].some(node=>generated?node.textContent.startsWith('SDK '):(node.getAttribute('aria-label')??node.textContent)==='Bold');
       example.querySelector('input').click();await until(()=>!command()&&!example.querySelector('input').disabled,'packaged plugin deactivation completed');
       check(label+' commands disposed on disable',true);example.querySelector('input').click();
-      await until(command,'packaged plugin reactivation');
+      await until(()=>command()&&!example.querySelector('input').disabled,'packaged plugin reactivation completed');
       check(label+' reactivated',true);click('Save settings');
       await until(()=>!document.querySelector('[role=dialog][aria-label=Settings]'),'settings saved');
       NativeAcceptance.screenshot('rich-native-settings-complete');

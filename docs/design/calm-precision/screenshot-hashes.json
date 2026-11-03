@@ -1,0 +1,142 @@
+[
+  {
+    "file": "after-android-editor-light.png",
+    "bytes": 70927,
+    "sha256": "61ee60e907b7497fcac79d3ad07e534655097c6043070fd2fae54d770acefd0c"
+  },
+  {
+    "file": "after-android-keyboard.png",
+    "bytes": 112206,
+    "sha256": "283719fb441ffd491ec15d03795b6f47180c39e662847a849effdfcaed39992d"
+  },
+  {
+    "file": "after-android-plugin-pending.png",
+    "bytes": 106487,
+    "sha256": "48db7076e2adabb70f052c985e5456221aecc518ff318610c0f5ae579cf77df1"
+  },
+  {
+    "file": "after-android-settings-dark.png",
+    "bytes": 108903,
+    "sha256": "6d9e51312e73a161c50660c66baa4b06dbc7266177b7188a8f2d984548ce3a3f"
+  },
+  {
+    "file": "after-android-settings-light.png",
+    "bytes": 111946,
+    "sha256": "9885b0d5d5cbb651ff9c38a65529488971f51e370ae158052e615dc0c7ad7a4e"
+  },
+  {
+    "file": "after-desktop-1366-dark.png",
+    "bytes": 81896,
+    "sha256": "e131de5f933154617ba5ac51e4250af99a62bd4b36ec03e3057faefba63a32b1"
+  },
+  {
+    "file": "after-desktop-1920-dark.png",
+    "bytes": 91615,
+    "sha256": "c26220c6c9e03dc39bb52a5734f7815c454c92dd949237a81cf815c0e0a49015"
+  },
+  {
+    "file": "after-desktop-confirm-clear.png",
+    "bytes": 98141,
+    "sha256": "f91f4645bb02d0e0144805b1a031937b0a8335478dbde1a40f0697dd9a330173"
+  },
+  {
+    "file": "after-desktop-editor-dark.png",
+    "bytes": 88606,
+    "sha256": "bbfbf9ef91d299b67702f4bda450b2f125980ef0b481c4b26f2aa7f86c1cb510"
+  },
+  {
+    "file": "after-desktop-editor-light.png",
+    "bytes": 88880,
+    "sha256": "8dbc40e757914e1e01ea819c58bd29c19128ea56e88127ab85fe951ebd410682"
+  },
+  {
+    "file": "after-desktop-forced-colors.png",
+    "bytes": 75367,
+    "sha256": "025630708e645155b5863aa2511c3e25edd6478e4b0c4900d503c55f26244fe6"
+  },
+  {
+    "file": "after-desktop-settings-dark.png",
+    "bytes": 89502,
+    "sha256": "ee7f13ef7cd6686174add0b3a6a7326cddb9d4a100055433f6262d39c3b0859a"
+  },
+  {
+    "file": "after-desktop-settings-light.png",
+    "bytes": 89472,
+    "sha256": "4bbbbdf1fb12f7a0f19dce5ab4b0650f25460524debb1df81555daa26c42bbc9"
+  },
+  {
+    "file": "after-mobile-calendar-dark.png",
+    "bytes": 32814,
+    "sha256": "3776d721f7b0770ae0b41fa8994b0ed06600499877bc62c09496347b911eb5e3"
+  },
+  {
+    "file": "after-mobile-editor-dark.png",
+    "bytes": 46100,
+    "sha256": "820cd66df09664c0e90efca142369f5f9f3c0bff2d043f4506c72411b2b5ed2c"
+  },
+  {
+    "file": "after-windows-100-dpi.jpg",
+    "bytes": 87466,
+    "sha256": "f26d2ea78064a16b2ee4f80b014d134d4290818d789c191f2874a467c4fd9af2"
+  },
+  {
+    "file": "after-windows-125-dpi.jpg",
+    "bytes": 79972,
+    "sha256": "fd0c074eeb1541a968ded26c96a3d6e3b91adf3a0034dffe45f7ce296db972ca"
+  },
+  {
+    "file": "after-windows-150-dpi.jpg",
+    "bytes": 83595,
+    "sha256": "d28bd942cc4899926b45ed3cc68cca7c10070fcd760db348f9df824f8cdcfae4"
+  },
+  {
+    "file": "after-windows-calendar-high-contrast.jpg",
+    "bytes": 115401,
+    "sha256": "bde4ee6a13fac004064cd8cfba1ebe2f3f8aff747a238ac8df910675df6e6e08"
+  },
+  {
+    "file": "after-windows-dark.jpg",
+    "bytes": 84571,
+    "sha256": "c8cdc1e1a00fa412f343babe561026651892169c16593f89ff1252c32a81c770"
+  },
+  {
+    "file": "after-windows-high-contrast.jpg",
+    "bytes": 117013,
+    "sha256": "50cdbfcb5bec886485c81ba5552c0306c4e943ab93b87dde28846851bdef1168"
+  },
+  {
+    "file": "after-windows-light.jpg",
+    "bytes": 88142,
+    "sha256": "6f95a4bd9b61eb17812cc5c1c9554d3affd815734d3a67685ee02d8404b6334c"
+  },
+  {
+    "file": "after-windows-settings-dark.jpg",
+    "bytes": 70878,
+    "sha256": "9db1fa54f9f2adf011e86f2d50efe33b6aef92255946449b8933f5f6c04b0fc5"
+  },
+  {
+    "file": "before-android-settings-historical-969c8af.png",
+    "bytes": 125275,
+    "sha256": "cf776183ab684f8f4145a5a65fb9e9553cd38f348cfd43447ea8fe5363231248"
+  },
+  {
+    "file": "before-desktop-editor.png",
+    "bytes": 83209,
+    "sha256": "31bf3777535b190a0e677cc7314abd47bb94b55142a4af0569b210aded67f965"
+  },
+  {
+    "file": "before-mobile-calendar.png",
+    "bytes": 35360,
+    "sha256": "42ab01a25cb60f8e455b9cb208f2fc7eedd62543e7d679ff3005e5d580b1380b"
+  },
+  {
+    "file": "before-settings.png",
+    "bytes": 81927,
+    "sha256": "5fa6f025baedfa20b74680c9106607a6206cc8c02c2fda668cabf6f0946d363e"
+  },
+  {
+    "file": "before-windows-shell.jpg",
+    "bytes": 66523,
+    "sha256": "575dd31d708b0afb2e2aa6eb85f39347a5afd8b7bd4f747e39f31749502b39ef"
+  }
+]
