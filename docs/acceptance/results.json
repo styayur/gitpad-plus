@@ -3,7 +3,7 @@
   "releaseVersion": "0.1.0-alpha.1",
   "releaseGate": "blocked",
   "environment": "Windows 11 Home build 26200 x64",
-  "sourceState": "Follow-up source fixes persisted empty-tail reconstruction. Final clean-source package stamps and qualification belong in generated candidate acceptance.json, not this pre-commit narrative.",
+  "sourceState": "Historical candidate results below are retained. Current PR #4 closeout requires fresh exact clean-main package acceptance; see currentCloseout. This summary is not final candidate acceptance.json.",
   "tests": {
     "dotnet": {
       "skipped": 0,
@@ -168,5 +168,40 @@
     "android": "Covered emulator scenarios passed; no physical device",
     "windows": "Covered runtime scenarios passed; subsequently discovered empty-tail reconstruction issue prevents full block-identity qualification",
     "licenseGate": "blocked: Win2D binary terms"
+  },
+  "currentCloseout": {
+    "date": "2026-11-03",
+    "pr": "https://github.com/styayur/gitpad-plus/pull/4",
+    "releaseGate": "pending final exact-main candidates and all 17 gates",
+    "uiEvidence": "docs/design/calm-precision/closeout-20261103/README.md",
+    "tests": {
+      "vitest": 52,
+      "core": 43,
+      "releaseProvenanceTransport": 23,
+      "fullPlaywrightBeforeFinalRangeGuard": 41,
+      "latestFocusedPlaywright": {
+        "passed": 11,
+        "failed": 2,
+        "reason": "Timeouts retained; latest-head full CI required"
+      }
+    },
+    "win2d": {
+      "package": "Microsoft.Graphics.Win2D 1.4.1-gitpadplus.1",
+      "upstream": "2cd2e846b0b410286a88fa5cddc3bc765de8be0b",
+      "distributedNativeArchitectures": [
+        "x64"
+      ],
+      "nativeProbe": "passed",
+      "managedDrawingProbe": "passed",
+      "actualNativeInventory": {
+        "dependencies": 144,
+        "unresolved": 0
+      },
+      "originalPrebuiltLicenseRelabeled": false
+    },
+    "finalNativeAcceptance": "pending",
+    "tagCreated": false,
+    "draftCreated": false,
+    "published": false
   }
 }
