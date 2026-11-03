@@ -1,0 +1,126 @@
+{
+  "passed": true,
+  "phase": "features-default",
+  "started": "2026-11-03T00:41:33.108Z",
+  "finished": "2026-11-03T00:41:43.935Z",
+  "userAgent": "Mozilla/5.0 (Linux; Android 16; sdk_gphone64_x86_64 Build/BE2A.250530.026.F3; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/133.0.6943.137 Mobile Safari/537.36",
+  "checks": [
+    {
+      "name": "Actual Android Release HybridWebView loaded",
+      "passed": true
+    },
+    {
+      "name": "Loaded embedded module",
+      "scripts": [
+        "./assets/index-Dp_howKH.js",
+        "./HybridWebView.js"
+      ]
+    },
+    {
+      "name": "Android intent opens the requested document",
+      "passed": true
+    },
+    {
+      "name": "Callout rendered",
+      "passed": true
+    },
+    {
+      "name": "Nested fold containers rendered",
+      "passed": true
+    },
+    {
+      "name": "Expand all opens nested folds",
+      "passed": true
+    },
+    {
+      "name": "Collapse all closes nested folds",
+      "passed": true
+    },
+    {
+      "name": "Imported image rendered from native vault",
+      "passed": true
+    },
+    {
+      "name": "Source peek retains original heading",
+      "passed": true
+    },
+    {
+      "name": "Selection uses the current target editor",
+      "passed": true
+    },
+    {
+      "name": "Selection before toolbar touch",
+      "quote": "quote 中文",
+      "focusedElement": "DIV"
+    },
+    {
+      "name": "Persistent selection link copied",
+      "passed": true
+    },
+    {
+      "name": "Selection quote restored after editor reconstruction",
+      "passed": true
+    },
+    {
+      "name": "Nested identities persisted to actual sidecar",
+      "passed": true
+    },
+    {
+      "name": "Selection anchor persisted to actual sidecar",
+      "passed": true
+    },
+    {
+      "name": "Native SQLite full-text search finds rich document",
+      "passed": true
+    },
+    {
+      "name": "Official toolbar commands disposed on disable",
+      "passed": true
+    },
+    {
+      "name": "Official toolbar reactivated",
+      "passed": true
+    }
+  ],
+  "saves": [
+    {
+      "requestId": "acceptance-1793666496518-2",
+      "bodyLength": 284,
+      "blocks": 0,
+      "payloadLength": 631,
+      "invalidRanges": 0,
+      "duplicateIds": 0,
+      "started": 4875.300000000745,
+      "elapsedMs": 138.09999999776483,
+      "error": null,
+      "revision": 2
+    },
+    {
+      "requestId": "01a19eda-bcf1-71e2-914a-bb0adebd313e",
+      "bodyLength": 274,
+      "blocks": 10,
+      "payloadLength": 1905,
+      "invalidRanges": 0,
+      "duplicateIds": 0,
+      "started": 6134.199999999255,
+      "elapsedMs": 912.3999999985099,
+      "error": null,
+      "revision": 3
+    },
+    {
+      "requestId": "01a19eda-c92b-70d8-938b-d8e6290c117a",
+      "bodyLength": 274,
+      "blocks": 10,
+      "payloadLength": 2113,
+      "invalidRanges": 0,
+      "duplicateIds": 0,
+      "started": 9264,
+      "elapsedMs": 155.89999999850988,
+      "error": null,
+      "revision": 4
+    }
+  ],
+  "scope": "Actual signed Release APK; emulator only; clipboard Unicode input does not establish Chinese IME composition",
+  "activityRecreationVerified": false,
+  "backgroundForegroundRequested": false
+}

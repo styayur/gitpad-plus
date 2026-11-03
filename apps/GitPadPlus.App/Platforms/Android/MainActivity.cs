@@ -16,7 +16,10 @@ public class MainActivity : MauiAppCompatActivity
         if(window is null)return;
         var controller=AndroidX.Core.View.WindowCompat.GetInsetsController(window,window.DecorView);
         if(controller is null)return;
-        var light=Microsoft.Maui.Controls.Application.Current?.RequestedTheme!=Microsoft.Maui.ApplicationModel.AppTheme.Dark;
+        var light=App.EffectiveTheme!=Microsoft.Maui.ApplicationModel.AppTheme.Dark;
+        // Android 15+ draws edge-to-edge. Paint the native inset area with the
+        // journal surface while leaving IME/navigation insets to the platform.
+        window.DecorView.SetBackgroundColor(Android.Graphics.Color.ParseColor(light?"#f5f6f8":"#202124"));
         controller.AppearanceLightStatusBars=light;controller.AppearanceLightNavigationBars=light;
     }
 }

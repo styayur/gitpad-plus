@@ -11,11 +11,20 @@ public sealed class MainPage : ContentPage
     private static readonly object vaultGate=new();
     private static VaultStore? sharedVault;
     private Action? detach;
-    private readonly Label local = new() { Text = "Local: Saved", VerticalOptions = LayoutOptions.Center };
+#if WINDOWS
+    private WindowAppearance? appearance;
+    private bool appearanceReady;
+    public void AttachAppearance(Microsoft.UI.Xaml.Window window,TitleBar titleBar) => appearance = new WindowAppearance(window,titleBar, message=>{if(appearanceReady)editor.SendRawMessage(message);});
+#endif
     public bool HasUnsavedChanges => bridge.HasUnsavedChanges;
     public event Action? Flushed;
     public MainPage()
     {
+#if ANDROID
+        // MAUI 10 defaults to edge-to-edge; include soft-input insets so the
+        // real HybridWebView viewport shrinks above Android's software keyboard.
+        SafeAreaEdges=Microsoft.Maui.SafeAreaEdges.All;
+#endif
         var overrideVault=Environment.GetEnvironmentVariable("GITPAD_ACCEPTANCE_VAULT");
 #if ANDROID
         // Android's OS-provided /data/user/0 alias can itself be a symlink.
@@ -36,6 +45,7 @@ public sealed class MainPage : ContentPage
         using var registry=typeof(MainPage).Assembly.GetManifestResourceStream("GitPadPlus.PackagedPlugins.json")??throw new InvalidOperationException("Packaged plugin registry missing.");
         bridge = new Bridge(vault,JsonSerializer.Deserialize(registry,DataJson.Default.PackagedPluginArray),NativeClipboard.ReadImage,NativeFilePicker.Pick);
         editor = new HybridWebView { HybridRoot = "wwwroot", DefaultFile = "index.html" };
+        Action? showNativeCalendar=null;
 #if WINDOWS
         var editorHost=new Grid();editorHost.Add(editor);
         var nativeFileDrop=new NativeFileDrop(editorHost,editor,vault);
@@ -45,6 +55,11 @@ public sealed class MainPage : ContentPage
         {
             var message = args.Message;
             if (message is null||!attached) return;
+            if(message=="{\"type\":\"show-native-calendar\"}")
+            {
+                MainThread.BeginInvokeOnMainThread(()=>{if(attached)showNativeCalendar?.Invoke();});
+                return;
+            }
             await requests.WaitAsync();
             try
             {
@@ -57,49 +72,59 @@ public sealed class MainPage : ContentPage
         void Activate() => MainThread.BeginInvokeOnMainThread(()=>{if(attached&&ready&&ActivationRouter.Take() is string uri)editor.SendRawMessage(JsonSerializer.Serialize(new {type="navigate",uri}));});
         ActivationRouter.Changed+=Activate;
         void ApplyTheme(){if(Application.Current is not null)Application.Current.UserAppTheme=vault.GetSettings().Theme switch{"light"=>AppTheme.Light,"dark"=>AppTheme.Dark,_=>AppTheme.Unspecified};
+#if WINDOWS
+            appearance?.Refresh();
+#endif
 #if ANDROID
             MainActivity.UpdateSystemBars();
 #endif
         }
-        Action<string> stateChanged=state => MainThread.BeginInvokeOnMainThread(() => {if(!attached)return;if(state=="Ready"){ready=true;Activate();}else if(state=="Flushed")Flushed?.Invoke();else if(state=="Settings")ApplyTheme();else local.Text = "Local: " + state;});
+        Action<string> stateChanged=state => MainThread.BeginInvokeOnMainThread(() => {if(!attached)return;if(state=="Ready"){ready=true;Activate();
+#if WINDOWS
+            appearanceReady=true;
+            appearance?.Refresh();
+#endif
+        }else if(state=="Flushed")Flushed?.Invoke();else if(state=="Settings")ApplyTheme();});
         bridge.StateChanged+=stateChanged;
         detach=()=>{attached=false;ActivationRouter.Changed-=Activate;bridge.StateChanged-=stateChanged;
 #if WINDOWS
             nativeFileDrop.Dispose();
+            appearanceReady=false;
+            appearance?.Dispose();
 #endif
         };
         try{ApplyTheme();}catch(Exception ex)when(ex is IOException or JsonException){/* Settings RPC reports retained corrupt data without blocking the editor. */}
         var nativeCalendar = new CalendarHost { HeightRequest = 300, IsVisible=false };
         nativeCalendar.DateSelected += date => editor.SendRawMessage(JsonSerializer.Serialize(new { type = "native-date", date = date.ToString("yyyy-MM-dd") }));
-        var showCalendar = new Button { Text = "Calendar", HorizontalOptions = LayoutOptions.Start };
 #if WINDOWS
-        showCalendar.HandlerChanged+=(_,_)=>
-        {
-            if(showCalendar.Handler?.PlatformView is not Microsoft.UI.Xaml.Controls.Button button)return;
             var calendar=new Microsoft.UI.Xaml.Controls.CalendarView{SelectionMode=Microsoft.UI.Xaml.Controls.CalendarViewSelectionMode.Single,IsTodayHighlighted=true};
             calendar.SelectedDatesChanged+=(_,_)=>{if(calendar.SelectedDates.Count>0)editor.SendRawMessage(JsonSerializer.Serialize(new{type="native-date",date=calendar.SelectedDates[0].ToString("yyyy-MM-dd")}));};
             var acrylic=new Microsoft.UI.Xaml.Media.AcrylicBrush{TintOpacity=0.8};
             var style=new Microsoft.UI.Xaml.Style(typeof(Microsoft.UI.Xaml.Controls.FlyoutPresenter));
             style.Setters.Add(new Microsoft.UI.Xaml.Setter(Microsoft.UI.Xaml.Controls.Control.BackgroundProperty,acrylic));
             var flyout=new Microsoft.UI.Xaml.Controls.Flyout{Content=calendar,FlyoutPresenterStyle=style};
-            flyout.Opening+=(_,_)=>{var dark=button.ActualTheme==Microsoft.UI.Xaml.ElementTheme.Dark;var color=Microsoft.UI.ColorHelper.FromArgb(255,dark?(byte)32:(byte)245,dark?(byte)43:(byte)248,dark?(byte)36:(byte)245);acrylic.TintColor=color;acrylic.FallbackColor=color;};
-            button.Flyout=flyout;
-        };
+            flyout.Opening+=(_,_)=>{
+                var dark=App.EffectiveTheme==AppTheme.Dark;
+                var color=Microsoft.UI.ColorHelper.FromArgb(255,dark?(byte)48:(byte)245,dark?(byte)49:(byte)246,dark?(byte)54:(byte)248);
+                var highContrast=appearance?.HighContrast??false;
+                if(highContrast)color=new Windows.UI.ViewManagement.UISettings().GetColorValue(Windows.UI.ViewManagement.UIColorType.Background);
+                acrylic.TintColor=color;acrylic.FallbackColor=color;acrylic.AlwaysUseFallback=highContrast;
+            };
+            showNativeCalendar=()=>{if(editor.Handler?.PlatformView is Microsoft.UI.Xaml.FrameworkElement anchor)flyout.ShowAt(anchor);};
 #else
-        showCalendar.Clicked += (_, _) => nativeCalendar.IsVisible = !nativeCalendar.IsVisible;
+        showNativeCalendar=()=>nativeCalendar.IsVisible=!nativeCalendar.IsVisible;
 #endif
-        var status = new HorizontalStackLayout { Padding = new Thickness(12, 6), Spacing = 24, Children = { local, new Label { Text = "Git: NotConfigured" } } };
-        var grid = new Grid { RowDefinitions = { new RowDefinition(GridLength.Auto), new RowDefinition(GridLength.Auto), new RowDefinition(GridLength.Star), new RowDefinition(GridLength.Auto) } };
-        grid.Add(showCalendar, 0, 0); grid.Add(nativeCalendar, 0, 1);
-#if WINDOWS
-        grid.Add(editorHost, 0, 2);
-#else
-        grid.Add(editor, 0, 2);
-#endif
+        var grid = new Grid { RowDefinitions = { new RowDefinition(GridLength.Auto), new RowDefinition(GridLength.Star) } };
 #if ANDROID
-        grid.Add(status, 0, 0); showCalendar.IsVisible = false;
+        // The layout owning the WebView must opt in too: Layout defaults to
+        // Container, which deliberately permits content underneath the IME.
+        grid.SafeAreaEdges=Microsoft.Maui.SafeAreaEdges.All;
+#endif
+        grid.Add(nativeCalendar, 0, 0);
+#if WINDOWS
+        grid.Add(editorHost, 0, 1);
 #else
-        grid.Add(status, 0, 3);
+        grid.Add(editor, 0, 1);
 #endif
         Content = grid;
     }
