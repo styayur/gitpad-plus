@@ -1,0 +1,93 @@
+{
+  "scope": "Post-build hash inventory of the unchanged installed link inputs; complements the pinned source/toolchain and preserved actual build logs, not a claim of byte-identical rebuilds",
+  "buildToolsLicenseDocumentSha256": "2f66b86a00e8d9833789897ce23d05a4a2dbea370cf39c8c1098dbc17d0e7bdc",
+  "runtimeLicenseDocumentSha256": "f1e3d56ceb2ad68aae0711b910375009e651ac5530fa0760f0dea6e81e54fae1",
+  "inputs": [
+    {
+      "input": "MSVC/14.44.35207/lib/x86/libcpmt.lib",
+      "sha256": "fc8b3e16985b11501436a50c5b51172fed91c792fd5722f38b7e35b18ddef571"
+    },
+    {
+      "input": "MSVC/14.44.35207/lib/x86/libcmt.lib",
+      "sha256": "77a18147a9cf6475995bbfd4d8eb46109912884ec03aaa2ee4f2e4d71ba97660"
+    },
+    {
+      "input": "MSVC/14.44.35207/lib/x86/libvcruntime.lib",
+      "sha256": "f94b4942804e5893ae2a255fa3845b35d2eaac9f5d427c89e84a7f84f7face64"
+    },
+    {
+      "input": "WindowsSDK/10.0.19041.0/um/x86/d2d1.lib",
+      "sha256": "1ba1cbbaab39840e09ec0e17bb332ad378bb0eab914054b13f493784b72cd6ae"
+    },
+    {
+      "input": "WindowsSDK/10.0.19041.0/um/x86/d3d11.lib",
+      "sha256": "8f66c769b8c114f6bc7be1d054cad24267cf3e5077fd7eedf095f7c5a654d4e3"
+    },
+    {
+      "input": "WindowsSDK/10.0.19041.0/um/x86/dwrite.lib",
+      "sha256": "5735b6555387c1f36c6734dbc9c4bb23c0173996a547976df2ee00b0240b7b35"
+    },
+    {
+      "input": "WindowsSDK/10.0.19041.0/ucrt/x86/ucrt.lib",
+      "sha256": "ccd3dad2a72ad555a320b855eea24eb9b6fc2d216473bd794ae7831bde00913d"
+    },
+    {
+      "input": "MSVC/14.44.35207/lib/x64/libcpmt.lib",
+      "sha256": "da86944db1497552c378e6252a7177fbefbdaeba4e69a6457de4db7fb2d235de"
+    },
+    {
+      "input": "MSVC/14.44.35207/lib/x64/libcmt.lib",
+      "sha256": "8fe40dd342b90b35d62b8f5d55b4e92df7785c122976618365cfe3b014cc857a"
+    },
+    {
+      "input": "MSVC/14.44.35207/lib/x64/libvcruntime.lib",
+      "sha256": "e4f8daf356d63592ff6d6f7ad90c8c9da4c1230273ad113a9a2b56afd6bfcb04"
+    },
+    {
+      "input": "WindowsSDK/10.0.19041.0/um/x64/d2d1.lib",
+      "sha256": "6a8ebf6249747eb6d1179a38b7698da5bbea6af5d378cc1beee1773a29f85a1b"
+    },
+    {
+      "input": "WindowsSDK/10.0.19041.0/um/x64/d3d11.lib",
+      "sha256": "66fbeba8936e52e86d97a7a5b97704ddc01143776caeb22d881257798797fe25"
+    },
+    {
+      "input": "WindowsSDK/10.0.19041.0/um/x64/dwrite.lib",
+      "sha256": "a9a06d9ff9402bf66d9cabd6b8ae5aecc9b22d50cfa362af4315c52d979be7a1"
+    },
+    {
+      "input": "WindowsSDK/10.0.19041.0/ucrt/x64/ucrt.lib",
+      "sha256": "7ef4eac926bf597d2f243f16cdfed7e0db22cb3ca34a1d7e088a84c994a03d66"
+    },
+    {
+      "input": "MSVC/14.44.35207/lib/arm64/libcpmt.lib",
+      "sha256": "3859455dbe29ff8372151eef1528816595f9921e9077b151ca959c32cb8e57c5"
+    },
+    {
+      "input": "MSVC/14.44.35207/lib/arm64/libcmt.lib",
+      "sha256": "12cfa5fce12fed27cba37bf1a1f9492666ced59e48d86f7c1fb925851b8cc481"
+    },
+    {
+      "input": "MSVC/14.44.35207/lib/arm64/libvcruntime.lib",
+      "sha256": "f065dadfc2fc7c6b455911d4f2a27c052127634eebae78fa93d1255534fbd0dd"
+    },
+    {
+      "input": "WindowsSDK/10.0.19041.0/um/arm64/d2d1.lib",
+      "sha256": "9d8678ae5903a923fa6676f8287af1faa104f64e3edd33bb1bde1ed7599a5dd7"
+    },
+    {
+      "input": "WindowsSDK/10.0.19041.0/um/arm64/d3d11.lib",
+      "sha256": "678db11f1716e43323d6c47aae82097c3913e0b37acc8224baba10896a0ac6f6"
+    },
+    {
+      "input": "WindowsSDK/10.0.19041.0/um/arm64/dwrite.lib",
+      "sha256": "c2d1f5c0a35147feaeb400cf555f4a39dc720403089b9292ffb597ec46fbb9ff"
+    },
+    {
+      "input": "WindowsSDK/10.0.19041.0/ucrt/arm64/ucrt.lib",
+      "sha256": "a0c0fa8ea945bdbeadf6a85af14f16fa8a18bdb8bc5da815aaf296945c94d203"
+    }
+  ],
+  "stlLicenseSource": "https://raw.githubusercontent.com/microsoft/STL/1f6e5b16ec02216665624c1e762f3732605cf2b4/LICENSE.txt",
+  "stlLicenseSha256": "1fc6b6db121d4555d8f661937d7f6013693cd8fd67495d5e5d98c1d18fb83eda"
+}

@@ -1,5 +1,7 @@
 # UI acceptance evidence
 
+The [3 November v1 closeout addendum](closeout-20261103/README.md) records the later empty-paragraph, pending-setting and short two-pane corrections, fresh 41-test browser result, source-built Win2D integration checks and explicitly scoped development Windows captures. Historical evidence below remains unchanged and is not final package acceptance.
+
 This record distinguishes browser regression, actual Windows runtime and actual Android emulator instrumentation. A development probe is not a public release candidate or universal Android package.
 
 ## Automated regression

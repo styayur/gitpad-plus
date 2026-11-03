@@ -1,6 +1,7 @@
-* text=auto
-*.md whitespace=-blank-at-eol
-tests/markdown-fixtures/** -text -whitespace
-# Retain the upstream vendor license RTF byte-for-byte.
-docs/licenses/*.rtf binary
-docs/licenses/win2d-LICENSE.txt -text -whitespace
+# Byte-bound source artifacts, licenses and build logs must survive cross-OS checkout.
+third-party/win2d/** -text -filter whitespace=cr-at-eol
+# Retain upstream/license and generated build-log whitespace verbatim.
+third-party/win2d/LICENSE.txt -whitespace linguist-vendored
+third-party/win2d/notices/** -whitespace linguist-vendored
+third-party/win2d/build-evidence/*.log.txt -whitespace
+third-party/win2d/feed/*.nupkg linguist-vendored

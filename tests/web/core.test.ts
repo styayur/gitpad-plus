@@ -52,6 +52,20 @@ describe('Markdown source fidelity',()=>{
     expect(source.blockRanges.filter(range=>range.kind==='paragraph').map(range=>raw.slice(range.start,range.end))).toEqual(['Before','After']);
     const image=source.blockRanges.find(range=>range.kind==='image-block')!;expect(raw.slice(image.start,image.end)).toBe('![image](../Assets/pixel.png)');
   });
+  it('recognizes the canonical empty paragraph marker without accepting other HTML',()=>{
+    const raw='First\r\n\r\n<br />\r\n\r\nThird\r\n',source=new SourceDocument(raw);
+    expect(source.unsupported()).toEqual([]);expect(source.serialize()).toBe(raw);
+    expect(source.blockRanges.map(range=>({kind:range.kind,text:raw.slice(range.start,range.end)}))).toEqual([{kind:'paragraph',text:'First'},{kind:'paragraph',text:'<br />'},{kind:'paragraph',text:'Third'}]);
+    for(const html of ['<br>','<br/>','<br class="custom" />','<br />\n<script>alert(1)</script>','<div>kept</div>'])expect(new SourceDocument(html).unsupported().length,html).toBeGreaterThan(0);
+  });
+  it('does not treat an inline break as another block source range',()=>{
+    const source=new SourceDocument('Before <br /> after\n\nNext\n');
+    expect(source.blockRanges.map(range=>({kind:range.kind,text:source.raw.slice(range.start,range.end)}))).toEqual([{kind:'paragraph',text:'Before <br /> after'},{kind:'paragraph',text:'Next'}]);
+  });
+  it('distinguishes inline breaks and empty paragraph markers within a blockquote',()=>{
+    const source=new SourceDocument('> First <br /> after\n>\n> <br />\n>\n> Last\n');
+    expect(source.blockRanges.filter(range=>range.kind==='paragraph').map(range=>source.raw.slice(range.start,range.end))).toEqual(['First <br /> after','<br />','Last']);
+  });
 });
 
 describe('Persistent anchors and session positions',()=>{

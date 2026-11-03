@@ -1,5 +1,7 @@
 # Temporal Writing Workspace — Calm Precision
 
+The [3 November UI v1 closeout](closeout-20261103/README.md) extends this historical redesign evidence with demonstrated reliability fixes, actual before/after captures and current validation limits. Final clean-main package acceptance remains separate.
+
 GitPad+ UI modernization, 2–3 November 2026. Dedicated branch `ui/calm-precision-20261102`; [PR #2](https://github.com/styayur/gitpad-plus/pull/2), based on `release/alpha1-closeout-20261031` (`969c8af`). The stacked base keeps Win2D licensing, packaging and release infrastructure outside this review.
 
 ## Design and implementation

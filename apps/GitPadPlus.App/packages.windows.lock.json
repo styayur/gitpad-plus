@@ -2,6 +2,15 @@
   "version": 1,
   "dependencies": {
     "net10.0-windows10.0.19041": {
+      "Microsoft.Graphics.Win2D": {
+        "type": "Direct",
+        "requested": "[1.4.1-gitpadplus.1, 1.4.1-gitpadplus.1]",
+        "resolved": "1.4.1-gitpadplus.1",
+        "contentHash": "ZjKSssbTvwtiUtGJTQC1+Gm8kvlnV/JeKdyU0rMuzlBUWPKgibD9vCRXG4KMsffgvEmyAv2Myd02jaziGuU/TQ==",
+        "dependencies": {
+          "Microsoft.WindowsAppSDK.WinUI": "1.8.260204000"
+        }
+      },
       "Microsoft.Maui.Controls": {
         "type": "Direct",
         "requested": "[10.0.120, )",
@@ -122,14 +131,6 @@
         "type": "Transitive",
         "resolved": "10.0.0",
         "contentHash": "inRnbpCS0nwO/RuoZIAqxQUuyjaknOOnCEZB55KSMMjRhl0RQDttSmLSGsUJN3RQ3ocf5NDLFd2mOQViHqMK5w=="
-      },
-      "Microsoft.Graphics.Win2D": {
-        "type": "Transitive",
-        "resolved": "1.4.0",
-        "contentHash": "/04yyf3xEOxeBK+SXxGB6OYLjXBVuujcLQF04mREcRcBT59IMI+oDbXOZZG2c/mJL8kKFC8r3wqz6MyA6IP3oA==",
-        "dependencies": {
-          "Microsoft.WindowsAppSDK.WinUI": "1.8.260204000"
-        }
       },
       "Microsoft.IO.RecyclableMemoryStream": {
         "type": "Transitive",
@@ -379,9 +380,10 @@
     },
     "net10.0-windows10.0.19041/win-x64": {
       "Microsoft.Graphics.Win2D": {
-        "type": "Transitive",
-        "resolved": "1.4.0",
-        "contentHash": "/04yyf3xEOxeBK+SXxGB6OYLjXBVuujcLQF04mREcRcBT59IMI+oDbXOZZG2c/mJL8kKFC8r3wqz6MyA6IP3oA==",
+        "type": "Direct",
+        "requested": "[1.4.1-gitpadplus.1, 1.4.1-gitpadplus.1]",
+        "resolved": "1.4.1-gitpadplus.1",
+        "contentHash": "ZjKSssbTvwtiUtGJTQC1+Gm8kvlnV/JeKdyU0rMuzlBUWPKgibD9vCRXG4KMsffgvEmyAv2Myd02jaziGuU/TQ==",
         "dependencies": {
           "Microsoft.WindowsAppSDK.WinUI": "1.8.260204000"
         }

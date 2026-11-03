@@ -1,0 +1,9 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {generateKeyPairSync} from 'node:crypto';
+import {sealCapability,openCapability,redactUploadOutput} from '../scripts/candidate-capability.mjs';
+const keys=generateKeyPairSync('rsa',{modulusLength:2048}),identity={repository:'styayur/gitpad-plus',sourceCommit:'a'.repeat(40),runId:'1234',nonce:'b'.repeat(64),manifestSha256:'c'.repeat(64),purpose:'transport-probe'};
+test('upload context is confidential and opens only for its matching recipient/session',()=>{const payload={...identity,runtimeToken:'not-a-real-token'},sealed=sealCapability(keys.publicKey,payload);assert.ok(!JSON.stringify(sealed).includes(payload.runtimeToken));assert.deepEqual(openCapability(keys.privateKey,sealed,identity),payload);const other=generateKeyPairSync('rsa',{modulusLength:2048});assert.throws(()=>openCapability(other.privateKey,sealed,identity));});
+test('ciphertext tampering and changing a probe to a candidate are rejected',()=>{const sealed=sealCapability(keys.publicKey,{...identity,runtimeToken:'not-a-real-token'});assert.throws(()=>openCapability(keys.privateKey,sealed,{...identity,purpose:'candidate'}),/context differs/);const bytes=Buffer.from(sealed.ciphertext,'base64');bytes[0]^=1;assert.throws(()=>openCapability(keys.privateKey,{...sealed,ciphertext:bytes.toString('base64')},identity));});
+test('local uploader diagnostics remove add-mask values, authorization tokens and signed URLs',()=>{const value='::add-mask::secret-signature\n::error::Upload failed secret-signature eyJabc.def.ghi https://blob.example/path?sig=other\n';const safe=redactUploadOutput(value);assert.ok(safe.includes('Upload failed'));for(const secret of ['secret-signature','eyJabc.def.ghi','sig=other','::add-mask::'])assert.ok(!safe.includes(secret));});

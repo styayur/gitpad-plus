@@ -1,0 +1,24 @@
+name: Seal one-job candidate upload capability
+description: Encrypt the current artifact-service context to the local uploader's ephemeral public key
+inputs:
+  public_key:
+    required: true
+    description: Ephemeral RSA public key; never a signing key
+  source_commit:
+    required: true
+    description: Exact clean main SHA
+  nonce:
+    required: true
+    description: Random upload session identifier
+  manifest_sha256:
+    required: true
+    description: SHA-256 of the approved file manifest
+  purpose:
+    required: true
+    description: candidate or transport-probe
+outputs:
+  sealed_path:
+    description: Ciphertext file only
+runs:
+  using: node24
+  main: index.mjs

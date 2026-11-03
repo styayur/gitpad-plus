@@ -1,0 +1,209 @@
+{
+  "schemaVersion": 1,
+  "package": {
+    "id": "Microsoft.Graphics.Win2D",
+    "version": "1.4.1-gitpadplus.1",
+    "scope": "GitPad+ downstream Windows x64 rebuild; not a Microsoft prebuilt release or upstream 1.4.1",
+    "file": "Microsoft.Graphics.Win2D.1.4.1-gitpadplus.1.nupkg",
+    "sha256": "1a9bcb99997705e62b6ae419c4663ae4c125aeb2c805b9522131c3884b00f630"
+  },
+  "upstream": {
+    "repository": "https://github.com/microsoft/Win2D",
+    "commit": "2cd2e846b0b410286a88fa5cddc3bc765de8be0b",
+    "tree": "2c2f75df5ea650351f75fd9bbc2f8559feb1a082",
+    "version": "1.4.0",
+    "sourceLicense": "MIT",
+    "licenseSha256": "ba4eb1619f6e1a6bcb4130d3e42194a5f22b4a54c99a865ef90a3242f785fd1f",
+    "trackedSourceClean": true
+  },
+  "architecture": "x64",
+  "compiledNativeMatrix": [
+    "x86",
+    "x64",
+    "ARM64"
+  ],
+  "distributedNativeMatrix": [
+    "x64"
+  ],
+  "configuration": "Release",
+  "toolchain": {
+    "windowsSdk": "10.0.19041.0",
+    "dotnetHostSha256": "d4401f5fbdea869bb7211b00594746ef6962b7dd2bfceb749889b920070c3f9f",
+    "msbuildSha256": "9fb50c5bfd8ea1de1c66151b25e60b7d4f4f56873618da98abb54090fb21aa75",
+    "compilerSha256": "fe251ef50a1545b1b0835ee17b1e785459712b38d79e45b5c1d3d28970a36619",
+    "nugetVersion": "5.8.0.6930",
+    "compilerVersion": "19.44.35229.0",
+    "msvc": "14.44.35207",
+    "nugetSha256": "5c5b9c96165d3283b2cb9e5b65825d343e0e7139b9e70a250b4bb24c2285f3ba",
+    "msbuild": "17.14.60.43110",
+    "dotnetSdk": "6.0.428"
+  },
+  "managedProjection": {
+    "platformTarget": "AnyCPU",
+    "buildPlatform": "x64",
+    "sourceLink": false,
+    "reason": "Upstream AzureRepos SourceLink provider rejects the public GitHub remote; explicit source revision retained"
+  },
+  "nativeRuntime": {
+    "linkage": "Upstream HybridCRT: static vcruntime/STL; dynamic Windows UCRT",
+    "sourceLicenseDoesNotRelicenseRuntime": true,
+    "retainedNotices": [
+      "notices/MSVC-STL-LICENSE.txt",
+      "notices/MSVC-ThirdPartyNotices.txt",
+      "notices/VC-Runtime.txt",
+      "notices/VS2022-BuildTools.txt"
+    ]
+  },
+  "productDependencies": [
+    {
+      "name": "Microsoft.Build.Tasks.Git/1.1.1",
+      "sha512": "AT3HlgTjsqHnWpBHSNeR0KxbLZD7bztlZVj7I8vgeYG9SYqbeFGh0TM/KVtC6fg53nrWHl3VfZFvb5BiQFcY6Q=="
+    },
+    {
+      "name": "Microsoft.SourceLink.AzureRepos.Git/1.1.1",
+      "sha512": "qB5urvw9LO2bG3eVAkuL+2ughxz2rR7aYgm2iyrB8Rlk9cp2ndvGRCvehk3rNIhRuNtQaeKwctOl1KvWiklv5w=="
+    },
+    {
+      "name": "Microsoft.SourceLink.Common/1.1.1",
+      "sha512": "WMcGpWKrmJmzrNeuaEb23bEMnbtR/vLmvZtkAP5qWu7vQsY59GqfRJd65sFpBszbd2k/bQ8cs8eWawQKAabkVg=="
+    },
+    {
+      "name": "Microsoft.Web.WebView2/1.0.3800.47",
+      "sha512": "vluoF9sqb72AB02yYs1UXW/2/VsxOMl2idiFJNvG993sOw3bHJvjHXmd3tqevTd9s3Md/9FgEzkOXoUl2Nb/ww=="
+    },
+    {
+      "name": "Microsoft.Windows.CsWinRT/2.2.0",
+      "sha512": "R8MDVawukHrKgYCFgYaoLfbAna/FrImEFRxDK9k8ITbrXv3KLE5uN6tRqrNV83H4MFdqJ/uiA/hg1cSsXkl0vw=="
+    },
+    {
+      "name": "Microsoft.Windows.SDK.BuildTools/10.0.26100.4654",
+      "sha512": "2mgcOlj/t2RfSyyw+pVESfO+Tk1RkfQzto9Vrq42M1lUQIfQEwbi8QLha9GXWIOj+TFzeHIEJckIoF25mgiM8A=="
+    },
+    {
+      "name": "Microsoft.Windows.SDK.BuildTools.MSIX/1.7.20250829.1",
+      "sha512": "IMdvRmCIZnBS5GkYnv0po1bcx6U1OF39pqA4TphQ9evDzpCRoSE19/PkDvlUNNrBavTsLIEJgd/TAIFner75ow=="
+    },
+    {
+      "name": "Microsoft.WindowsAppSDK.Base/1.8.251216001",
+      "sha512": "PS1wriuFknz3W2F2P/e6RvOTM35w89Lsj/f0QmUEPrJjKnc+jM0JLX1vfdytI14y1gNRUTm9uclwP0aH/SVU5w=="
+    },
+    {
+      "name": "Microsoft.WindowsAppSDK.Foundation/1.8.260203002",
+      "sha512": "eKQ/prWq98mW7+E+ffot47iZNbDnq/NVN9R9Gi8vmoU/3Ka6zNNivxdICXh6j7g6REFPCV9530/nQYQC0L3fwg=="
+    },
+    {
+      "name": "Microsoft.WindowsAppSDK.InteractiveExperiences/1.8.260125001",
+      "sha512": "CTGFd1zhIDbnOltZ6piPvpNXFR1OaNyW3vHvhaILzpGziAgj5DPuVnU3PUp1p5iOBd382FLCBVM6nEPyu/LCOA=="
+    },
+    {
+      "name": "Microsoft.WindowsAppSDK.WinUI/1.8.260204000",
+      "sha512": "DSpA01+iPXwky4O1uZCrdClSi2aRIYTIhmsTeC1EsJmWBFpSirwNAg4EGHejijV6u4ZVkTdyv3px0Y2P3fp72Q=="
+    }
+  ],
+  "assetsSha256": "098fa989013aac12e090406dca56f51a6cde53a1635aeec564d2dcaa5dc4df9c",
+  "files": [
+    {
+      "source": "LICENSE.txt",
+      "path": "LICENSE.txt",
+      "sha256": "ba4eb1619f6e1a6bcb4130d3e42194a5f22b4a54c99a865ef90a3242f785fd1f",
+      "bytes": 1139
+    },
+    {
+      "source": "obj/Win2D.githash.txt",
+      "path": "Win2D.githash.txt",
+      "sha256": "0b55a7e8eebd9c9d0de25848c05af79d352da4aac44791d230aff2ed328ddffc",
+      "bytes": 41
+    },
+    {
+      "source": "bin/uapx64/release/winrt.dll.uap/Microsoft.Graphics.Canvas.dll",
+      "path": "runtimes/win-x64/native/Microsoft.Graphics.Canvas.dll",
+      "sha256": "e1de5f0d081a7fadc57bfe594b104869d954f315a2e24214ebf5d89995b047ef",
+      "bytes": 1723904
+    },
+    {
+      "source": "bin/uapx64/release/winrt.dll.uap/Microsoft.Graphics.Canvas.winmd",
+      "path": "lib/uap10.0/Microsoft.Graphics.Canvas.winmd",
+      "sha256": "2d64909ecd49ee9a643847ed23bc56207f364eaa7e651fc658d0291af9cc32c6",
+      "bytes": 272384
+    },
+    {
+      "source": "bin/x64/release/winrt.projection/Microsoft.Graphics.Canvas.Interop.dll",
+      "path": "lib/net6.0-windows10.0.19041.0/Microsoft.Graphics.Canvas.Interop.dll",
+      "sha256": "dc582b76a1791c9d0fa2bb3ff3f397b76d4aaf23112ddcb7296603c02f62bb90",
+      "bytes": 1183232
+    },
+    {
+      "source": "obj/winrt.lib.uap/uapx64/release/Generated Files/Microsoft.Graphics.Canvas.h",
+      "path": "include/x64/Microsoft.Graphics.Canvas.h",
+      "sha256": "52c8d3c6ab338a7a042e7d9eecda1c09a31f0fd7b7c239b5b78e4f55caa113cc",
+      "bytes": 3650351
+    },
+    {
+      "source": "winrt/published/Microsoft.Graphics.Canvas.native.h",
+      "path": "include/Microsoft.Graphics.Canvas.native.h",
+      "sha256": "0d474a66978c8b93556c3658176ad9daa1d69e6b76ba7c7c250a702d1c0a18e6",
+      "bytes": 19188
+    },
+    {
+      "source": "build/nuget/Microsoft.Graphics.Win2D-WinUI3.props",
+      "path": "build/net6.0-windows10.0.19041.0/Microsoft.Graphics.Win2D.props",
+      "sha256": "7ad952039d3d8e2c370bfb653314645448d278bf1db8db8cf6510417128a5b40",
+      "bytes": 383
+    },
+    {
+      "source": "build/nuget/Microsoft.Graphics.Win2D-WinUI3.targets",
+      "path": "build/net6.0-windows10.0.19041.0/Microsoft.Graphics.Win2D.targets",
+      "sha256": "57a10289221951eb9af61598638f795bb06274605b45bca7bb10d0f618618083",
+      "bytes": 2283,
+      "transformation": "Add fail-closed win-x64 RID guard; retain upstream targets"
+    },
+    {
+      "source": "build/nuget/Microsoft.Graphics.Win2D-WinUI3.props",
+      "path": "buildTransitive/net6.0-windows10.0.19041.0/Microsoft.Graphics.Win2D.props",
+      "sha256": "7ad952039d3d8e2c370bfb653314645448d278bf1db8db8cf6510417128a5b40",
+      "bytes": 383
+    },
+    {
+      "source": "build/nuget/Microsoft.Graphics.Win2D-WinUI3.targets",
+      "path": "buildTransitive/net6.0-windows10.0.19041.0/Microsoft.Graphics.Win2D.targets",
+      "sha256": "57a10289221951eb9af61598638f795bb06274605b45bca7bb10d0f618618083",
+      "bytes": 2283,
+      "transformation": "Add fail-closed win-x64 RID guard; retain upstream targets"
+    },
+    {
+      "source": "GitPad+ third-party/win2d/notices/MSVC-STL-LICENSE.txt",
+      "path": "notices/MSVC-STL-LICENSE.txt",
+      "sha256": "1fc6b6db121d4555d8f661937d7f6013693cd8fd67495d5e5d98c1d18fb83eda",
+      "bytes": 12550
+    },
+    {
+      "source": "GitPad+ third-party/win2d/notices/MSVC-ThirdPartyNotices.txt",
+      "path": "notices/MSVC-ThirdPartyNotices.txt",
+      "sha256": "782815bd1256f9ad798211eee4b0e574ddd113bd07700c6921ab25c591fbcda7",
+      "bytes": 7043986
+    },
+    {
+      "source": "GitPad+ third-party/win2d/notices/VC-Runtime.txt",
+      "path": "notices/VC-Runtime.txt",
+      "sha256": "76c6045b291b9fbd6049453142f8ca6f10e3d0e57b63aff6e57fe8398f04cef1",
+      "bytes": 6622
+    },
+    {
+      "source": "GitPad+ third-party/win2d/notices/VS2022-BuildTools.txt",
+      "path": "notices/VS2022-BuildTools.txt",
+      "sha256": "f1213e456284f193754dbe8406463988eb41f35f735431cb0c86eedfd7cc93ab",
+      "bytes": 11286
+    }
+  ],
+  "provenanceSha256": "74a45026bf4b2e0e2ed2e9295958ce4fddf8a6c0737acf9b5e0622f6298d0f91",
+  "buildLogs": [
+    {
+      "path": "native.log",
+      "sha256": "d0a4290289ba2cbe0eb8c635f2a1b1f0d72a1a622ef342fe4f5349cb2484a9b5"
+    },
+    {
+      "path": "projection.log",
+      "sha256": "483eec19f3461ed809640a013cf9b61202c23e2c29f1937eb048b07786d00ac7"
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "sourceCommit": "2cd2e846b0b410286a88fa5cddc3bc765de8be0b",
+  "nativeSha256": "e1de5f0d081a7fadc57bfe594b104869d954f315a2e24214ebf5d89995b047ef",
+  "projectionSha256": "dc582b76a1791c9d0fa2bb3ff3f397b76d4aaf23112ddcb7296603c02f62bb90",
+  "width": 4,
+  "height": 4,
+  "dpi": 96,
+  "pixels": 64,
+  "bgra": [
+    56,
+    34,
+    12,
+    255
+  ],
+  "scope": "Actual source-built CsWinRT projection, WARP device, CanvasRenderTarget, drawing session and pixel readback; not final MAUI package acceptance"
+}

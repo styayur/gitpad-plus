@@ -1,0 +1,18 @@
+{
+  "dll": "E:\\GitPadPlus-Toolchain\\source\\Win2D-alpha1-20261103\\bin\\uapx64\\release\\winrt.dll.uap\\Microsoft.Graphics.Canvas.dll",
+  "sha256": "e1de5f0d081a7fadc57bfe594b104869d954f315a2e24214ebf5d89995b047ef",
+  "architecture": "X64",
+  "scope": "Actual native Win2D factory, hardware/default and WARP device creation and capability calls; not a MAUI or managed-projection acceptance",
+  "devices": [
+    {
+      "requestedSoftwareRenderer": false,
+      "maximumBitmapSizeInPixels": 16384,
+      "bgra8Supported": true
+    },
+    {
+      "requestedSoftwareRenderer": true,
+      "maximumBitmapSizeInPixels": 8388608,
+      "bgra8Supported": true
+    }
+  ]
+}
