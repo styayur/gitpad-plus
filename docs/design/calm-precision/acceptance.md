@@ -37,6 +37,8 @@ The same installed APK passed smoke, smoke-restart, smoke-recreate and smoke-res
 
 Capture review rejected several intermediate Android images whose filenames described the requested theme but whose composed frame still showed the prior state. The committed keyboard frame visibly contains the real IME; settings/theme captures were inspected individually rather than accepted by filename. The historical baseline is labeled separately.
 
+The browser mobile editor capture was also retaken after two animation frames and a settled paint. At 393×852 its status bar occupies y=824…852; both status strings occupy y=831.5…845.5 with readable dark-theme ink. [Measured geometry](mobile-footer-metrics.json) accompanies the corrected capture; this required no product-code change.
+
 ## Boundaries
 
 No storage schema, UUIDv7 generation, Markdown serializer, plugin protocol, recovery semantics, permanent signing identity, package lock or release workflow changed. Native file-drop container ownership is retained. Historical manual drag/drop acceptance from the previous release task is not claimed as a fresh manual acceptance of this UI branch. Existing browser image persistence regression and Android native image checks supply the automated coverage for this branch.
