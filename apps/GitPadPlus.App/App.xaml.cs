@@ -7,6 +7,10 @@ public partial class App : Application
     public App()
     {
         InitializeComponent();
+#if ANDROID
+        Microsoft.Maui.Controls.PlatformConfiguration.AndroidSpecific.Application.SetWindowSoftInputModeAdjust(
+            this,Microsoft.Maui.Controls.PlatformConfiguration.AndroidSpecific.WindowSoftInputModeAdjust.Resize);
+#endif
         foreach(var argument in Environment.GetCommandLineArgs())if(argument.StartsWith("gitpadplus:",StringComparison.OrdinalIgnoreCase))ActivationRouter.Open(argument);
     }
     protected override Window CreateWindow(IActivationState? activationState)

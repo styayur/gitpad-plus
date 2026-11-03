@@ -106,18 +106,20 @@ public sealed class MainPage : ContentPage
             flyout.Opening+=(_,_)=>{
                 var dark=App.EffectiveTheme==AppTheme.Dark;
                 var color=Microsoft.UI.ColorHelper.FromArgb(255,dark?(byte)48:(byte)245,dark?(byte)49:(byte)246,dark?(byte)54:(byte)248);
-                acrylic.TintColor=color;acrylic.FallbackColor=color;
                 var highContrast=appearance?.HighContrast??false;
-                Microsoft.UI.Xaml.Media.Brush background=highContrast
-                    ?new Microsoft.UI.Xaml.Media.SolidColorBrush(new Windows.UI.ViewManagement.UISettings().GetColorValue(Windows.UI.ViewManagement.UIColorType.Background))
-                    :acrylic;
-                style.Setters[0]=new Microsoft.UI.Xaml.Setter(Microsoft.UI.Xaml.Controls.Control.BackgroundProperty,background);
+                if(highContrast)color=new Windows.UI.ViewManagement.UISettings().GetColorValue(Windows.UI.ViewManagement.UIColorType.Background);
+                acrylic.TintColor=color;acrylic.FallbackColor=color;acrylic.AlwaysUseFallback=highContrast;
             };
             showNativeCalendar=()=>{if(editor.Handler?.PlatformView is Microsoft.UI.Xaml.FrameworkElement anchor)flyout.ShowAt(anchor);};
 #else
         showNativeCalendar=()=>nativeCalendar.IsVisible=!nativeCalendar.IsVisible;
 #endif
         var grid = new Grid { RowDefinitions = { new RowDefinition(GridLength.Auto), new RowDefinition(GridLength.Star) } };
+#if ANDROID
+        // The layout owning the WebView must opt in too: Layout defaults to
+        // Container, which deliberately permits content underneath the IME.
+        grid.SafeAreaEdges=Microsoft.Maui.SafeAreaEdges.All;
+#endif
         grid.Add(nativeCalendar, 0, 0);
 #if WINDOWS
         grid.Add(editorHost, 0, 1);

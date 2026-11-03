@@ -14,6 +14,9 @@ const paths: Record<string, ReactNode> = {
   source: <path d="m8 6-6 6 6 6m8-12 6 6-6 6m-3-15-2 18"/>,
   bullet: <><path d="M9 6h12M9 12h12M9 18h12"/><circle cx="4" cy="6" r=".6"/><circle cx="4" cy="12" r=".6"/><circle cx="4" cy="18" r=".6"/></>,
   fold: <><path d="M3 5h18M3 19h18m5-10 4 4 4-4"/></>,
+  expandAll: <path d="M4 3h16M4 21h16m-12-11 4-4 4 4m-8 4 4 4 4-4"/>,
+  collapseAll: <path d="M4 3h16M4 21h16M8 6l4 4 4-4m-8 12 4-4 4 4"/>,
+  mark: <><path d="m4 14 9-9 6 6-9 9H4v-6Zm3-3 6 6M3 22h10"/></>,
 };
 export function Icon({ name }: { name: string }) {
   return <svg className="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{paths[name]??paths.more}</svg>;
@@ -42,6 +45,6 @@ export function NoteActions({children}:{children:ReactNode}) {
 }
 
 export function CommandLabel({id,title}:{id:string;title:string}) {
-  const mark:Record<string,string>={bold:'B',italic:'I',underline:'U',strike:'S',mark:'H',color:'A'};
-  return mark[id]?<span aria-hidden="true" className={'command-mark command-'+id}>{mark[id]}</span>:<><Icon name={id==='link'?'link':id==='bullet'?'bullet':'fold'}/><span className="command-caption">{title}</span></>;
+  const mark:Record<string,string>={bold:'B',italic:'I',underline:'U',strike:'S',color:'A'};
+  return mark[id]?<span aria-hidden="true" className={'command-mark command-'+id}>{mark[id]}</span>:<><Icon name={id in paths?id:'more'}/><span className="command-caption">{title}</span></>;
 }

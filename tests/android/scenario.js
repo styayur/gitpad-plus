@@ -40,12 +40,15 @@ void(async()=>{
       const day=document.querySelector('.calendar button').getBoundingClientRect();
       check('Android calendar touch targets are at least 44 by 44 CSS pixels',day.width>=44&&day.height>=44);
       NativeAcceptance.screenshot('ui-calendar-dark');toggle.click();await wait(300);
+      NativeAcceptance.hideKeyboard();await until(()=>!NativeAcceptance.keyboardVisible(),'keyboard hidden before viewport baseline');await wait(600);
       const fullHeight=innerHeight,active=document.querySelector('.milkdown .ProseMirror'),rect=active.getBoundingClientRect();
       NativeAcceptance.press(rect.x+30,Math.max(rect.y+15,document.querySelector('.editor-pane').getBoundingClientRect().y+15),innerWidth,80);
-      await until(()=>NativeAcceptance.keyboardVisible()&&innerHeight<fullHeight-80,'actual Android IME and resized WebView');await wait(1000);
+      await until(()=>NativeAcceptance.keyboardVisible(),'actual Android software keyboard');await wait(1000);
       check('Native IME is visible',NativeAcceptance.keyboardVisible());
       const pane=document.querySelector('.editor-pane').getBoundingClientRect(),toolbar=document.querySelector('.format-toolbar').getBoundingClientRect();
-      checks.push({name:'Native keyboard viewport measurements',fullHeight,keyboardViewportHeight:innerHeight,editorHeight:pane.height,nativeGeometry:NativeAcceptance.geometry()});
+      checks.push({name:'Native keyboard viewport measurements',fullHeight,keyboardViewportHeight:innerHeight,editorHeight:pane.height,nativeGeometry:NativeAcceptance.geometry(),nativeLayout:NativeAcceptance.layoutDiagnostics()});
+      NativeAcceptance.screenshot('ui-keyboard-observed');
+      check('Keyboard reduces the real WebView viewport',innerHeight<fullHeight-80);
       check('Keyboard-resized editor retains a usable viewport',pane.height>=80&&pane.bottom<=innerHeight+1);
       check('Formatting stays above the visible editor',toolbar.bottom<=pane.top+1);
       check('Local and Git status remain above the keyboard',document.querySelector('footer').getBoundingClientRect().bottom<=innerHeight+1);
@@ -185,7 +188,7 @@ void(async()=>{
       const generated=phase==='features',label=generated?'Example command':'Official toolbar';
       const example=[...document.querySelectorAll('[role=dialog] label')].find(node=>node.textContent===label);
       const command=()=>[...document.querySelectorAll('.format-toolbar button')].some(node=>generated?node.textContent.startsWith('SDK '):(node.getAttribute('aria-label')??node.textContent)==='Bold');
-      example.querySelector('input').click();await until(()=>!command(),'packaged plugin deactivation');
+      example.querySelector('input').click();await until(()=>!command()&&!example.querySelector('input').disabled,'packaged plugin deactivation completed');
       check(label+' commands disposed on disable',true);example.querySelector('input').click();
       await until(command,'packaged plugin reactivation');
       check(label+' reactivated',true);click('Save settings');

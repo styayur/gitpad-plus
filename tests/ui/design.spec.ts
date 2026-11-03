@@ -43,6 +43,20 @@ test('tabs and note action menu remain keyboard accessible',async({page})=>{
   await page.keyboard.press('Escape');await expect(page.getByRole('button',{name:'Source peek',exact:true})).toBeHidden();await expect(menu).toBeFocused();
 });
 
+test('plugin controls wait for the native operation before accepting another change',async({page})=>{
+  await page.goto('/');await page.getByRole('button',{name:'Settings',exact:true}).click();
+  let release=()=>{};const held=new Promise<void>(resolve=>{release=resolve;});
+  await page.route('**/rpc',async route=>{
+    if(route.request().postDataJSON()?.method==='plugins.deactivate'){const response=await route.fetch();await held;await route.fulfill({response});}
+    else await route.continue();
+  });
+  const toolbar=page.getByLabel('Official toolbar',{exact:true});await toolbar.uncheck();
+  await expect(toolbar).toBeDisabled();await expect(page.getByLabel('Calendar statistics',{exact:true})).toBeDisabled();await expect(page.getByRole('button',{name:'Save settings',exact:true})).toBeDisabled();
+  release();await expect(toolbar).toBeEnabled();await toolbar.check();await expect(toolbar).toBeEnabled();
+  await page.getByRole('button',{name:'Save settings',exact:true}).click();await expect(page.getByRole('dialog',{name:'Settings',exact:true})).toHaveCount(0);
+  await page.reload();await page.getByRole('button',{name:'Settings',exact:true}).click();await expect(page.getByLabel('Official toolbar',{exact:true})).toBeChecked();
+});
+
 test('editor, toolbar and status fit desktop, narrow and reduced keyboard viewports',async({page})=>{
   await page.goto('/');await page.getByRole('button',{name:'New note',exact:true}).click();await expect(page.locator('.ProseMirror')).toBeVisible();
   await page.locator('.ProseMirror').fill('A page with 中文 and a long line that should wrap at every writing width.');

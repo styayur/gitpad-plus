@@ -33,6 +33,10 @@ internal sealed class WindowAppearance : IDisposable
     public void Refresh()
     {
         if(disposed)return;
+        if(root is not null)root.RequestedTheme=Microsoft.Maui.Controls.Application.Current?.UserAppTheme switch
+        {
+            AppTheme.Light=>ElementTheme.Light,AppTheme.Dark=>ElementTheme.Dark,_=>ElementTheme.Default
+        };
         var highContrast=theme.HighContrast;
         var dark=App.EffectiveTheme==AppTheme.Dark;
         var background=highContrast?colors.GetColorValue(UIColorType.Background):Microsoft.UI.ColorHelper.FromArgb(255,dark?(byte)32:(byte)245,dark?(byte)33:(byte)246,dark?(byte)36:(byte)248);
