@@ -14,7 +14,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:ui": "playwright test",
-    "test:release": "node --test tests/release-gate.test.mjs",
+    "test:release": "node --test tests/release-gate.test.mjs tests/win2d-source.test.mjs tests/candidate-capability.test.mjs",
     "lint": "eslint web packages plugins tests --max-warnings 0",
     "check:release": "node scripts/release-gate.mjs"
   },

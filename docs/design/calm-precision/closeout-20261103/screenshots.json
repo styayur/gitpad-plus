@@ -1,0 +1,40 @@
+{
+  "scope": "Actual working-tree UI closeout at a171c0e plus reviewed diff; not final clean-main native candidate acceptance. The short-viewport after capture is scrolled to the second pane and uses light rather than dark theme.",
+  "screenshots": [
+    {
+      "file": "after-short-two-pane.png",
+      "sha256": "61f0780aaeacda8e53ff1e594078af53e24f6a69afe7df6180f8940d2fe4c179",
+      "runtime": "Chromium / real disposable DevHost vault"
+    },
+    {
+      "file": "before-short-two-pane.png",
+      "sha256": "ba488836539e44cb135c20cd12f55c2eb4a8771e3699e875a65e10ba5881f663",
+      "runtime": "Chromium / real disposable DevHost vault"
+    },
+    {
+      "file": "save-error.png",
+      "sha256": "54a38191ac5ea008d29be64935ad01bfb6e475490f414e2115f6af7cdf23dafc",
+      "runtime": "Chromium / real disposable DevHost vault"
+    },
+    {
+      "file": "single-1000.png",
+      "sha256": "8ed5594c6b4b6c2bef18bc5fa9f0fda7e6452b96d5fdeb5c26acd0189f36a433",
+      "runtime": "Chromium / real disposable DevHost vault"
+    },
+    {
+      "file": "single-320.png",
+      "sha256": "294a497a2cefd9945ecebb4a13a144bd7cea9cf1bcb171f2802617024a6ae450",
+      "runtime": "Chromium / real disposable DevHost vault"
+    },
+    {
+      "file": "windows-development-dark.png",
+      "sha256": "e1b0bd87d23b169b8104ecb696dc08845c411dee5ed5d9a8bed2e7fd95253cd2",
+      "runtime": "Actual Windows 11 / extracted development ZIP / window DPI 192"
+    },
+    {
+      "file": "windows-development-light.png",
+      "sha256": "793746d587beb51b97fc36872244504eb1b109d0ba1a6e7ffd096f8514657b36",
+      "runtime": "Actual Windows 11 / extracted development ZIP / window DPI 192"
+    }
+  ]
+}

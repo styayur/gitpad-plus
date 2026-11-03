@@ -1,0 +1,6 @@
+适用于 .NET Framework MSBuild 版本 17.14.60+43b635718
+
+  正在确定要还原的项目…
+  已还原 E:\GitPadPlus-Toolchain\source\Win2D-alpha1-20261103\winrt\projection\winrt.projection.csproj (用时 1.31 秒)。
+  0 IID calculations/fetches patched
+  winrt.projection -> e:\gitpadplus-toolchain\source\win2d-alpha1-20261103\bin\x64\release\winrt.projection\Microsoft.Graphics.Canvas.Interop.dll

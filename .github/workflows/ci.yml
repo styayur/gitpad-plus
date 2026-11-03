@@ -44,6 +44,12 @@ jobs:
           node scripts/security-gate.mjs
       - name: License inventory and SBOM
         run: node scripts/licenses.mjs
+      - name: Audit the upstream Win2D version behind the downstream revision
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api --method GET /advisories -f ecosystem=nuget -f 'affects=Microsoft.Graphics.Win2D@1.4.0' > artifacts/win2d-upstream-advisories.json
+          node -e 'const a=JSON.parse(require("fs").readFileSync("artifacts/win2d-upstream-advisories.json"));if(!Array.isArray(a)||a.length)throw Error("Review upstream Win2D advisories before using the downstream revision")'
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         if: always()
         with:
@@ -70,7 +76,19 @@ jobs:
       - name: Install Windows workload only
         run: dotnet workload install maui-windows --version 10.0.400
       - name: Compile unpackaged Windows target
-        run: dotnet build apps/GitPadPlus.App/GitPadPlus.App.csproj -c Release -f net10.0-windows10.0.19041.0 -p:GitPadTargetFramework=net10.0-windows10.0.19041.0 -p:RuntimeIdentifier=win-x64 -p:WindowsPackageType=None
+        run: dotnet build apps/GitPadPlus.App/GitPadPlus.App.csproj -c Release -f net10.0-windows10.0.19041.0 -p:GitPadTargetFramework=net10.0-windows10.0.19041.0 -p:RuntimeIdentifier=win-x64 -p:WindowsPackageType=None -p:RestoreLockedMode=true
+      - name: Exercise source-built Win2D managed drawing and pixel readback
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force artifacts | Out-Null
+          dotnet restore tests/windows/Win2D.ManagedProbe --locked-mode
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          dotnet run --project tests/windows/Win2D.ManagedProbe -c Release --no-restore -- third-party/win2d/win2d-source-binding.json artifacts/win2d-managed-probe.json
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: windows-source-component-evidence
+          path: artifacts/win2d-managed-probe.json
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: windows-build-not-release

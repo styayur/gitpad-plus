@@ -34,6 +34,18 @@ test('official SDK toolbar formats a selection and unloads cleanly',async({page}
   await page.getByRole('toolbar',{name:'Formatting'}).getByRole('button',{name:'Bold',exact:true}).click();await expect(editor.locator('strong')).toContainText('format me');
   await page.getByRole('button',{name:'Settings',exact:true}).click();await page.getByLabel('Official toolbar',{exact:true}).uncheck();await page.getByRole('button',{name:'Close settings'}).click();await expect(page.getByRole('toolbar',{name:'Formatting'}).getByRole('button')).toHaveCount(0);
 });
+test('an intentional empty paragraph stays editable with stable identities after reload',async({page,request})=>{
+  await page.goto('/');await page.getByRole('button',{name:'New note',exact:true}).click();const editor=page.locator('.ProseMirror');await expect(editor).toBeVisible();
+  await editor.pressSequentially('First paragraph');await editor.press('Enter');await editor.press('Enter');await editor.pressSequentially('Third paragraph');
+  await page.getByRole('button',{name:'Save',exact:true}).click();await expect(page.getByRole('status')).toContainText('Local: Saved');
+  const notes=await call(request,'documents.list'),before=await call(request,'documents.load',{id:notes[0].id});
+  expect(before.body).toContain('First paragraph\n\n<br />\n\nThird paragraph');
+  await page.reload();await expect(editor).toBeVisible();await expect(editor.locator('p')).toHaveCount(3);
+  await expect(editor.locator('p').nth(1)).toHaveText('');
+  await page.getByRole('button',{name:'Save',exact:true}).click();await expect(page.getByRole('status')).toContainText('Local: Saved');
+  const after=await call(request,'documents.load',{id:notes[0].id});expect(after.body).toBe(before.body);
+  expect(after.sidecar.blocks.filter((block:{deleted:boolean})=>!block.deleted).map((block:{id:string})=>block.id)).toEqual(before.sidecar.blocks.filter((block:{deleted:boolean})=>!block.deleted).map((block:{id:string})=>block.id));
+});
 test('peek uses original source and closes after three seconds',async({page,request})=>{
   const note=await call(request,'documents.create',{date:fixtureDate(),title:'Peek fixture'});
   await call(request,'documents.save',{id:note.header.id,body:'__original__\n',title:note.header.title,tags:[],expectedRevision:note.sidecar.revision,expectedHash:note.sidecar.contentHash,blocks:[],selections:[]});

@@ -145,6 +145,15 @@ footer{flex-shrink:0;display:flex;align-items:center;gap:24px;min-height:28px;pa
   .secondary-pane{min-height:160px}.secondary-pane .note-heading{padding:8px 12px}.modal section{padding:24px}.message{right:12px;bottom:36px}
 }
 @media(pointer:coarse){button,.note-actions summary,select{min-height:44px}.icon-button{min-width:44px}}
+/* A stacked second page must not consume all writing space above the IME.
+   Scroll the writing workspace when both pages cannot fit, keeping the shell
+   status outside that scroll region and each editor independently usable. */
+@media(max-width:760px),(max-height:600px){
+  main:has(.secondary-pane){overflow-y:auto}
+  main:has(.secondary-pane)>.editor-pane{flex:1 0 160px;min-height:160px}
+  main>.secondary-pane{flex:1 0 320px;min-height:320px}
+  main>.secondary-pane>.editor-pane{min-height:120px}
+}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation:none!important;transition:none!important}}
 /* High contrast overrides explicit app themes, using system colors. */
 :root[data-high-contrast=true]{--journal-canvas:Canvas;--page-paper:Canvas;--page-overlay:Canvas;--ink-primary:CanvasText;--ink-secondary:CanvasText;--ink-meta:CanvasText;--ink-disabled:GrayText;--date-accent:Highlight;--date-accent-ink:HighlightText;--date-wash:ButtonFace;--control-well:Canvas;--control-hover:ButtonFace;--line-quiet:CanvasText;--line-control:ButtonText;--notice-danger:CanvasText;--notice-warning:CanvasText;--overlay-shadow:none}

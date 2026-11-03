@@ -1,0 +1,204 @@
+适用于 .NET Framework MSBuild 版本 17.14.60+43b635718
+
+  NuGet Version: 5.8.0.6930
+  NuGet Version: 5.8.0.6930
+  MSBuild auto-detection: using msbuild version '17.14.60.43110' from 'C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\MSBuild\Current\bin'. Use option -MSBuildVersion to force nuget to use a specific version of MSBuild.
+  MSBuild P2P timeout [ms]: 120000
+  C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\MSBuild\Current\bin\msbuild.exe "C:\Users\StyAyur\AppData\Local\Temp\NuGetScratch\znak5flk.hh5.nugetinputs.targets" /t:GenerateRestoreGraphFile /nologo /nr:false /v:q /p:NuGetRestoreTargets="C:\Users\StyAyur\AppData\Local\Temp\NuGetScratch\uqwghd1c.fuy.nugetrestore.targets" /p:RestoreUseCustomAfterTargets="True" /p:RestoreTaskAssemblyFile="E:\GitPadPlus-Toolchain\tools\nuget\5.8.0\nuget.exe" /p:RestoreSolutionDirectory="E:\GitPadPlus-Toolchain\source\Win2D-alpha1-20261103\\" /p:SolutionDir="E:\GitPadPlus-Toolchain\source\Win2D-alpha1-20261103\\" /p:SolutionName="Microsoft.Graphics.Win2D"
+  
+  packages.config 中列出的所有程序包均已安装。
+  Running restore with 16 concurrent jobs.
+  Reading project file E:\GitPadPlus-Toolchain\source\Win2D-alpha1-20261103\winrt\test.nativecomponent.projection\winrt.test.nativecomponent.projection.csproj.
+  Reading project file E:\GitPadPlus-Toolchain\source\Win2D-alpha1-20261103\winrt\test.managed\winrt.test.managed.winappsdk.csproj.
+  Reading project file E:\GitPadPlus-Toolchain\source\Win2D-alpha1-20261103\winrt\projection\winrt.projection.csproj.
+  The restore inputs for 'winrt.test.managed.winappsdk' have not changed. No further actions are required to complete the restore.
+  The restore inputs for 'Microsoft.Graphics.Canvas.Interop' have not changed. No further actions are required to complete the restore.
+  The restore inputs for 'winrt.test.nativecomponent.projection' have not changed. No further actions are required to complete the restore.
+  Committing restore...
+  Assets file has not changed. Skipping assets file writing. Path: e:\gitpadplus-toolchain\source\win2d-alpha1-20261103\build\..\obj\winrt.test.managed.winappsdk\x86\release\project.assets.json
+  No-Op restore. The cache will not be updated. Path: e:\gitpadplus-toolchain\source\win2d-alpha1-20261103\obj\winrt.test.managed.winappsdk\x86\release\project.nuget.cache
+  Restored E:\GitPadPlus-Toolchain\source\Win2D-alpha1-20261103\winrt\test.managed\winrt.test.managed.winappsdk.csproj (in 108 ms).
+  Committing restore...
+  Assets file has not changed. Skipping assets file writing. Path: e:\gitpadplus-toolchain\source\win2d-alpha1-20261103\build\..\obj\winrt.test.nativecomponent.projection\x86\release\project.assets.json
+  No-Op restore. The cache will not be updated. Path: e:\gitpadplus-toolchain\source\win2d-alpha1-20261103\obj\winrt.test.nativecomponent.projection\x86\release\project.nuget.cache
+  Restored E:\GitPadPlus-Toolchain\source\Win2D-alpha1-20261103\winrt\test.nativecomponent.projection\winrt.test.nativecomponent.projection.csproj (in 108 ms).
+  Committing restore...
+  Assets file has not changed. Skipping assets file writing. Path: e:\gitpadplus-toolchain\source\win2d-alpha1-20261103\build\..\obj\winrt.projection\x86\release\project.assets.json
+  No-Op restore. The cache will not be updated. Path: e:\gitpadplus-toolchain\source\win2d-alpha1-20261103\obj\winrt.projection\x86\release\project.nuget.cache
+  Restored E:\GitPadPlus-Toolchain\source\Win2D-alpha1-20261103\winrt\projection\winrt.projection.csproj (in 108 ms).
+  
+  NuGet Config files used:
+      E:\GitPadPlus-Toolchain\source\Win2D-alpha1-20261103\NuGet.Config
+      C:\Users\StyAyur\AppData\Roaming\NuGet\NuGet.Config
+      C:\Program Files (x86)\NuGet\Config\Microsoft.VisualStudio.FallbackLocation.config
+      C:\Program Files (x86)\NuGet\Config\Microsoft.VisualStudio.Offline.config
+  
+  Feeds used:
+      https://pkgs.dev.azure.com/shine-oss/Win2D/_packaging/Win2D-Dependencies/nuget/v3/index.json
+  3 of 4 projects are up-to-date for restore.
+  Building TargetPlatformMinVersion 18362 variants of project winrt.lib:
+    winrt.lib.uap (Release|Win32)
+  Excluding references from Midl conversion to idl: Microsoft.Windows.ApplicationModel.DynamicDependency.winmd;Microsoft.Windows.ApplicationModel.WindowsAppRuntime.winmd;Microsoft.Windows.ApplicationModel.Background.winmd;Microsoft.Windows.ApplicationModel.Background.UniversalBGTask.winmd;Microsoft.Windows.AppLifecycle.winmd;Microsoft.Windows.Storage.winmd;Microsoft.Windows.System.Power.winmd;Microsoft.Windows.Security.AccessControl.winmd;Microsoft.Windows.System.winmd;Microsoft.Windows.PushNotifications.winmd;Microsoft.Security.Authentication.OAuth.winmd;Microsoft.Windows.Media.Capture.winmd;Microsoft.Windows.BadgeNotifications.winmd;Microsoft.Windows.Foundation.winmd;Microsoft.Windows.Storage.Pickers.winmd
+  Including references from Midl conversion to idl: E:\GitPadPlus-Toolchain\source\Win2D-alpha1-20261103\packages\Microsoft.WindowsAppSDK.Foundation.1.8.260203002\build\native\..\..\metadata\Microsoft.Windows.ApplicationModel.DynamicDependency.winmd
+  Including references from Midl conversion to idl: E:\GitPadPlus-Toolchain\source\Win2D-alpha1-20261103\packages\Microsoft.WindowsAppSDK.Foundation.1.8.260203002\build\native\..\..\metadata\Microsoft.Windows.ApplicationModel.WindowsAppRuntime.winmd
+  Including references from Midl conversion to idl: E:\GitPadPlus-Toolchain\source\Win2D-alpha1-20261103\packages\Microsoft.WindowsAppSDK.Foundation.1.8.260203002\build\native\..\..\metadata\Microsoft.Windows.ApplicationModel.Background.winmd
+  Including references from Midl conversion to idl: E:\GitPadPlus-Toolchain\source\Win2D-alpha1-20261103\packages\Microsoft.WindowsAppSDK.Foundation.1.8.260203002\build\native\..\..\metadata\Microsoft.Windows.ApplicationModel.Background.UniversalBGTask.winmd
+  Including references from Midl conversion to idl: E:\GitPadPlus-Toolchain\source\Win2D-alpha1-20261103\packages\Microsoft.WindowsAppSDK.Foundation.1.8.260203002\build\native\..\..\metadata\Microsoft.Windows.AppLifecycle.winmd
+  Including references from Midl conversion to idl: E:\GitPadPlus-Toolchain\source\Win2D-alpha1-20261103\packages\Microsoft.WindowsAppSDK.Foundation.1.8.260203002\build\native\..\..\metadata\Microsoft.Windows.Storage.winmd
+  Including references from Midl conversion to idl: E:\GitPadPlus-Toolchain\source\Win2D-alpha1-20261103\packages\Microsoft.WindowsAppSDK.Foundation.1.8.260203002\build\native\..\..\metadata\Microsoft.Windows.System.Power.winmd
+  Including references from Midl conversion to idl: E:\GitPadPlus-Toolchain\source\Win2D-alpha1-20261103\packages\Microsoft.WindowsAppSDK.Foundation.1.8.260203002\build\native\..\..\metadata\Microsoft.Windows.Security.AccessControl.winmd
+  Including references from Midl conversion to idl: E:\GitPadPlus-Toolchain\source\Win2D-alpha1-20261103\packages\Microsoft.WindowsAppSDK.Foundation.1.8.260203002\build\native\..\..\metadata\Microsoft.Windows.System.winmd
+  Including references from Midl conversion to idl: E:\GitPadPlus-Toolchain\source\Win2D-alpha1-20261103\packages\Microsoft.WindowsAppSDK.Foundation.1.8.260203002\build\native\..\..\metadata\Microsoft.Windows.PushNotifications.winmd
+  Including references from Midl conversion to idl: E:\GitPadPlus-Toolchain\source\Win2D-alpha1-20261103\packages\Microsoft.WindowsAppSDK.Foundation.1.8.260203002\build\native\..\..\metadata\Microsoft.Security.Authentication.OAuth.winmd
+  Including references from Midl conversion to idl: E:\GitPadPlus-Toolchain\source\Win2D-alpha1-20261103\packages\Microsoft.WindowsAppSDK.Foundation.1.8.260203002\build\native\..\..\metadata\Microsoft.Windows.Media.Capture.winmd
+  Including references from Midl conversion to idl: E:\GitPadPlus-Toolchain\source\Win2D-alpha1-20261103\packages\Microsoft.WindowsAppSDK.Foundation.1.8.260203002\build\native\..\..\metadata\Microsoft.Windows.BadgeNotifications.winmd
+  Including references from Midl conversion to idl: E:\GitPadPlus-Toolchain\source\Win2D-alpha1-20261103\packages\Microsoft.WindowsAppSDK.Foundation.1.8.260203002\build\native\..\..\metadata\Microsoft.Windows.Foundation.winmd
+  Including references from Midl conversion to idl: E:\GitPadPlus-Toolchain\source\Win2D-alpha1-20261103\packages\Microsoft.WindowsAppSDK.Foundation.1.8.260203002\build\native\..\..\metadata\Microsoft.Windows.Storage.Pickers.winmd
+  winrt.lib.uap.vcxproj -> e:\gitpadplus-toolchain\source\win2d-alpha1-20261103\bin\uapx86\release\winrt.lib.uap\winrt.lib
+  Building TargetPlatformMinVersion 18362 variants of project winrt.dll:
+    winrt.dll.uap (Release|Win32)
+  winrt.dll.uap.vcxproj -> e:\gitpadplus-toolchain\source\win2d-alpha1-20261103\bin\uapx86\release\winrt.dll.uap\Microsoft.Graphics.Canvas.dll
+
+适用于 .NET Framework MSBuild 版本 17.14.60+43b635718
+
+  NuGet Version: 5.8.0.6930
+  NuGet Version: 5.8.0.6930
+  MSBuild auto-detection: using msbuild version '17.14.60.43110' from 'C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\MSBuild\Current\bin'. Use option -MSBuildVersion to force nuget to use a specific version of MSBuild.
+  MSBuild P2P timeout [ms]: 120000
+  C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\MSBuild\Current\bin\msbuild.exe "C:\Users\StyAyur\AppData\Local\Temp\NuGetScratch\fukwg0yz.kzz.nugetinputs.targets" /t:GenerateRestoreGraphFile /nologo /nr:false /v:q /p:NuGetRestoreTargets="C:\Users\StyAyur\AppData\Local\Temp\NuGetScratch\isvdf4gn.qh2.nugetrestore.targets" /p:RestoreUseCustomAfterTargets="True" /p:RestoreTaskAssemblyFile="E:\GitPadPlus-Toolchain\tools\nuget\5.8.0\nuget.exe" /p:RestoreSolutionDirectory="E:\GitPadPlus-Toolchain\source\Win2D-alpha1-20261103\\" /p:SolutionDir="E:\GitPadPlus-Toolchain\source\Win2D-alpha1-20261103\\" /p:SolutionName="Microsoft.Graphics.Win2D"
+  
+  packages.config 中列出的所有程序包均已安装。
+  Running restore with 16 concurrent jobs.
+  Reading project file E:\GitPadPlus-Toolchain\source\Win2D-alpha1-20261103\winrt\projection\winrt.projection.csproj.
+  Reading project file E:\GitPadPlus-Toolchain\source\Win2D-alpha1-20261103\winrt\test.nativecomponent.projection\winrt.test.nativecomponent.projection.csproj.
+  Reading project file E:\GitPadPlus-Toolchain\source\Win2D-alpha1-20261103\winrt\test.managed\winrt.test.managed.winappsdk.csproj.
+  The restore inputs for 'Microsoft.Graphics.Canvas.Interop' have changed. Continuing restore.
+  The restore inputs for 'winrt.test.managed.winappsdk' have not changed. No further actions are required to complete the restore.
+  The restore inputs for 'winrt.test.nativecomponent.projection' have not changed. No further actions are required to complete the restore.
+  Committing restore...
+  Assets file has not changed. Skipping assets file writing. Path: e:\gitpadplus-toolchain\source\win2d-alpha1-20261103\build\..\obj\winrt.test.nativecomponent.projection\x64\release\project.assets.json
+  Committing restore...
+  Assets file has not changed. Skipping assets file writing. Path: e:\gitpadplus-toolchain\source\win2d-alpha1-20261103\build\..\obj\winrt.test.managed.winappsdk\x64\release\project.assets.json
+  No-Op restore. The cache will not be updated. Path: e:\gitpadplus-toolchain\source\win2d-alpha1-20261103\obj\winrt.test.nativecomponent.projection\x64\release\project.nuget.cache
+  No-Op restore. The cache will not be updated. Path: e:\gitpadplus-toolchain\source\win2d-alpha1-20261103\obj\winrt.test.managed.winappsdk\x64\release\project.nuget.cache
+  Restored E:\GitPadPlus-Toolchain\source\Win2D-alpha1-20261103\winrt\test.nativecomponent.projection\winrt.test.nativecomponent.projection.csproj (in 124 ms).
+  Restored E:\GitPadPlus-Toolchain\source\Win2D-alpha1-20261103\winrt\test.managed\winrt.test.managed.winappsdk.csproj (in 123 ms).
+  Restoring packages for E:\GitPadPlus-Toolchain\source\Win2D-alpha1-20261103\winrt\projection\winrt.projection.csproj...
+  Restoring packages for .NETCoreApp,Version=v6.0...
+  Resolving conflicts for net6.0-windows10.0.19041...
+  Checking compatibility of packages on net6.0-windows10.0.19041.
+  Checking compatibility for Microsoft.Graphics.Canvas.Interop 1.4.0 with net6.0-windows10.0.19041.
+  Checking compatibility for Microsoft.SourceLink.AzureRepos.Git 1.1.1 with net6.0-windows10.0.19041.
+  Checking compatibility for Microsoft.Web.WebView2 1.0.3800.47 with net6.0-windows10.0.19041.
+  Checking compatibility for Microsoft.Windows.CsWinRT 2.2.0 with net6.0-windows10.0.19041.
+  Checking compatibility for Microsoft.WindowsAppSDK.Foundation 1.8.260203002 with net6.0-windows10.0.19041.
+  Checking compatibility for Microsoft.WindowsAppSDK.InteractiveExperiences 1.8.260125001 with net6.0-windows10.0.19041.
+  Checking compatibility for Microsoft.WindowsAppSDK.WinUI 1.8.260204000 with net6.0-windows10.0.19041.
+  Checking compatibility for winrt.lib.uap 1.0.0 with net6.0-windows10.0.19041.
+  Checking compatibility for Microsoft.SourceLink.Common 1.1.1 with net6.0-windows10.0.19041.
+  Checking compatibility for Microsoft.Build.Tasks.Git 1.1.1 with net6.0-windows10.0.19041.
+  Checking compatibility for Microsoft.WindowsAppSDK.Base 1.8.251216001 with net6.0-windows10.0.19041.
+  Checking compatibility for Microsoft.Windows.SDK.BuildTools 10.0.26100.4654 with net6.0-windows10.0.19041.
+  Checking compatibility for Microsoft.Windows.SDK.BuildTools.MSIX 1.7.20250829.1 with net6.0-windows10.0.19041.
+  All packages and projects are compatible with net6.0-windows10.0.19041.
+  Committing restore...
+  Generating MSBuild file e:\gitpadplus-toolchain\source\win2d-alpha1-20261103\build\..\obj\winrt.projection\x64\release\winrt.projection.csproj.nuget.g.props.
+  Generating MSBuild file e:\gitpadplus-toolchain\source\win2d-alpha1-20261103\build\..\obj\winrt.projection\x64\release\winrt.projection.csproj.nuget.g.targets.
+  Writing assets file to disk. Path: e:\gitpadplus-toolchain\source\win2d-alpha1-20261103\obj\winrt.projection\x64\release\project.assets.json
+  Writing cache file to disk. Path: e:\gitpadplus-toolchain\source\win2d-alpha1-20261103\obj\winrt.projection\x64\release\project.nuget.cache
+  Persisting dg to e:\gitpadplus-toolchain\source\win2d-alpha1-20261103\build\..\obj\winrt.projection\x64\release\winrt.projection.csproj.nuget.dgspec.json
+  Restored E:\GitPadPlus-Toolchain\source\Win2D-alpha1-20261103\winrt\projection\winrt.projection.csproj (in 744 ms).
+  
+  NuGet Config files used:
+      E:\GitPadPlus-Toolchain\source\Win2D-alpha1-20261103\NuGet.Config
+      C:\Users\StyAyur\AppData\Roaming\NuGet\NuGet.Config
+      C:\Program Files (x86)\NuGet\Config\Microsoft.VisualStudio.FallbackLocation.config
+      C:\Program Files (x86)\NuGet\Config\Microsoft.VisualStudio.Offline.config
+  
+  Feeds used:
+      https://pkgs.dev.azure.com/shine-oss/Win2D/_packaging/Win2D-Dependencies/nuget/v3/index.json
+  2 of 4 projects are up-to-date for restore.
+  Building TargetPlatformMinVersion 18362 variants of project winrt.lib:
+    winrt.lib.uap (Release|x64)
+  Excluding references from Midl conversion to idl: Microsoft.Windows.ApplicationModel.DynamicDependency.winmd;Microsoft.Windows.ApplicationModel.WindowsAppRuntime.winmd;Microsoft.Windows.ApplicationModel.Background.winmd;Microsoft.Windows.ApplicationModel.Background.UniversalBGTask.winmd;Microsoft.Windows.AppLifecycle.winmd;Microsoft.Windows.Storage.winmd;Microsoft.Windows.System.Power.winmd;Microsoft.Windows.Security.AccessControl.winmd;Microsoft.Windows.System.winmd;Microsoft.Windows.PushNotifications.winmd;Microsoft.Security.Authentication.OAuth.winmd;Microsoft.Windows.Media.Capture.winmd;Microsoft.Windows.BadgeNotifications.winmd;Microsoft.Windows.Foundation.winmd;Microsoft.Windows.Storage.Pickers.winmd
+  Including references from Midl conversion to idl: E:\GitPadPlus-Toolchain\source\Win2D-alpha1-20261103\packages\Microsoft.WindowsAppSDK.Foundation.1.8.260203002\build\native\..\..\metadata\Microsoft.Windows.ApplicationModel.DynamicDependency.winmd
+  Including references from Midl conversion to idl: E:\GitPadPlus-Toolchain\source\Win2D-alpha1-20261103\packages\Microsoft.WindowsAppSDK.Foundation.1.8.260203002\build\native\..\..\metadata\Microsoft.Windows.ApplicationModel.WindowsAppRuntime.winmd
+  Including references from Midl conversion to idl: E:\GitPadPlus-Toolchain\source\Win2D-alpha1-20261103\packages\Microsoft.WindowsAppSDK.Foundation.1.8.260203002\build\native\..\..\metadata\Microsoft.Windows.ApplicationModel.Background.winmd
+  Including references from Midl conversion to idl: E:\GitPadPlus-Toolchain\source\Win2D-alpha1-20261103\packages\Microsoft.WindowsAppSDK.Foundation.1.8.260203002\build\native\..\..\metadata\Microsoft.Windows.ApplicationModel.Background.UniversalBGTask.winmd
+  Including references from Midl conversion to idl: E:\GitPadPlus-Toolchain\source\Win2D-alpha1-20261103\packages\Microsoft.WindowsAppSDK.Foundation.1.8.260203002\build\native\..\..\metadata\Microsoft.Windows.AppLifecycle.winmd
+  Including references from Midl conversion to idl: E:\GitPadPlus-Toolchain\source\Win2D-alpha1-20261103\packages\Microsoft.WindowsAppSDK.Foundation.1.8.260203002\build\native\..\..\metadata\Microsoft.Windows.Storage.winmd
+  Including references from Midl conversion to idl: E:\GitPadPlus-Toolchain\source\Win2D-alpha1-20261103\packages\Microsoft.WindowsAppSDK.Foundation.1.8.260203002\build\native\..\..\metadata\Microsoft.Windows.System.Power.winmd
+  Including references from Midl conversion to idl: E:\GitPadPlus-Toolchain\source\Win2D-alpha1-20261103\packages\Microsoft.WindowsAppSDK.Foundation.1.8.260203002\build\native\..\..\metadata\Microsoft.Windows.Security.AccessControl.winmd
+  Including references from Midl conversion to idl: E:\GitPadPlus-Toolchain\source\Win2D-alpha1-20261103\packages\Microsoft.WindowsAppSDK.Foundation.1.8.260203002\build\native\..\..\metadata\Microsoft.Windows.System.winmd
+  Including references from Midl conversion to idl: E:\GitPadPlus-Toolchain\source\Win2D-alpha1-20261103\packages\Microsoft.WindowsAppSDK.Foundation.1.8.260203002\build\native\..\..\metadata\Microsoft.Windows.PushNotifications.winmd
+  Including references from Midl conversion to idl: E:\GitPadPlus-Toolchain\source\Win2D-alpha1-20261103\packages\Microsoft.WindowsAppSDK.Foundation.1.8.260203002\build\native\..\..\metadata\Microsoft.Security.Authentication.OAuth.winmd
+  Including references from Midl conversion to idl: E:\GitPadPlus-Toolchain\source\Win2D-alpha1-20261103\packages\Microsoft.WindowsAppSDK.Foundation.1.8.260203002\build\native\..\..\metadata\Microsoft.Windows.Media.Capture.winmd
+  Including references from Midl conversion to idl: E:\GitPadPlus-Toolchain\source\Win2D-alpha1-20261103\packages\Microsoft.WindowsAppSDK.Foundation.1.8.260203002\build\native\..\..\metadata\Microsoft.Windows.BadgeNotifications.winmd
+  Including references from Midl conversion to idl: E:\GitPadPlus-Toolchain\source\Win2D-alpha1-20261103\packages\Microsoft.WindowsAppSDK.Foundation.1.8.260203002\build\native\..\..\metadata\Microsoft.Windows.Foundation.winmd
+  Including references from Midl conversion to idl: E:\GitPadPlus-Toolchain\source\Win2D-alpha1-20261103\packages\Microsoft.WindowsAppSDK.Foundation.1.8.260203002\build\native\..\..\metadata\Microsoft.Windows.Storage.Pickers.winmd
+  winrt.lib.uap.vcxproj -> e:\gitpadplus-toolchain\source\win2d-alpha1-20261103\bin\uapx64\release\winrt.lib.uap\winrt.lib
+  Building TargetPlatformMinVersion 18362 variants of project winrt.dll:
+    winrt.dll.uap (Release|x64)
+  winrt.dll.uap.vcxproj -> e:\gitpadplus-toolchain\source\win2d-alpha1-20261103\bin\uapx64\release\winrt.dll.uap\Microsoft.Graphics.Canvas.dll
+
+适用于 .NET Framework MSBuild 版本 17.14.60+43b635718
+
+  NuGet Version: 5.8.0.6930
+  NuGet Version: 5.8.0.6930
+  MSBuild auto-detection: using msbuild version '17.14.60.43110' from 'C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\MSBuild\Current\bin'. Use option -MSBuildVersion to force nuget to use a specific version of MSBuild.
+  MSBuild P2P timeout [ms]: 120000
+  C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\MSBuild\Current\bin\msbuild.exe "C:\Users\StyAyur\AppData\Local\Temp\NuGetScratch\oklff4uv.zr4.nugetinputs.targets" /t:GenerateRestoreGraphFile /nologo /nr:false /v:q /p:NuGetRestoreTargets="C:\Users\StyAyur\AppData\Local\Temp\NuGetScratch\vnauqvdn.1da.nugetrestore.targets" /p:RestoreUseCustomAfterTargets="True" /p:RestoreTaskAssemblyFile="E:\GitPadPlus-Toolchain\tools\nuget\5.8.0\nuget.exe" /p:RestoreSolutionDirectory="E:\GitPadPlus-Toolchain\source\Win2D-alpha1-20261103\\" /p:SolutionDir="E:\GitPadPlus-Toolchain\source\Win2D-alpha1-20261103\\" /p:SolutionName="Microsoft.Graphics.Win2D"
+  
+  packages.config 中列出的所有程序包均已安装。
+  Running restore with 16 concurrent jobs.
+  Reading project file E:\GitPadPlus-Toolchain\source\Win2D-alpha1-20261103\winrt\test.managed\winrt.test.managed.winappsdk.csproj.
+  Reading project file E:\GitPadPlus-Toolchain\source\Win2D-alpha1-20261103\winrt\test.nativecomponent.projection\winrt.test.nativecomponent.projection.csproj.
+  Reading project file E:\GitPadPlus-Toolchain\source\Win2D-alpha1-20261103\winrt\projection\winrt.projection.csproj.
+  The restore inputs for 'Microsoft.Graphics.Canvas.Interop' have not changed. No further actions are required to complete the restore.
+  The restore inputs for 'winrt.test.nativecomponent.projection' have not changed. No further actions are required to complete the restore.
+  The restore inputs for 'winrt.test.managed.winappsdk' have not changed. No further actions are required to complete the restore.
+  Committing restore...
+  Committing restore...
+  Committing restore...
+  Assets file has not changed. Skipping assets file writing. Path: e:\gitpadplus-toolchain\source\win2d-alpha1-20261103\build\..\obj\winrt.test.managed.winappsdk\arm64\release\project.assets.json
+  No-Op restore. The cache will not be updated. Path: e:\gitpadplus-toolchain\source\win2d-alpha1-20261103\obj\winrt.test.managed.winappsdk\arm64\release\project.nuget.cache
+  Assets file has not changed. Skipping assets file writing. Path: e:\gitpadplus-toolchain\source\win2d-alpha1-20261103\build\..\obj\winrt.test.nativecomponent.projection\arm64\release\project.assets.json
+  No-Op restore. The cache will not be updated. Path: e:\gitpadplus-toolchain\source\win2d-alpha1-20261103\obj\winrt.test.nativecomponent.projection\arm64\release\project.nuget.cache
+  Assets file has not changed. Skipping assets file writing. Path: e:\gitpadplus-toolchain\source\win2d-alpha1-20261103\build\..\obj\winrt.projection\arm64\release\project.assets.json
+  No-Op restore. The cache will not be updated. Path: e:\gitpadplus-toolchain\source\win2d-alpha1-20261103\obj\winrt.projection\arm64\release\project.nuget.cache
+  Restored E:\GitPadPlus-Toolchain\source\Win2D-alpha1-20261103\winrt\projection\winrt.projection.csproj (in 124 ms).
+  Restored E:\GitPadPlus-Toolchain\source\Win2D-alpha1-20261103\winrt\test.managed\winrt.test.managed.winappsdk.csproj (in 126 ms).
+  Restored E:\GitPadPlus-Toolchain\source\Win2D-alpha1-20261103\winrt\test.nativecomponent.projection\winrt.test.nativecomponent.projection.csproj (in 126 ms).
+  
+  NuGet Config files used:
+      E:\GitPadPlus-Toolchain\source\Win2D-alpha1-20261103\NuGet.Config
+      C:\Users\StyAyur\AppData\Roaming\NuGet\NuGet.Config
+      C:\Program Files (x86)\NuGet\Config\Microsoft.VisualStudio.FallbackLocation.config
+      C:\Program Files (x86)\NuGet\Config\Microsoft.VisualStudio.Offline.config
+  
+  Feeds used:
+      https://pkgs.dev.azure.com/shine-oss/Win2D/_packaging/Win2D-Dependencies/nuget/v3/index.json
+  3 of 4 projects are up-to-date for restore.
+  Building TargetPlatformMinVersion 18362 variants of project winrt.lib:
+    winrt.lib.uap (Release|ARM64)
+  Excluding references from Midl conversion to idl: Microsoft.Windows.ApplicationModel.DynamicDependency.winmd;Microsoft.Windows.ApplicationModel.WindowsAppRuntime.winmd;Microsoft.Windows.ApplicationModel.Background.winmd;Microsoft.Windows.ApplicationModel.Background.UniversalBGTask.winmd;Microsoft.Windows.AppLifecycle.winmd;Microsoft.Windows.Storage.winmd;Microsoft.Windows.System.Power.winmd;Microsoft.Windows.Security.AccessControl.winmd;Microsoft.Windows.System.winmd;Microsoft.Windows.PushNotifications.winmd;Microsoft.Security.Authentication.OAuth.winmd;Microsoft.Windows.Media.Capture.winmd;Microsoft.Windows.BadgeNotifications.winmd;Microsoft.Windows.Foundation.winmd;Microsoft.Windows.Storage.Pickers.winmd
+  Including references from Midl conversion to idl: E:\GitPadPlus-Toolchain\source\Win2D-alpha1-20261103\packages\Microsoft.WindowsAppSDK.Foundation.1.8.260203002\build\native\..\..\metadata\Microsoft.Windows.ApplicationModel.DynamicDependency.winmd
+  Including references from Midl conversion to idl: E:\GitPadPlus-Toolchain\source\Win2D-alpha1-20261103\packages\Microsoft.WindowsAppSDK.Foundation.1.8.260203002\build\native\..\..\metadata\Microsoft.Windows.ApplicationModel.WindowsAppRuntime.winmd
+  Including references from Midl conversion to idl: E:\GitPadPlus-Toolchain\source\Win2D-alpha1-20261103\packages\Microsoft.WindowsAppSDK.Foundation.1.8.260203002\build\native\..\..\metadata\Microsoft.Windows.ApplicationModel.Background.winmd
+  Including references from Midl conversion to idl: E:\GitPadPlus-Toolchain\source\Win2D-alpha1-20261103\packages\Microsoft.WindowsAppSDK.Foundation.1.8.260203002\build\native\..\..\metadata\Microsoft.Windows.ApplicationModel.Background.UniversalBGTask.winmd
+  Including references from Midl conversion to idl: E:\GitPadPlus-Toolchain\source\Win2D-alpha1-20261103\packages\Microsoft.WindowsAppSDK.Foundation.1.8.260203002\build\native\..\..\metadata\Microsoft.Windows.AppLifecycle.winmd
+  Including references from Midl conversion to idl: E:\GitPadPlus-Toolchain\source\Win2D-alpha1-20261103\packages\Microsoft.WindowsAppSDK.Foundation.1.8.260203002\build\native\..\..\metadata\Microsoft.Windows.Storage.winmd
+  Including references from Midl conversion to idl: E:\GitPadPlus-Toolchain\source\Win2D-alpha1-20261103\packages\Microsoft.WindowsAppSDK.Foundation.1.8.260203002\build\native\..\..\metadata\Microsoft.Windows.System.Power.winmd
+  Including references from Midl conversion to idl: E:\GitPadPlus-Toolchain\source\Win2D-alpha1-20261103\packages\Microsoft.WindowsAppSDK.Foundation.1.8.260203002\build\native\..\..\metadata\Microsoft.Windows.Security.AccessControl.winmd
+  Including references from Midl conversion to idl: E:\GitPadPlus-Toolchain\source\Win2D-alpha1-20261103\packages\Microsoft.WindowsAppSDK.Foundation.1.8.260203002\build\native\..\..\metadata\Microsoft.Windows.System.winmd
+  Including references from Midl conversion to idl: E:\GitPadPlus-Toolchain\source\Win2D-alpha1-20261103\packages\Microsoft.WindowsAppSDK.Foundation.1.8.260203002\build\native\..\..\metadata\Microsoft.Windows.PushNotifications.winmd
+  Including references from Midl conversion to idl: E:\GitPadPlus-Toolchain\source\Win2D-alpha1-20261103\packages\Microsoft.WindowsAppSDK.Foundation.1.8.260203002\build\native\..\..\metadata\Microsoft.Security.Authentication.OAuth.winmd
+  Including references from Midl conversion to idl: E:\GitPadPlus-Toolchain\source\Win2D-alpha1-20261103\packages\Microsoft.WindowsAppSDK.Foundation.1.8.260203002\build\native\..\..\metadata\Microsoft.Windows.Media.Capture.winmd
+  Including references from Midl conversion to idl: E:\GitPadPlus-Toolchain\source\Win2D-alpha1-20261103\packages\Microsoft.WindowsAppSDK.Foundation.1.8.260203002\build\native\..\..\metadata\Microsoft.Windows.BadgeNotifications.winmd
+  Including references from Midl conversion to idl: E:\GitPadPlus-Toolchain\source\Win2D-alpha1-20261103\packages\Microsoft.WindowsAppSDK.Foundation.1.8.260203002\build\native\..\..\metadata\Microsoft.Windows.Foundation.winmd
+  Including references from Midl conversion to idl: E:\GitPadPlus-Toolchain\source\Win2D-alpha1-20261103\packages\Microsoft.WindowsAppSDK.Foundation.1.8.260203002\build\native\..\..\metadata\Microsoft.Windows.Storage.Pickers.winmd
+  winrt.lib.uap.vcxproj -> e:\gitpadplus-toolchain\source\win2d-alpha1-20261103\bin\uaparm64\release\winrt.lib.uap\winrt.lib
+  Building TargetPlatformMinVersion 18362 variants of project winrt.dll:
+    winrt.dll.uap (Release|ARM64)
+  winrt.dll.uap.vcxproj -> e:\gitpadplus-toolchain\source\win2d-alpha1-20261103\bin\uaparm64\release\winrt.dll.uap\Microsoft.Graphics.Canvas.dll
+

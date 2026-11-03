@@ -121,6 +121,7 @@ public final class AcceptanceInstrumentation extends Instrumentation {
             });
             String phase=arguments.getString("phase","initial");
             if(phase.equals("clear")&&(!"true".equals(arguments.getString("disposable"))||!(Build.HARDWARE.equals("ranchu")||Build.FINGERPRINT.contains("sdk_gphone"))))throw new IOException("Clear requires an explicitly disposable emulator");
+            if(phase.equals("ui-two-pane")&&(!"true".equals(arguments.getString("disposable"))||!(Build.HARDWARE.equals("ranchu")||Build.FINGERPRINT.contains("sdk_gphone"))))throw new IOException("Two-pane writing requires an explicitly disposable emulator");
             if(phase.startsWith("performance")){
                 if(!"true".equals(arguments.getString("disposable"))||!(Build.HARDWARE.equals("ranchu")||Build.FINGERPRINT.contains("sdk_gphone")))throw new IOException("Performance seeding requires an explicitly disposable emulator");
                 File vault=new File(getTargetContext().getFilesDir().getCanonicalFile(),"Vault");

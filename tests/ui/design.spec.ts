@@ -51,8 +51,13 @@ test('plugin controls wait for the native operation before accepting another cha
     else await route.continue();
   });
   const toolbar=page.getByLabel('Official toolbar',{exact:true});await toolbar.uncheck();
-  await expect(toolbar).toBeDisabled();await expect(page.getByLabel('Calendar statistics',{exact:true})).toBeDisabled();await expect(page.getByRole('button',{name:'Save settings',exact:true})).toBeDisabled();
-  release();await expect(toolbar).toBeEnabled();await toolbar.check();await expect(toolbar).toBeEnabled();
+  try{
+    await expect(toolbar).toBeDisabled();await expect(page.getByLabel('Calendar statistics',{exact:true})).toBeDisabled();await expect(page.getByRole('button',{name:'Save settings',exact:true})).toBeDisabled();
+    for(const name of ['Theme','Markdown Peek','Native word selection'])await expect(page.getByLabel(name,{exact:true})).toBeDisabled();
+  }finally{release();}
+  await expect(toolbar).toBeEnabled();
+  for(const name of ['Theme','Markdown Peek','Native word selection'])await expect(page.getByLabel(name,{exact:true})).toBeEnabled();
+  await toolbar.check();await expect(toolbar).toBeEnabled();
   await page.getByRole('button',{name:'Save settings',exact:true}).click();await expect(page.getByRole('dialog',{name:'Settings',exact:true})).toHaveCount(0);
   await page.reload();await page.getByRole('button',{name:'Settings',exact:true}).click();await expect(page.getByLabel('Official toolbar',{exact:true})).toBeChecked();
 });
@@ -60,13 +65,32 @@ test('plugin controls wait for the native operation before accepting another cha
 test('editor, toolbar and status fit desktop, narrow and reduced keyboard viewports',async({page})=>{
   await page.goto('/');await page.getByRole('button',{name:'New note',exact:true}).click();await expect(page.locator('.ProseMirror')).toBeVisible();
   await page.locator('.ProseMirror').fill('A page with 中文 and a long line that should wrap at every writing width.');
-  for(const [width,height]of [[1920,1080],[1440,960],[1366,768],[1280,720],[960,720],[760,850],[393,852],[320,640],[393,430]]){
+  for(const [width,height]of [[1920,1080],[1440,960],[1366,768],[1280,720],[1000,720],[960,720],[800,720],[761,850],[760,850],[393,852],[320,640],[393,430]]){
     await page.setViewportSize({width,height});
     const rect=await page.locator('.editor-pane').boundingBox();expect(rect,`${width}x${height}`).not.toBeNull();expect(rect!.height).toBeGreaterThan(80);
     expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
     await expect(page.getByRole('textbox',{name:'Note title',exact:true})).toBeVisible();
     const toolbar=await page.getByRole('toolbar',{name:'Formatting'}).boundingBox();expect(toolbar!.y+toolbar!.height).toBeLessThanOrEqual(rect!.y+1);
     await expect(page.locator('footer [role=status]')).toBeVisible();
+  }
+});
+
+test('stacked writing panes remain editable and keyboard-scrollable on narrow and short screens',async({page,request},testInfo)=>{
+  const now=new Date(),date=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+  const first=await call(request,'documents.create',{date,title:'Primary narrow page'}),second=await call(request,'documents.create',{date,title:'Secondary narrow page'});
+  await page.goto('/');await page.getByRole('navigation',{name:'Notes'}).getByRole('button').filter({hasText:'Primary narrow page'}).click();
+  await expect(page.locator('.ProseMirror')).toHaveCount(1);await page.getByRole('combobox',{name:'Open beside'}).selectOption(second.header.id);await expect(page.locator('.ProseMirror')).toHaveCount(2);
+  for(const [width,height]of [[320,640],[393,430]]){
+    await page.setViewportSize({width,height});const workspace=page.getByRole('main',{name:'Writing workspace'});
+    for(const pane of await page.locator('.editor-pane').all())expect((await pane.boundingBox())!.height).toBeGreaterThanOrEqual(120);
+    await workspace.focus();await page.keyboard.press('Home');await page.keyboard.press('PageDown');
+    await expect.poll(()=>workspace.evaluate(node=>node.scrollTop)).toBeGreaterThan(0);
+    await page.locator('.ProseMirror').first().fill(`Primary ${width}`);await page.locator('.ProseMirror').last().fill(`Secondary ${width}`);
+    await page.getByRole('button',{name:'Save second pane',exact:true}).click();
+    await expect.poll(async()=>(await call(request,'documents.load',{id:second.header.id})).body).toContain(`Secondary ${width}`);
+    await expect.poll(async()=>(await call(request,'documents.load',{id:first.header.id})).body).toContain(`Primary ${width}`);
+    await expect(page.locator('footer [role=status]')).toBeInViewport();expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+    await page.screenshot({path:testInfo.outputPath(`stacked-${width}-${height}.png`)});
   }
 });
 

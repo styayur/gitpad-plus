@@ -1,12 +1,21 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 import { execFileSync } from 'node:child_process';
-import { readFileSync, writeFileSync, mkdirSync, readdirSync, existsSync, cpSync } from 'node:fs';
-import { join } from 'node:path';
-import { createHash } from 'node:crypto';
+import { readFileSync, writeFileSync, mkdirSync, readdirSync, existsSync, cpSync, renameSync } from 'node:fs';
+import { join, resolve, sep } from 'node:path';
+import { createHash, randomUUID } from 'node:crypto';
 const groups=JSON.parse(process.platform==='win32'
   ?execFileSync(process.env.ComSpec??'cmd.exe',['/d','/s','/c','pnpm licenses list --json'],{encoding:'utf8',maxBuffer:20_000_000})
   :execFileSync('pnpm',['licenses','list','--json'],{encoding:'utf8',maxBuffer:20_000_000}));
-mkdirSync('artifacts/third-party',{recursive:true});
+// Reused numeric SPDX directories can otherwise retain notices from an older
+// native dependency graph. Preserve that generated evidence, then collect this
+// inventory into a fresh tree instead of merging unrelated package contents.
+const artifactsRoot=resolve('artifacts'),noticeRoot=join(artifactsRoot,'third-party');
+if(existsSync(noticeRoot)){
+  const history=join(artifactsRoot,'license-history'),archive=join(history,randomUUID());
+  if(!noticeRoot.startsWith(artifactsRoot+sep)||!archive.startsWith(artifactsRoot+sep))throw Error('Notice archive escapes generated artifacts');
+  mkdirSync(history,{recursive:true});renameSync(noticeRoot,archive);
+}
+mkdirSync(noticeRoot,{recursive:true});
 const approved=new Set(['MIT','MIT-0','Apache-2.0','BSD-2-Clause','BSD-3-Clause','ISC','CC0-1.0','BlueOak-1.0.0','MPL-2.0','(MPL-2.0 OR Apache-2.0)']);
 const packages=[],inventory=[];let count=0;
 for(const [license,items] of Object.entries(groups)){

@@ -4,6 +4,10 @@ Use .NET SDK **10.0.403**, Node **24.19.0**, Corepack **0.34.6**, pnpm **12.16.1
 
 Windows requires the `maui-windows` workload and Windows SDK 10.0.26100. Use the app-only framework selector to avoid restoring Android. The project enables .NET self-contained deployment, `WindowsAppSDKSelfContained=true` and `WindowsPackageType=None` for Windows.
 
+Windows x64 restores the reviewed [Win2D source rebuild](../third-party/win2d/README.md) from the repository-local feed. `NuGet.Config` maps that exact package ID; the app pins `1.4.1-gitpadplus.1` (upstream source **1.4.0**) and verifies both package provenance and actual restored files during every Windows build. The original prebuilt 1.4.0 remains blocked. This downstream artifact supports only `win-x64`; it does not claim x86 or ARM64 support. Building GitPad+ does not require rebuilding Win2D or installing .NET 6. The separate reproducible source-build instructions explain the isolated upstream toolchain.
+
+`dotnet restore tests/windows/Win2D.ManagedProbe --locked-mode` followed by `dotnet run --project tests/windows/Win2D.ManagedProbe -c Release --no-restore -- third-party/win2d/win2d-source-binding.json <report.json>` exercises the actual source-built projection and native DLL with a WARP render target and pixel readback. Its renderer/App SDK and WebView SDK match the application's runtime dependencies. This component probe is distinct from final packaged MAUI acceptance.
+
 ```powershell
 pnpm install --frozen-lockfile
 pnpm build
@@ -25,6 +29,8 @@ The builder requires clean committed source, builds the editor, produces one arm
 `-QuickProbe -AllowDirtyDevelopmentBuild` produces a development-stamped probe that cannot pass the release gate. Install and test the exact candidate APK; retain `apksigner verify --verbose --print-certs`, `aapt2 dump badging`, ABI, source stamp and SHA-256 evidence. Repeat acceptance after candidate changes.
 
 Native locked restores use `apps/GitPadPlus.App/packages.windows.lock.json` for the Windows selector and `packages.android.lock.json` for the universal Android selector. Single-ABI development probes use an ignored separate lockfile. Runtime and self-contained properties are removed from the Core project reference so native restores do not rewrite its portable lockfile. Both candidate builders enable locked restore.
+
+The [candidate transport procedure](acceptance/candidate-transport.md) tests the hosted upload path before final native builds, then sends only the locally gated immutable candidate to Actions. Run the existing `release.yml` verifier against that successful upload run. Uploading evidence does not authorize tag creation, a draft Release or publication.
 
 `release.yml` verifies a supplied candidate and does not publish it. `publish-local-release.ps1 -CandidateDirectory <path>` checks clean HEAD, exact GitHub main, successful corresponding CI, the fail-closed gate and checksums without creating a tag. A candidate contains the ZIP/APK, SBOM, notices, release notes, acceptance metadata, hashed evidence and SHA256SUMS.
 

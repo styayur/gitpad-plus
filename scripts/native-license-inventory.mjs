@@ -2,6 +2,7 @@
 import {readFileSync,writeFileSync,mkdirSync,readdirSync,existsSync,cpSync} from 'node:fs';
 import {resolve,join,relative} from 'node:path';
 import {createHash} from 'node:crypto';
+import {verifyWin2DSource,win2dVersion} from './win2d-source.mjs';
 
 // Run after portable licenses.mjs, with snapshots of each actual native restore.
 const inputs=process.argv.slice(2);
@@ -25,8 +26,16 @@ function record(name,version,folder,scope){
   name=/<id>([^<]+)<\/id>/.exec(spec)?.[1]??name;
   const expression=/<license type="expression">([^<]+)<\/license>/.exec(spec)?.[1];
   const licenseFile=/<license type="file">([^<]+)<\/license>/.exec(spec)?.[1];
-  let license=expression,review='metadata and retained upstream text',extra=[];
-  if(expression){
+  let license=expression,review='metadata and retained upstream text',extra=[],sourceBuild;
+  if(name==='Microsoft.Graphics.Win2D'&&version===win2dVersion){
+    sourceBuild=verifyWin2DSource(folder);
+    if(licenseFile!=='LICENSE.txt')throw Error('Source-built Win2D license metadata differs');
+    const runtimeText=['VS2022-BuildTools.txt','VC-Runtime.txt'].map(file=>readFileSync(join(folder,'notices',file),'utf8')).join('\n\n');
+    const runtime=extractedLicense(runtimeText,'Microsoft-VisualCpp-Runtime');
+    license=`MIT AND (Apache-2.0 WITH LLVM-exception) AND ${runtime}`;
+    review=`Reviewed downstream Windows x64 source rebuild, upstream ${sourceBuild.upstream.commit}; exact package and restored payload hashes verified. Win2D source MIT is independent of retained MSVC STL/runtime and Windows system-library terms; see third-party/win2d/README.md. No claim applies to the original prebuilt binary.`;
+    extra.push(join(folder,'source-build.json'),'third-party/win2d/win2d-source-binding.json');
+  }else if(expression){
     const atoms=expression.split(/\s+(?:AND|OR)\s+|[()]/).filter(Boolean);
     if(atoms.some(atom=>!approved.has(atom)))throw Error('Unreviewed native license expression '+key+' '+expression);
   }else if(licenseFile){
@@ -55,7 +64,7 @@ function record(name,version,folder,scope){
   for(const file of notices)cpSync(join(folder,file),join(noticeDir,file),{recursive:true});
   for(const path of extra)cpSync(path,join(noticeDir,path.split(/[\\/]/).at(-1)));
   const record={name,version,license,scopes:[scope],review,notices:readdirSync(noticeDir)};inventory.push(record);ids.set(key,record);
-  sbom.packages.push({SPDXID:id,name,versionInfo:version,downloadLocation:`https://api.nuget.org/v3-flatcontainer/${name.toLowerCase()}/${version}/${name.toLowerCase()}.${version}.nupkg`,filesAnalyzed:false,licenseDeclared:license,licenseConcluded:license,copyrightText:'NOASSERTION',comment:review});
+  sbom.packages.push({SPDXID:id,name,versionInfo:version,downloadLocation:sourceBuild?'NOASSERTION':`https://api.nuget.org/v3-flatcontainer/${name.toLowerCase()}/${version}/${name.toLowerCase()}.${version}.nupkg`,filesAnalyzed:false,licenseDeclared:sourceBuild?'MIT':license,licenseConcluded:license,copyrightText:'NOASSERTION',comment:review,...(sourceBuild?{checksums:[{algorithm:'SHA256',checksumValue:sourceBuild.package.sha256}],sourceInfo:`Vendored third-party/win2d/feed/${sourceBuild.package.file}; built from https://github.com/microsoft/Win2D/tree/${sourceBuild.upstream.commit}`}:{})});
   sbom.relationships.push({spdxElementId:'SPDXRef-DOCUMENT',relationshipType:'DESCRIBES',relatedSpdxElement:id});
 }
 for(const input of inputs){

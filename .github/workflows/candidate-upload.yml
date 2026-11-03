@@ -1,0 +1,57 @@
+name: Receive local candidate (no release)
+run-name: GitPad local upload ${{ inputs.nonce }}
+on:
+  workflow_dispatch:
+    inputs:
+      source_commit:
+        description: Exact clean main SHA
+        required: true
+      public_key:
+        description: Ephemeral uploader public key
+        required: true
+      nonce:
+        description: Random upload session
+        required: true
+      manifest_sha256:
+        description: SHA-256 of the local file manifest
+        required: true
+      purpose:
+        description: Candidate upload or isolated transport check
+        type: choice
+        options: [candidate, transport-probe]
+        required: true
+permissions:
+  contents: read
+  actions: read
+jobs:
+  receive:
+    if: github.ref == 'refs/heads/main' && github.sha == inputs.source_commit
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - id: capability
+        uses: ./.github/actions/seal-candidate-upload
+        with:
+          public_key: ${{ inputs.public_key }}
+          source_commit: ${{ inputs.source_commit }}
+          nonce: ${{ inputs.nonce }}
+          manifest_sha256: ${{ inputs.manifest_sha256 }}
+          purpose: ${{ inputs.purpose }}
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: candidate-upload-capability
+          path: ${{ steps.capability.outputs.sealed_path }}
+          retention-days: 1
+      - name: Wait for a finalized artifact from the local uploader
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EXPECTED_ARTIFACT: ${{ inputs.purpose == 'candidate' && 'release-candidate' || 'candidate-transport-probe' }}
+        run: |
+          for attempt in {1..120}; do
+            count=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/artifacts" --jq "[.artifacts[] | select(.name==\"$EXPECTED_ARTIFACT\" and .size_in_bytes>0 and .expired==false)] | length")
+            if [ "$count" = 1 ]; then exit 0; fi
+            sleep 10
+          done
+          echo "No finalized artifact arrived within the bounded upload session."
+          exit 1
