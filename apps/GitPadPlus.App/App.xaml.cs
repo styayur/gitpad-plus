@@ -20,11 +20,12 @@ public partial class App : Application
         window.Stopped += (_, _) => page.RequestFlush();
         window.Destroying+=(_,_)=>page.Detach();
 #if WINDOWS
+        window.TitleBar=new TitleBar{Title=window.Title,HeightRequest=32,BackgroundColor=Microsoft.Maui.Graphics.Colors.Transparent};
         window.Created += (_, _) =>
         {
             if (window.Handler?.PlatformView is Microsoft.UI.Xaml.Window native)
             {
-                page.AttachAppearance(native);
+                page.AttachAppearance(native,window.TitleBar);
                 // MAUI sizes the window in DIPs; AppWindow bounds are physical
                 // pixels. Clamp once to the actual work area so a high-DPI
                 // desktop never starts with the status bar below the screen.

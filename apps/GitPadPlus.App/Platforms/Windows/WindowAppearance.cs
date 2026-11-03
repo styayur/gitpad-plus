@@ -10,6 +10,7 @@ namespace GitPadPlus.App;
 internal sealed class WindowAppearance : IDisposable
 {
     private readonly Microsoft.UI.Xaml.Window window;
+    private readonly Microsoft.Maui.Controls.TitleBar titleBar;
     private readonly Action<string> send;
     private readonly UISettings colors=new();
     private readonly Microsoft.UI.System.ThemeSettings theme;
@@ -17,9 +18,9 @@ internal sealed class WindowAppearance : IDisposable
     private bool disposed;
     internal bool HighContrast => theme.HighContrast;
 
-    public WindowAppearance(Microsoft.UI.Xaml.Window window,Action<string> send)
+    public WindowAppearance(Microsoft.UI.Xaml.Window window,Microsoft.Maui.Controls.TitleBar titleBar,Action<string> send)
     {
-        this.window=window;this.send=send;root=window.Content as FrameworkElement;
+        this.window=window;this.titleBar=titleBar;this.send=send;root=window.Content as FrameworkElement;
         theme=Microsoft.UI.System.ThemeSettings.CreateForWindowId(window.AppWindow.Id);
         colors.ColorValuesChanged+=ColorsChanged;
         theme.Changed+=ContrastChanged;
@@ -41,6 +42,8 @@ internal sealed class WindowAppearance : IDisposable
         var dark=App.EffectiveTheme==AppTheme.Dark;
         var background=highContrast?colors.GetColorValue(UIColorType.Background):Microsoft.UI.ColorHelper.FromArgb(255,dark?(byte)32:(byte)245,dark?(byte)33:(byte)246,dark?(byte)36:(byte)248);
         var foreground=highContrast?colors.GetColorValue(UIColorType.Foreground):Microsoft.UI.ColorHelper.FromArgb(255,dark?(byte)236:(byte)36,dark?(byte)238:(byte)39,dark?(byte)243:(byte)46);
+        titleBar.ForegroundColor=Microsoft.Maui.Graphics.Color.FromRgb(foreground.R,foreground.G,foreground.B);
+        titleBar.BackgroundColor=highContrast?Microsoft.Maui.Graphics.Color.FromRgb(background.R,background.G,background.B):Microsoft.Maui.Graphics.Colors.Transparent;
         if(!highContrast&&Microsoft.UI.Composition.SystemBackdrops.MicaController.IsSupported())
             window.SystemBackdrop??=new Microsoft.UI.Xaml.Media.MicaBackdrop{Kind=Microsoft.UI.Composition.SystemBackdrops.MicaKind.BaseAlt};
         else window.SystemBackdrop=null;

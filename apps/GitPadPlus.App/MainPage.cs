@@ -14,7 +14,7 @@ public sealed class MainPage : ContentPage
 #if WINDOWS
     private WindowAppearance? appearance;
     private bool appearanceReady;
-    public void AttachAppearance(Microsoft.UI.Xaml.Window window) => appearance = new WindowAppearance(window, message=>{if(appearanceReady)editor.SendRawMessage(message);});
+    public void AttachAppearance(Microsoft.UI.Xaml.Window window,TitleBar titleBar) => appearance = new WindowAppearance(window,titleBar, message=>{if(appearanceReady)editor.SendRawMessage(message);});
 #endif
     public bool HasUnsavedChanges => bridge.HasUnsavedChanges;
     public event Action? Flushed;
