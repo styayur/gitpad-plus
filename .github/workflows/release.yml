@@ -32,8 +32,12 @@ jobs:
           gh run list --workflow ci.yml --commit "$EXPECTED" --limit 1 --json headSha,conclusion > ci.json
           node -e 'const r=JSON.parse(require("fs").readFileSync("ci.json"));if(r[0]?.headSha!==process.env.EXPECTED||r[0]?.conclusion!=="success")process.exit(1)'
           gh run download "$RUN_ID" --name release-candidate --dir release-candidate
-      - name: Install APK verification tools
-        run: sdkmanager "build-tools;36.0.0"
+      - name: Locate APK verification tools
+        run: |
+          sdk_root="${ANDROID_SDK_ROOT:-$ANDROID_HOME}"
+          test -x "$sdk_root/build-tools/36.0.0/aapt2"
+          test -r "$sdk_root/build-tools/36.0.0/lib/apksigner.jar"
+          echo "ANDROID_SDK_ROOT=$sdk_root" >> "$GITHUB_ENV"
       - name: Fail closed on missing native acceptance, signatures or asset checks
         env:
           SOURCE_COMMIT: ${{ inputs.source_commit }}
