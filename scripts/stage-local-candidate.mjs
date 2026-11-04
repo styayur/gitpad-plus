@@ -47,6 +47,9 @@ try{
   const capability=openCapability(keys.privateKey,JSON.parse(entries.get('capability.json').toString('utf8')),expected);
   if(typeof capability.runtimeToken!=='string'||capability.runtimeToken.length<32||capability.runtimeToken.split('.').length!==3||!/^\d+$/.test(capability.runAttempt))throw Error('Invalid one-job artifact context');
   const output=join(temporary,'uploader-outputs.txt');
+  // Actions creates command files before invoking an action. Reproduce that
+  // contract locally: @actions/core refuses a missing GITHUB_OUTPUT file.
+  writeFileSync(output,'',{flag:'wx',mode:0o600});
   const workerEnv=Object.fromEntries(['SystemRoot','SYSTEMROOT','PATH','TEMP','TMP','HOME','USERPROFILE'].filter(name=>process.env[name]!==undefined).map(name=>[name,process.env[name]]));
   Object.assign(workerEnv,{ACTIONS_RUNTIME_TOKEN:capability.runtimeToken,ACTIONS_RESULTS_URL:serviceUrl(capability.resultsUrl),GITHUB_SERVER_URL:'https://github.com',GITHUB_API_URL:'https://api.github.com',GITHUB_REPOSITORY:repository,GITHUB_RUN_ID:runId,GITHUB_RUN_ATTEMPT:capability.runAttempt,GITHUB_WORKSPACE:root,GITHUB_OUTPUT:output,RUNNER_TEMP:temporary,RUNNER_OS:process.platform==='win32'?'Windows':'Linux',RUNNER_DEBUG:'0',INPUT_NAME:artifactName,INPUT_PATH:directory,'INPUT_IF-NO-FILES-FOUND':'error','INPUT_COMPRESSION-LEVEL':'0','INPUT_RETENTION-DAYS':'7',INPUT_OVERWRITE:'false','INPUT_INCLUDE-HIDDEN-FILES':'false'});
   if(capability.runtimeUrl)workerEnv.ACTIONS_RUNTIME_URL=serviceUrl(capability.runtimeUrl);
