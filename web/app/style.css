@@ -161,3 +161,47 @@ footer{flex-shrink:0;display:flex;align-items:center;gap:24px;min-height:28px;pa
   :root,:root[data-theme]{--journal-canvas:Canvas;--page-paper:Canvas;--page-overlay:Canvas;--ink-primary:CanvasText;--ink-secondary:CanvasText;--ink-meta:CanvasText;--date-accent:Highlight;--date-accent-ink:HighlightText;--date-wash:ButtonFace;--control-well:Canvas;--control-hover:ButtonFace;--line-quiet:CanvasText;--line-control:ButtonText;--overlay-shadow:none}
   .calendar button[aria-pressed=true] .date-number{forced-color-adjust:none}.tab[data-selected=true],nav[aria-label=Notes] button[aria-current=page]{outline:2px solid Highlight;outline-offset:-2px}.action-menu,.message{border:1px solid ButtonText}.milkdown .editor ::selection{background:Highlight;color:HighlightText}
 }
+
+/* The native safe area and AdjustResize define this viewport, including IME.
+   Keep one command strip in the DOM and dock it to that viewport on mobile. */
+.mobile-only,.mobile-overflow,.action-menu>.mobile-only,.action-menu>.mobile-overflow{display:none}
+@media(max-width:760px){
+  .mobile-only,.action-menu>.mobile-only{display:inline-flex}
+  .shell[data-writing=true][data-calendar-open=false]>.app-header{display:none}
+  .app-header .brand{display:none}
+  .app-header{min-height:48px}
+  .shell[data-writing=true] .note-heading{padding:4px 8px;gap:4px;max-width:none}
+  .shell[data-writing=true] .page-title time{display:none}
+  .shell[data-writing=true] .page-title input{font-size:16px;letter-spacing:normal;text-overflow:ellipsis}
+  .shell[data-writing=true] .page-actions{flex-shrink:0}
+  .shell[data-writing=true]:has(.format-toolbar:not(:empty)){padding-bottom:48px}
+  .format-toolbar{position:fixed;bottom:0;left:0;right:0;height:48px;z-index:20;background:var(--page-paper);border-top:1px solid var(--line-quiet);border-bottom:0}
+  .shell[data-calendar-open=true] .format-toolbar{display:none}
+  .shell[data-calendar-open=true]{padding-bottom:0!important}
+  .action-menu label{flex-direction:column;padding:8px;gap:4px}
+  .action-menu select{max-width:100%}
+  .message{bottom:80px}
+}
+@media(max-width:360px){
+  aside{padding-inline:6px}
+  .page-actions>.mobile-optional{display:none}
+  .action-menu>.mobile-overflow{display:block}
+}
+
+.note-row{position:relative;overflow:hidden;touch-action:pan-y}
+nav[aria-label=Notes] .recycle-note{position:absolute;right:0;top:0;width:88px;height:100%;text-align:center;color:var(--notice-danger)}
+nav[aria-label=Notes] .open-note{position:relative;background:var(--journal-canvas)}
+.note-row:has(.recycle-note:focus-visible) .open-note{transform:translateX(-88px)}
+.trash-snackbar{position:fixed;z-index:40;bottom:80px;left:16px;padding:8px 12px;background:var(--page-overlay);border:1px solid var(--line-control);border-radius:8px;box-shadow:var(--overlay-shadow)}
+.trash-snackbar button{margin-left:16px}
+
+.secondary-save>.icon,.secondary-close>b{display:none}
+@media(max-width:760px){
+  .secondary-pane .note-heading{flex-wrap:nowrap}
+  .secondary-pane .note-heading>input{flex:1;min-width:0;width:0;font-size:16px}
+  .secondary-pane .note-heading>[role=status],.secondary-pane .secondary-bold{display:none}
+  .secondary-pane .secondary-save,.secondary-pane .secondary-close{min-width:44px;width:44px;padding:8px;flex-shrink:0}
+  .secondary-save>.icon,.secondary-close>b{display:inline}
+  .secondary-save>span,.secondary-close>span{display:none}
+  footer:has(.mobile-only){flex-wrap:wrap}
+}

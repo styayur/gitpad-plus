@@ -1,0 +1,8 @@
+{
+  "scope": "Development x86_64 signed Release probe, not final release acceptance",
+  "sourceCommit": "development",
+  "packageSha256": "2bb5b53e868453c1bb291a3b425c5c1e57c3e5dc4657093908e467085cdfb0e5",
+  "certificateSha256": "4fe4a85c853243d9d7c1b0dc421b5786f1bb89a91f22f8c691fe6840824e9fd0",
+  "emulator": "GitPadPlus_API36_Pixel7",
+  "sdk": "36"
+}

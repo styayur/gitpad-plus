@@ -65,3 +65,22 @@ Android requires the application-level MAUI WindowSoftInputModeAdjust.Resize pol
 ## Review discipline
 
 Methodology: Dammyjay93/interface-design at 2f9be3206855bcb2d1d0af262c8bae25cba6658d; read SKILL.md plus design-review and design-deslop commands. It supplies the review lenses, not a dashboard template. Screenshots must be actual application output. Review focal point, typography/color, surface/depth, composition, states, and reuse independently; record findings and fixes, with untested/native limits explicit. No stock moodboard, decorative artwork or fabricated runtime screenshot is needed for this writing tool.
+
+## Mobile workflow v1.1, in progress
+
+On writing widths up to 760 CSS px, use the existing editable title as the single
+document heading, with Calendar, Settings, Save, Image and More in its action row.
+At 360px and below, Settings and Image move into More. Calendar and Save retain
+44px targets. Browsing provides Back to writing when a document is open.
+
+The existing plugin-owned formatting strip docks to the bottom of the resized
+viewport. A 48px reserved strip keeps the shell status immediately above it.
+Native SafeArea and AdjustResize own keyboard compensation. CSS adds no keyboard
+height or second native inset. Commands target the editor that most recently
+received focus, preserving its instance and selection.
+
+A note row reveals an 88px trash action after a leftward touch of at least 48px.
+The first 24px at the screen edge is reserved for system navigation. Vertical
+intent cancels the gesture. Recycling requires the explicit trash action.
+Keyboard focus reveals the same action. Undo remains available for ten seconds,
+and Settings exposes persistent Trash and Restore. Native validation is pending.

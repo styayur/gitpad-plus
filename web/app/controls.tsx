@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-import { useEffect, useRef, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 
 const paths: Record<string, ReactNode> = {
   calendar: <><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M7 3v4m10-4v4M3 11h18m-13 4h2m4 0h2"/></>,
@@ -47,4 +47,31 @@ export function NoteActions({children}:{children:ReactNode}) {
 export function CommandLabel({id,title}:{id:string;title:string}) {
   const mark:Record<string,string>={bold:'B',italic:'I',underline:'U',strike:'S',color:'A'};
   return mark[id]?<span aria-hidden="true" className={'command-mark command-'+id}>{mark[id]}</span>:<><Icon name={id in paths?id:'more'}/><span className="command-caption">{title}</span></>;
+}
+
+
+export function NoteRow({id,title,date,current,expanded,onExpand,onOpen,onTrash}:{id:string;title:string;date:string;current:boolean;expanded:boolean;onExpand:(id:string|null)=>void;onOpen:()=>void;onTrash:()=>void}) {
+  const start=useRef<{x:number;y:number}|null>(null);
+  const [offset,setOffset]=useState(0);
+  const suppressClick=useRef(false);
+  return <div className="note-row" onPointerDown={event=>{
+    if(event.pointerType==='mouse'||event.clientX<24)return;
+    start.current={x:event.clientX,y:event.clientY};
+  }} onPointerMove={event=>{
+    if(!start.current)return;
+    const dx=event.clientX-start.current.x,dy=event.clientY-start.current.y;
+    if(Math.abs(dy)>16&&Math.abs(dy)>Math.abs(dx)){start.current=null;setOffset(0);return;}
+    if(dx< -16&&Math.abs(dx)>Math.abs(dy)*1.3)setOffset(Math.min(88,-dx));
+  }} onPointerUp={()=>{
+    suppressClick.current=offset>=16;
+    if(start.current&&offset>=48)onExpand(id);
+    start.current=null;setOffset(0);
+  }} onPointerCancel={()=>{start.current=null;setOffset(0);}}>
+    <button className="recycle-note" aria-label={'Move '+title+' to trash'} onClick={onTrash}>Trash</button>
+    <button className="open-note" style={{transform:expanded||offset? 'translateX(-'+(expanded?88:offset)+'px)':undefined}} aria-current={current?'page':undefined} onClick={()=>{
+      if(suppressClick.current){suppressClick.current=false;return;}
+      if(expanded){onExpand(null);return;}
+      onOpen();
+    }}><strong>{title||'Untitled'}</strong><small><time dateTime={date}>{date}</time><span>{id.slice(-6)}</span></small></button>
+  </div>;
 }

@@ -213,6 +213,15 @@ public sealed partial class VaultStore
             foreach (var folder in Directory.EnumerateDirectories(Safe(".gitpad", "trash")))
             {
                 _ = Safe(Path.GetRelativePath(root, folder));
+                if (File.Exists(Safe(Path.GetRelativePath(root, folder), "restoring.json")))
+                {
+                    try { FinishRestore(folder); }
+                    catch (Exception ex) when (ex is IOException or JsonException or ArgumentException)
+                    {
+                        RecoveryIssues.Add(new(null, "RestoreConflict"));
+                    }
+                    continue;
+                }
                 var markerPath = Path.Combine(folder, "deleted.json");
                 if (!File.Exists(markerPath)) continue;
                 var deleted = Read<DeleteMarker>(markerPath);

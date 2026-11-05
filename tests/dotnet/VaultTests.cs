@@ -13,6 +13,80 @@ public sealed class VaultTests : IDisposable
     private static SaveRequest Edit(Note note, string body, BlockAnchor[]? blocks = null, SelectionAnchor[]? selections = null) => new(note.Header.Id, body, note.Header.Title, note.Header.Tags, note.Sidecar.Revision, note.Sidecar.ContentHash, blocks ?? [], selections ?? []);
     public void Dispose() { if (Directory.Exists(parent)) Directory.Delete(parent, true); }
 
+    [Theory]
+    [InlineData("RestoreStaged")]
+    [InlineData("RestoreMarkdownReplaced")]
+    [InlineData("RestoreSidecarReplaced")]
+    public void RestoreCrashRetainsExactSourcePair(string phase)
+    {
+        var store = Store();
+        var first = store.Create("2026-11-05", "Restore 中文");
+        var block = new BlockAnchor(Guid.CreateVersion7(), "paragraph", 0, 7);
+        var selection = new SelectionAnchor(Guid.CreateVersion7(), block.Id, "中文", "", "", 0, 2);
+        var saved = store.Save(Edit(first, "中文 test", [block], [selection]));
+        var markdown = File.ReadAllBytes(store.Safe("Journal", saved.Header.Id + ".md"));
+        var sidecar = File.ReadAllBytes(store.Safe(".gitpad", "anchors", saved.Header.Id + ".json"));
+        store.Delete(saved.Header.Id, saved.Sidecar.Revision);
+        Assert.Empty(store.List());
+        Assert.Single(Store().ListTrash());
+        var interrupted = Store(point => { if (point == phase) throw new IOException("Simulated restore interruption"); });
+        Assert.Throws<IOException>(() => interrupted.Restore(saved.Header.Id));
+        var recovered = Store();
+        Assert.Empty(recovered.ListTrash());
+        Assert.Single(recovered.List("2026-11-05", "test"));
+        Assert.Equal(markdown, File.ReadAllBytes(recovered.Safe("Journal", saved.Header.Id + ".md")));
+        Assert.Equal(sidecar, File.ReadAllBytes(recovered.Safe(".gitpad", "anchors", saved.Header.Id + ".json")));
+        Assert.Equivalent(saved, recovered.Load(saved.Header.Id));
+    }
+
+    [Fact] public void TrashRestoreSurvivesRepeatedRoundTripsAndRestart()
+    {
+        var store = Store();
+        var note = store.Create("2026-11-05", "Round trip");
+        var raw = File.ReadAllBytes(store.Safe("Journal", note.Header.Id + ".md"));
+        var metadata = File.ReadAllBytes(store.Safe(".gitpad", "anchors", note.Header.Id + ".json"));
+        for (var round = 0; round < 2; round++)
+        {
+            store.Delete(note.Header.Id, note.Sidecar.Revision);
+            store = Store();
+            Assert.Single(store.ListTrash());
+            Assert.Equivalent(note, store.Restore(note.Header.Id));
+            store = Store();
+            Assert.Empty(store.ListTrash());
+            Assert.Single(store.List());
+            Assert.Equal(raw, File.ReadAllBytes(store.Safe("Journal", note.Header.Id + ".md")));
+            Assert.Equal(metadata, File.ReadAllBytes(store.Safe(".gitpad", "anchors", note.Header.Id + ".json")));
+        }
+    }
+
+    [Fact] public void InterruptedRestoreConflictRetainsCopiesAndAllowsOtherNotesToLoad()
+    {
+        var store = Store();
+        var note = store.Create("2026-11-05", "Interrupted target");
+        var other = store.Create("2026-11-05", "Unaffected note");
+        store.Delete(note.Header.Id, note.Sidecar.Revision);
+        var interrupted = Store(point => { if (point == "RestoreMarkdownReplaced") throw new IOException("Stop"); });
+        Assert.Throws<IOException>(() => interrupted.Restore(note.Header.Id));
+        File.WriteAllText(store.Safe("Journal", note.Header.Id + ".md"), "external conflict");
+        var reopened = Store();
+        Assert.Contains(reopened.RecoveryIssues, issue => issue.Code == "RestoreConflict");
+        Assert.Single(reopened.ListTrash());
+        Assert.Equivalent(other, reopened.Load(other.Header.Id));
+        Assert.Throws<RecoveryRequiredException>(() => reopened.Restore(note.Header.Id));
+        Assert.Equal("external conflict", File.ReadAllText(reopened.Safe("Journal", note.Header.Id + ".md")));
+    }
+
+    [Fact] public void RestoreRejectsConflictingActiveSource()
+    {
+        var store = Store();
+        var note = store.Create("2026-11-05", "Restore conflict");
+        store.Delete(note.Header.Id, note.Sidecar.Revision);
+        File.WriteAllText(store.Safe("Journal", note.Header.Id + ".md"), "external conflict");
+        Assert.Throws<RevisionConflictException>(() => store.Restore(note.Header.Id));
+        Assert.Equal("external conflict", File.ReadAllText(store.Safe("Journal", note.Header.Id + ".md")));
+        Assert.Single(store.ListTrash());
+    }
+
     [Fact] public void CreateSaveReloadAndSearch()
     {
         var store = Store();

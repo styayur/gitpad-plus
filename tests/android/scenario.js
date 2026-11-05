@@ -5,8 +5,12 @@ void(async()=>{
   const wait=ms=>new Promise(resolve=>setTimeout(resolve,ms));
   const until=async(predicate,label,attempts=180)=>{for(let i=0;i<attempts;i++){const value=await predicate();if(value)return value;await wait(250);}throw Error('Timeout: '+label);};
   const check=(name,value)=>{if(!value)throw Error(name);checks.push({name,passed:true});};
-  const button=label=>[...document.querySelectorAll('button')].find(node=>(node.getAttribute('aria-label')??node.textContent.trim())===label);
-  const click=label=>{const node=button(label);if(!node)throw Error('Missing button: '+label);node.click();};
+  const button=label=>[...document.querySelectorAll('button')].find(node=>node.checkVisibility()&&(node.getAttribute('aria-label')??node.textContent.trim())===label);
+  const click=label=>{if(!button(label)&&['Settings','Image'].includes(label))document.querySelector('.note-actions summary')?.click();const node=button(label);if(!node)throw Error('Missing button: '+label);node.click();};
+  const newNote=async()=>{
+    if(!button('New note')){click('Calendar');await until(()=>button('New note'),'visible calendar note creation');}
+    button('New note').click();
+  };
   let sequence=0;
   const rpc=(method,params={})=>new Promise((resolve,reject)=>{
     const requestId='acceptance-'+Date.now()+'-'+sequence++;
@@ -16,7 +20,7 @@ void(async()=>{
     window.HybridWebView.SendRawMessage(JSON.stringify({protocolVersion:1,requestId,method,params}));
   });
   try{
-    await until(()=>window.HybridWebView&&button('Settings'),'real app startup');
+    await until(()=>window.HybridWebView&&(button('Settings')||document.querySelector('.note-actions summary')),'real app startup');
     await until(()=>document.documentElement.dataset.workspaceReady==='true','workspace restoration completed');
     check('Actual Android Release HybridWebView loaded',!!window.HybridWebView);
     const originalSend=window.HybridWebView.SendRawMessage.bind(window.HybridWebView);
@@ -36,10 +40,10 @@ void(async()=>{
       const theme=async value=>{click('Settings');const select=await until(()=>document.querySelector('dialog select[aria-label=Theme]'),'theme control');select.value=value;select.dispatchEvent(new Event('change',{bubbles:true}));await until(()=>document.documentElement.dataset.theme===value,'applied theme');await wait(800);NativeAcceptance.screenshot('ui-settings-'+value);click('Save settings');await until(()=>!document.querySelector('dialog[open]'),'settings closed');await until(()=>document.querySelector('.milkdown .ProseMirror'),'editor rebuilt');await wait(300);};
       await theme('light');await wait(800);NativeAcceptance.screenshot('ui-editor-light');
       await theme('dark');await wait(800);NativeAcceptance.screenshot('ui-editor-dark');
-      const toggle=document.querySelector('button.calendar-toggle');toggle.click();await wait(300);
+      click('Calendar');await wait(300);
       const day=document.querySelector('.calendar button').getBoundingClientRect();
       check('Android calendar touch targets are at least 44 by 44 CSS pixels',day.width>=44&&day.height>=44);
-      NativeAcceptance.screenshot('ui-calendar-dark');toggle.click();await wait(300);
+      NativeAcceptance.screenshot('ui-calendar-dark');click('Back to writing');await wait(300);
       NativeAcceptance.hideKeyboard();await until(()=>!NativeAcceptance.keyboardVisible(),'keyboard hidden before viewport baseline');await wait(600);
       const fullHeight=innerHeight,active=document.querySelector('.milkdown .ProseMirror'),rect=active.getBoundingClientRect();
       NativeAcceptance.press(rect.x+30,Math.max(rect.y+15,document.querySelector('.editor-pane').getBoundingClientRect().y+15),innerWidth,80);
@@ -50,7 +54,7 @@ void(async()=>{
       NativeAcceptance.screenshot('ui-keyboard-observed');
       check('Keyboard reduces the real WebView viewport',innerHeight<fullHeight-80);
       check('Keyboard-resized editor retains a usable viewport',pane.height>=80&&pane.bottom<=innerHeight+1);
-      check('Formatting stays above the visible editor',toolbar.bottom<=pane.top+1);
+      check('Formatting docks to the actual IME-resized viewport',Math.abs(toolbar.bottom-innerHeight)<=1&&toolbar.top>=pane.bottom-1);
       check('Local and Git status remain above the keyboard',document.querySelector('footer').getBoundingClientRect().bottom<=innerHeight+1);
       check('Mobile layout has no document-level horizontal overflow',document.documentElement.scrollWidth<=innerWidth);
       NativeAcceptance.screenshot('ui-keyboard-visible');NativeAcceptance.hideKeyboard();
@@ -60,11 +64,13 @@ void(async()=>{
       const selected=()=>document.querySelector('[role=tab][aria-selected=true]')?.title;
       const primaryId=selected(),before=await rpc('documents.load',{id:primaryId});
       NativeAcceptance.hideKeyboard();await until(()=>!NativeAcceptance.keyboardVisible(),'keyboard hidden before split writing');
-      click('New note');await until(()=>selected()&&selected()!==primaryId,'new disposable second document');
+      await newNote();await until(()=>selected()&&selected()!==primaryId,'new disposable second document');
       const secondaryId=selected();
       [...document.querySelectorAll('[role=tab]')].find(node=>node.title===primaryId).click();
       await until(()=>selected()===primaryId&&document.querySelector('.ProseMirror'),'primary page restored');
-      const openSecond=async()=>{const select=document.querySelector('select[aria-label="Open beside"]');select.value=secondaryId;select.dispatchEvent(new Event('change',{bubbles:true}));await until(()=>document.querySelectorAll('.ProseMirror').length===2,'two real editable panes');};
+      const openSecond=async()=>{let select=document.querySelector('select[aria-label="Open beside"]');
+        if(!select.checkVisibility()){const summary=document.querySelector('.note-actions summary');if(!summary.parentElement.open)summary.click();select=await until(()=>{const menu=document.querySelector('select[aria-label="Open beside in menu"]');return menu?.checkVisibility()?menu:null;},'visible second pane command');}
+        select.value=secondaryId;select.dispatchEvent(new Event('change',{bubbles:true}));await until(()=>document.querySelectorAll('.ProseMirror').length===2,'two real editable panes');};
       await openSecond();
       const fullHeight=innerHeight,secondary=document.querySelector('.secondary-pane .ProseMirror');
       const paragraph=secondary.querySelector('p')??secondary;paragraph.scrollIntoView({block:'center'});await wait(400);
@@ -90,7 +96,7 @@ void(async()=>{
       check('Split native writing preserves the primary source pair',before.body===after.body&&JSON.stringify(before.sidecar.blocks)===JSON.stringify(after.sidecar.blocks));
       click('Close second pane');await until(async()=>!(await rpc('workspace.get')).secondaryId,'single-page workspace persisted');
     }else if(phase==='smoke'){
-      const previous=document.querySelector('.milkdown .ProseMirror');click('New note');
+      const previous=document.querySelector('.milkdown .ProseMirror');await newNote();
       const editor=await until(()=>{const node=document.querySelector('.milkdown .ProseMirror');return node?.isConnected&&node!==previous?node:null;},'default-bundle editor');
       editor.scrollIntoView({block:'center'});await wait(500);const rect=editor.getBoundingClientRect();NativeAcceptance.press(rect.x+30,rect.y+15,innerWidth,80);await wait(500);
       NativeAcceptance.paste('Signed candidate 中文 👩🏽‍💻 — restart qualification');
@@ -117,7 +123,7 @@ void(async()=>{
       check('Calendar retains usable height',document.querySelector('.calendar').getBoundingClientRect().height>150);
       await NativeAcceptance.screenshot('calendar-initial');
       const previousEditor=document.querySelector('.milkdown .ProseMirror[contenteditable=true]');
-      click('New note');
+      await newNote();
       const editor=await until(()=>{const node=document.querySelector('.milkdown .ProseMirror[contenteditable=true]');return node&&node!==previousEditor&&node.getBoundingClientRect().width>0?node:null;},'new WYSIWYG editor');
       editor.scrollIntoView({block:'center'});await wait(1000);
       const activeEditor=await until(()=>{const node=document.querySelector('.milkdown .ProseMirror[contenteditable=true]');return node?.isConnected&&node.getBoundingClientRect().width>0?node:null;},'connected editable surface');
