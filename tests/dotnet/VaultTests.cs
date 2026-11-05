@@ -354,6 +354,44 @@ public sealed class VaultTests : IDisposable
         Assert.NotEqual(JsonValueKind.Null, JsonDocument.Parse(Call("app.previewClear", "{}")).RootElement.GetProperty("error").ValueKind);
         Assert.Contains("NotConfigured", Call("git.status", "{}"));
     }
+    [Fact] public void TrashRpcRejectsDirtyAndStaleDeletesAndKeepsDuplicateRequestsSafe()
+    {
+        var store = Store();
+        var first = store.Create("2026-11-05", "RPC recovery 中文");
+        var block = new BlockAnchor(Guid.CreateVersion7(), "paragraph", 0, 5);
+        var note = store.Save(Edit(first, "hello", [block]));
+        var markdown = File.ReadAllBytes(store.Safe("Journal", note.Header.Id + ".md"));
+        var sidecar = File.ReadAllBytes(store.Safe(".gitpad", "anchors", note.Header.Id + ".json"));
+        var bridge = new Bridge(store);
+        JsonElement Call(string method, object parameters)
+        {
+            using var response = JsonDocument.Parse(bridge.Handle(JsonSerializer.Serialize(new {
+                protocolVersion = 1, requestId = Guid.NewGuid().ToString(), method, @params = parameters
+            })));
+            return response.RootElement.Clone();
+        }
+        Call("documents.dirty", true);
+        var dirty = Call("documents.delete", new { id = note.Header.Id, revision = note.Sidecar.Revision });
+        Assert.Equal("InvalidRequest", dirty.GetProperty("error").GetProperty("code").GetString());
+        Assert.Single(store.List()); Assert.Empty(store.ListTrash());
+        Call("documents.dirty", false);
+        var stale = Call("documents.delete", new { id = note.Header.Id, revision = first.Sidecar.Revision });
+        Assert.Equal("Conflict", stale.GetProperty("error").GetProperty("code").GetString());
+        Assert.Equal(markdown, File.ReadAllBytes(store.Safe("Journal", note.Header.Id + ".md")));
+        Assert.Equal(JsonValueKind.Null, Call("documents.delete", new { id = note.Header.Id, revision = note.Sidecar.Revision }).GetProperty("error").ValueKind);
+        var duplicate = Call("documents.delete", new { id = note.Header.Id, revision = note.Sidecar.Revision });
+        Assert.NotEqual(JsonValueKind.Null, duplicate.GetProperty("error").ValueKind);
+        Assert.Empty(store.List());
+        Assert.Single(Call("documents.trash", new { }).GetProperty("result").EnumerateArray());
+        Assert.Equal(markdown, File.ReadAllBytes(store.Safe(".gitpad", "trash", note.Header.Id.ToString(), "document.md")));
+        Assert.Equal(sidecar, File.ReadAllBytes(store.Safe(".gitpad", "trash", note.Header.Id.ToString(), "sidecar.json")));
+        foreach (var attempt in new[] { 1, 2 })
+            Assert.Equal(JsonValueKind.Null, Call("documents.restore", new { id = note.Header.Id }).GetProperty("error").ValueKind);
+        Assert.Equal(markdown, File.ReadAllBytes(store.Safe("Journal", note.Header.Id + ".md")));
+        Assert.Equal(sidecar, File.ReadAllBytes(store.Safe(".gitpad", "anchors", note.Header.Id + ".json")));
+        Assert.Equivalent(note, Store().Load(note.Header.Id));
+        Assert.Empty(store.ListTrash());
+    }
     [Fact] public void LinksAreStrictAndVersion7()
     {
         var doc = Guid.CreateVersion7(); var block = Guid.CreateVersion7();

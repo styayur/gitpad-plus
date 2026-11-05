@@ -62,3 +62,36 @@ test('a complete swipe delivered within one render turn expands without recyclin
   await expect(row.locator('.open-note')).toHaveCSS('transform','matrix(1, 0, 0, 1, -88, 0)');
   expect(await call(request,'documents.trash')).toHaveLength(0);
 });
+
+test('recycling a background tab preserves the active editor and survives workspace restart',async({page,request})=>{
+  const date=fixtureDate();
+  const background=await call(request,'documents.create',{date,title:'Background recycle fixture'});
+  const active=await call(request,'documents.create',{date,title:'Active retained fixture'});
+  await page.goto('/');
+  await page.locator('.open-note').filter({hasText:background.header.title}).click();
+  await page.locator('.ProseMirror').fill('Background original 中文');
+  await page.getByRole('button',{name:'Save',exact:true}).click();
+  await expect(page.locator('footer [role=status]')).toContainText('Saved');
+  const original=await call(request,'documents.load',{id:background.header.id});
+  await page.locator('.open-note').filter({hasText:active.header.title}).click();
+  await page.locator('.ProseMirror').fill('Active writing stays connected');
+  await page.getByRole('button',{name:'Save',exact:true}).click();
+  await expect(page.locator('footer [role=status]')).toContainText('Saved');
+  const activeBefore=await call(request,'documents.load',{id:active.header.id});
+  const activeEditor=await page.locator('.ProseMirror').elementHandle();
+  const row=page.locator('.note-row').filter({hasText:background.header.title});
+  await row.locator('.recycle-note').focus();await row.locator('.recycle-note').press('Enter');
+  await expect(page.getByRole('tab').filter({hasText:background.header.title})).toHaveCount(0);
+  await expect(page.getByRole('tab',{selected:true})).toHaveAttribute('title',active.header.id);
+  expect(await page.locator('.ProseMirror').evaluate((node,previous)=>node===previous,activeEditor)).toBe(true);
+  expect(await call(request,'documents.load',{id:active.header.id})).toEqual(activeBefore);
+  expect(await call(request,'documents.list',{date})).toHaveLength(1);
+  expect(await call(request,'documents.list',{search:background.header.title})).toHaveLength(0);
+  await page.getByRole('button',{name:'Undo',exact:true}).click();
+  await expect.poll(()=>call(request,'documents.trash')).toHaveLength(0);
+  expect(await call(request,'documents.load',{id:background.header.id})).toEqual(original);
+  await page.reload();
+  await expect(page.getByRole('tab',{selected:true})).toHaveAttribute('title',active.header.id);
+  await expect(page.getByRole('tab').filter({hasText:background.header.title})).toHaveCount(0);
+  await expect(page.locator('.ProseMirror')).toContainText('Active writing stays connected');
+});
