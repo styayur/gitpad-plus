@@ -76,6 +76,19 @@ public sealed class VaultTests : IDisposable
         Assert.Equal("external conflict", File.ReadAllText(reopened.Safe("Journal", note.Header.Id + ".md")));
     }
 
+    [Fact] public void RestoreCanRetryAfterSourceCommitBeforeIndexAcknowledgement()
+    {
+        var store = Store();
+        var note = store.Create("2026-11-05", "Committed restore");
+        store.Delete(note.Header.Id, note.Sidecar.Revision);
+        var interrupted = Store(point => { if (point == "RestoreCommitted") throw new IOException("Lost acknowledgement"); });
+        Assert.Throws<IOException>(() => interrupted.Restore(note.Header.Id));
+        Assert.Equivalent(note, interrupted.Restore(note.Header.Id));
+        Assert.Single(interrupted.List());
+        Assert.Empty(interrupted.ListTrash());
+        Assert.Equivalent(note, Store().Load(note.Header.Id));
+    }
+
     [Fact] public void RestoreRejectsConflictingActiveSource()
     {
         var store = Store();

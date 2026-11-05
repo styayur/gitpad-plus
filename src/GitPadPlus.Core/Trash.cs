@@ -28,7 +28,27 @@ public sealed partial class VaultStore
             if (!File.Exists(marker))
             {
                 if (File.Exists(Markdown(id)) || File.Exists(AnchorPath(id)))
+                {
+                    // A completed source-pair restore may lose its response or
+                    // fail while rebuilding the disposable index. Accept only
+                    // an exact replay of a retained committed transaction.
+                    var archive = Safe(".gitpad", "restored", id.ToString());
+                    if (!Directory.Exists(folder) && Directory.Exists(archive)
+                        && File.Exists(Markdown(id)) && File.Exists(AnchorPath(id)))
+                    {
+                        var markdownHash = RestoreHash(Markdown(id));
+                        var sidecarHash = RestoreHash(AnchorPath(id));
+                        foreach (var entry in Directory.EnumerateDirectories(archive))
+                        {
+                            var retained = Read<RestoreMarker>(Safe(Path.GetRelativePath(root, entry), "restoring.json"));
+                            if (retained.Id != id || retained.MarkdownHash != markdownHash
+                                || retained.SidecarHash != sidecarHash) continue;
+                            RebuildIndex();
+                            return Load(id);
+                        }
+                    }
                     throw new RevisionConflictException("An active document already occupies this identity.");
+                }
                 var deleted = Read<DeleteMarker>(Safe(Path.GetRelativePath(root, folder), "deleted.json"));
                 var text = File.ReadAllText(Safe(Path.GetRelativePath(root, folder), "document.md"), Utf8);
                 var sidecar = Read<Sidecar>(Safe(Path.GetRelativePath(root, folder), "sidecar.json"));
@@ -40,6 +60,7 @@ public sealed partial class VaultStore
                 checkpoint?.Invoke("RestoreStaged");
             }
             FinishRestore(folder);
+            checkpoint?.Invoke("RestoreCommitted");
             RebuildIndex();
             return Load(id);
         }

@@ -51,20 +51,25 @@ export function CommandLabel({id,title}:{id:string;title:string}) {
 
 
 export function NoteRow({id,title,date,current,expanded,onExpand,onOpen,onTrash}:{id:string;title:string;date:string;current:boolean;expanded:boolean;onExpand:(id:string|null)=>void;onOpen:()=>void;onTrash:()=>void}) {
-  const start=useRef<{x:number;y:number}|null>(null);
+  const start=useRef<{x:number;y:number;distance:number}|null>(null);
   const [offset,setOffset]=useState(0);
   const suppressClick=useRef(false);
   return <div className="note-row" onPointerDown={event=>{
     if(event.pointerType==='mouse'||event.clientX<24)return;
-    start.current={x:event.clientX,y:event.clientY};
+    suppressClick.current=false;
+    start.current={x:event.clientX,y:event.clientY,distance:0};
   }} onPointerMove={event=>{
     if(!start.current)return;
     const dx=event.clientX-start.current.x,dy=event.clientY-start.current.y;
     if(Math.abs(dy)>16&&Math.abs(dy)>Math.abs(dx)){start.current=null;setOffset(0);return;}
-    if(dx< -16&&Math.abs(dx)>Math.abs(dy)*1.3)setOffset(Math.min(88,-dx));
+    if((dx< -16&&Math.abs(dx)>Math.abs(dy)*1.3)||start.current.distance>0){
+      start.current.distance=Math.max(0,Math.min(88,-dx));
+      setOffset(start.current.distance);
+    }
   }} onPointerUp={()=>{
-    suppressClick.current=offset>=16;
-    if(start.current&&offset>=48)onExpand(id);
+    const distance=start.current?.distance??0;
+    suppressClick.current=distance>=16;
+    if(distance>=48)onExpand(id);
     start.current=null;setOffset(0);
   }} onPointerCancel={()=>{start.current=null;setOffset(0);}}>
     <button className="recycle-note" aria-label={'Move '+title+' to trash'} onClick={onTrash}>Trash</button>

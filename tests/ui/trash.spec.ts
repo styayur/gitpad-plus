@@ -47,3 +47,18 @@ test('recycling the second pane closes that pane and undo keeps the first docume
   expect((await call(request,'documents.load',{id:first.header.id})).header.id).toBe(first.header.id);
   expect((await call(request,'documents.load',{id:second.header.id})).header.id).toBe(second.header.id);
 });
+
+
+test('a complete swipe delivered within one render turn expands without recycling',async({page,request})=>{
+  await page.setViewportSize({width:393,height:700});
+  const note=await call(request,'documents.create',{date:fixtureDate(),title:'Batched pointer fixture'});
+  await page.goto('/');
+  const row=page.locator('.note-row').filter({hasText:note.header.title});
+  await row.evaluate(node=>{
+    for(const [type,x] of [['pointerdown',300],['pointermove',210],['pointerup',210]] as const){
+      node.dispatchEvent(new PointerEvent(type,{bubbles:true,pointerType:'touch',pointerId:1,clientX:x,clientY:100}));
+    }
+  });
+  await expect(row.locator('.open-note')).toHaveCSS('transform','matrix(1, 0, 0, 1, -88, 0)');
+  expect(await call(request,'documents.trash')).toHaveLength(0);
+});

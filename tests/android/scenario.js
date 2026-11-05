@@ -6,7 +6,7 @@ void(async()=>{
   const until=async(predicate,label,attempts=180)=>{for(let i=0;i<attempts;i++){const value=await predicate();if(value)return value;await wait(250);}throw Error('Timeout: '+label);};
   const check=(name,value)=>{if(!value)throw Error(name);checks.push({name,passed:true});};
   const button=label=>[...document.querySelectorAll('button')].find(node=>node.checkVisibility()&&(node.getAttribute('aria-label')??node.textContent.trim())===label);
-  const click=label=>{if(!button(label)&&['Settings','Image'].includes(label))document.querySelector('.note-actions summary')?.click();const node=button(label);if(!node)throw Error('Missing button: '+label);node.click();};
+  const click=label=>{if(!button(label)&&['Settings','Image','Source peek','Paste image','Copy note link','Block link','Selection link','Move to trash','Check recovery'].includes(label))document.querySelector('.note-actions summary')?.click();const node=button(label);if(!node)throw Error('Missing button: '+label);node.click();};
   const newNote=async()=>{
     if(!button('New note')){click('Calendar');await until(()=>button('New note'),'visible calendar note creation');}
     button('New note').click();
@@ -33,7 +33,77 @@ void(async()=>{
     window.addEventListener('HybridWebViewMessageReceived',event=>{try{const response=JSON.parse(event.detail.message),record=saveRequests.get(response.requestId);if(record){record.elapsedMs=performance.now()-record.started;record.error=response.error;record.revision=response.result?.sidecar?.revision;}}catch{/* Ignore unrelated native notifications. */}});
     checks.push({name:'Loaded embedded module',scripts:[...document.querySelectorAll('script[src]')].map(node=>node.getAttribute('src'))});
     const phase=window.__acceptancePhase;await wait(1500);
-    if(phase==='ui-design'){
+    if(phase==='trash'){
+      if(document.querySelector('.secondary-pane')){click('Close second pane');await until(()=>!document.querySelector('.secondary-pane'),'single pane before trash');}
+      const now=new Date(),date=[now.getFullYear(),String(now.getMonth()+1).padStart(2,'0'),String(now.getDate()).padStart(2,'0')].join('-');
+      const created=await rpc('documents.create',{date,title:'Native trash '+Date.now()});
+      const id=created.header.id;
+      NativeAcceptance.openUri('gitpadplus://note/'+id);
+      await until(()=>document.querySelector('[role=tab][aria-selected=true]')?.title===id,'native trash fixture opened');
+      const editor=await until(()=>document.querySelector('.ProseMirror'),'native trash editor');
+      const rect=editor.getBoundingClientRect();NativeAcceptance.press(rect.x+25,rect.y+20,innerWidth,80);
+      await until(()=>NativeAcceptance.keyboardVisible(),'keyboard for trash fixture');
+      NativeAcceptance.paste('Restore original 中文 👩🏽‍💻 punctuation!\nSecond line.');
+      await until(()=>editor.textContent.includes('Second line.'),'native trash Unicode input');click('Save');
+      await until(()=>document.querySelector('footer [role=status]')?.textContent==='Local: Saved','trash fixture saved');
+      NativeAcceptance.hideKeyboard();await until(()=>!NativeAcceptance.keyboardVisible(),'keyboard hidden for note swipe');
+      const before=await rpc('documents.load',{id}),pair=NativeAcceptance.sourcePairDigest(id,false);
+      click('Calendar');await until(()=>document.querySelector('aside').checkVisibility(),'calendar list shown');
+      const row=()=>{const matches=[...document.querySelectorAll('.note-row')].filter(node=>node.querySelector('.open-note small span')?.textContent===id.slice(-6));if(matches.length!==1)throw Error('Trash row identity ambiguous');return matches[0];};
+      const point=()=>{row().scrollIntoView({block:'center'});return row().getBoundingClientRect();};
+      let position=point();NativeAcceptance.swipe(position.right-30,position.y+position.height/2,position.right-30,position.y+position.height/2-40,innerWidth);
+      await wait(300);check('Native vertical swipe preserves the note',!(await rpc('documents.trash')).some(note=>note.id===id));
+      position=point();NativeAcceptance.swipe(position.right-30,position.y+position.height/2,position.right-54,position.y+position.height/2,innerWidth);
+      await wait(300);check('Native short swipe does not reveal or recycle',new DOMMatrix(getComputedStyle(row().querySelector('.open-note')).transform).m41===0&&!(await rpc('documents.trash')).some(note=>note.id===id));
+      const touch=node=>{if(typeof node==='string')node=button(node);if(!node)throw Error('Native action unavailable');node.scrollIntoView({block:'center'});const bounds=node.getBoundingClientRect();NativeAcceptance.press(bounds.x+bounds.width/2,bounds.y+bounds.height/2,innerWidth,80);};
+      const recycle=async()=>{const bounds=point();NativeAcceptance.swipe(bounds.right-24,bounds.y+bounds.height/2,bounds.right-116,bounds.y+bounds.height/2,innerWidth);await until(()=>new DOMMatrix(getComputedStyle(row().querySelector('.open-note')).transform).m41===-88,'native swipe reveals action');touch(row().querySelector('.recycle-note'));await until(async()=> (await rpc('documents.trash')).some(note=>note.id===id),'native recycled note');};
+      await recycle();check('Native recycle keeps exact source pair',NativeAcceptance.sourcePairDigest(id,true)===pair);
+      NativeAcceptance.screenshot('trash-native-recycled');touch('Undo');
+      await until(async()=>!(await rpc('documents.trash')).some(note=>note.id===id),'native undo completed');
+      check('Native Undo keeps Markdown and sidecar bytes',NativeAcceptance.sourcePairDigest(id,false)===pair);
+      check('Native Undo keeps all identities and metadata',JSON.stringify(await rpc('documents.load',{id}))===JSON.stringify(before));
+      await recycle();touch('Settings');await until(()=>document.querySelector('dialog[open]'),'settings for trash');
+      touch('Trash');await until(()=>document.querySelector('dialog[aria-label=Trash]'),'local trash dialog');
+      touch('Restore '+before.header.title);await until(async()=>!(await rpc('documents.trash')).some(note=>note.id===id),'native trash restore completed');
+      check('Native Trash restore keeps source pair and UUIDs',NativeAcceptance.sourcePairDigest(id,false)===pair&&JSON.stringify(await rpc('documents.load',{id}))===JSON.stringify(before));
+      checks.push({name:'Native file source pair digests',before:JSON.parse(pair),after:JSON.parse(NativeAcceptance.sourcePairDigest(id,false))});
+      NativeAcceptance.screenshot('trash-native-restored');
+      touch('Close trash');touch('Close settings');
+    }else if(phase==='writing-end'||phase==='writing-end-two-pane'){
+      if(document.querySelector('.secondary-pane')){click('Close second pane');await until(()=>!document.querySelector('.secondary-pane'),'single pane before long writing');}
+      const previous=document.querySelector('[role=tab][aria-selected=true]')?.title;
+      await newNote();await until(()=>document.querySelector('[role=tab][aria-selected=true]')?.title!==previous&&document.querySelector('.ProseMirror'),'new long writing fixture');
+      const split=phase==='writing-end-two-pane';
+      if(split){
+        const primaryId=document.querySelector('[role=tab][aria-selected=true]').title;
+        await newNote();await until(()=>document.querySelector('[role=tab][aria-selected=true]')?.title!==primaryId,'new secondary fixture');
+        const secondaryId=document.querySelector('[role=tab][aria-selected=true]').title;
+        [...document.querySelectorAll('[role=tab]')].find(node=>node.title===primaryId).click();
+        await until(()=>document.querySelector('[role=tab][aria-selected=true]')?.title===primaryId&&document.querySelector('.ProseMirror'),'primary long fixture restored');
+        let select=document.querySelector('select[aria-label="Open beside"]');
+        if(!select.checkVisibility()){document.querySelector('.note-actions summary').click();select=await until(()=>document.querySelector('select[aria-label="Open beside in menu"]'),'split command');}
+        select.value=secondaryId;select.dispatchEvent(new Event('change',{bubbles:true}));
+        await until(()=>document.querySelector('.secondary-pane .ProseMirror'),'long secondary editor');
+      }
+      const editor=document.querySelector(split?'.secondary-pane .ProseMirror':'.milkdown .ProseMirror');
+      const paragraph=editor.querySelector('p');paragraph.scrollIntoView({block:'center'});await wait(400);
+      const point=paragraph.getBoundingClientRect();NativeAcceptance.press(point.x+12,point.y+12,innerWidth,80);
+      await until(()=>NativeAcceptance.keyboardVisible(),'keyboard for long native writing');
+      const content=Array.from({length:200},(_,index)=>'Line '+index+' 中文，English punctuation!').join('\n\n')+'\n\nEND-IME-中文';
+      NativeAcceptance.paste(content);await until(()=>editor.textContent.endsWith('END-IME-中文'),'long native input reached last line');
+      await wait(1000);
+      const selection=getSelection();
+      check('Native input leaves a collapsed caret in the last paragraph',selection.isCollapsed&&editor.lastElementChild.contains(selection.focusNode));
+      const caret=selection.getRangeAt(0).getBoundingClientRect(),pane=editor.closest('.editor-pane').getBoundingClientRect(),footer=document.querySelector('footer').getBoundingClientRect(),toolbar=document.querySelector('.format-toolbar').getBoundingClientRect();
+      checks.push({name:'Native long-document caret geometry',width:innerWidth,split,caret:caret.toJSON(),pane:pane.toJSON(),footer:footer.toJSON(),toolbar:toolbar.toJSON(),selection:{collapsed:selection.isCollapsed,focusOffset:selection.focusOffset},nativeLayout:NativeAcceptance.layoutDiagnostics()});
+      NativeAcceptance.screenshot('writing-end-visible');
+      check('Native caret remains visible at the long-document end',caret.top>=Math.max(0,pane.top)-2&&caret.bottom<=Math.min(pane.bottom,footer.top)+2);
+      check('Long writing retains real IME and one docked toolbar',NativeAcceptance.keyboardVisible()&&Math.abs(toolbar.bottom-innerHeight)<=1&&document.querySelectorAll('.format-toolbar').length===1);
+      click(split?'Save second pane':'Save');await until(()=>!document.querySelector('footer').textContent.match(/Unsaved|Saving|SaveError/),'long native writing saved');
+      NativeAcceptance.hideKeyboard();
+      if(split){click('Close second pane');await until(async()=>!(await rpc('workspace.get')).secondaryId,'long-writing split closure persisted');}
+    }else if(phase==='ui-design'){
+      if(document.querySelector('.secondary-pane')){click('Close second pane');await until(()=>!document.querySelector('.secondary-pane'),'single pane before layout measurement');}
       await until(()=>document.querySelector('.milkdown .ProseMirror'),'restored writing surface');
       const id=document.querySelector('[role=tab][aria-selected=true]').title,before=await rpc('documents.load',{id});
       NativeAcceptance.hideKeyboard();
@@ -50,7 +120,7 @@ void(async()=>{
       await until(()=>NativeAcceptance.keyboardVisible(),'actual Android software keyboard');await wait(1000);
       check('Native IME is visible',NativeAcceptance.keyboardVisible());
       const pane=document.querySelector('.editor-pane').getBoundingClientRect(),toolbar=document.querySelector('.format-toolbar').getBoundingClientRect();
-      checks.push({name:'Native keyboard viewport measurements',fullHeight,keyboardViewportHeight:innerHeight,editorHeight:pane.height,nativeGeometry:NativeAcceptance.geometry(),nativeLayout:NativeAcceptance.layoutDiagnostics()});
+      checks.push({name:'Native keyboard viewport measurements',width:innerWidth,fullHeight,keyboardViewportHeight:innerHeight,editorHeight:pane.height,toolbar:toolbar.toJSON(),footer:document.querySelector('footer').getBoundingClientRect().toJSON(),imeGapCssPx:innerHeight-toolbar.bottom,nativeGeometry:NativeAcceptance.geometry(),nativeLayout:NativeAcceptance.layoutDiagnostics()});
       NativeAcceptance.screenshot('ui-keyboard-observed');
       check('Keyboard reduces the real WebView viewport',innerHeight<fullHeight-80);
       check('Keyboard-resized editor retains a usable viewport',pane.height>=80&&pane.bottom<=innerHeight+1);
@@ -82,7 +152,7 @@ void(async()=>{
       check('Neither writing body collapses under the actual IME',panes.length===2&&panes.every(pane=>pane.height>=120));
       check('Split workspace scrolls while its shell status remains visible',workspace.scrollHeight>workspace.clientHeight&&document.querySelector('footer').getBoundingClientRect().bottom<=innerHeight+1);
       check('Split keyboard layout has no document-level horizontal overflow',document.documentElement.scrollWidth<=innerWidth);
-      checks.push({name:'Actual two-pane IME geometry',fullHeight,keyboardViewportHeight:innerHeight,panes,scrollHeight:workspace.scrollHeight,clientHeight:workspace.clientHeight,nativeGeometry:NativeAcceptance.geometry(),nativeLayout:NativeAcceptance.layoutDiagnostics()});
+      checks.push({name:'Actual two-pane IME geometry',width:innerWidth,toolbar:document.querySelector('.format-toolbar').getBoundingClientRect().toJSON(),imeGapCssPx:innerHeight-document.querySelector('.format-toolbar').getBoundingClientRect().bottom,fullHeight,keyboardViewportHeight:innerHeight,panes,scrollHeight:workspace.scrollHeight,clientHeight:workspace.clientHeight,nativeGeometry:NativeAcceptance.geometry(),nativeLayout:NativeAcceptance.layoutDiagnostics()});
       NativeAcceptance.screenshot('ui-two-pane-keyboard');
       const save=button('Save second pane');save.scrollIntoView({block:'center'});await wait(300);const saveRect=save.getBoundingClientRect();
       check('Second-pane save command is reachable above the IME',saveRect.top>=0&&saveRect.bottom<=innerHeight);
@@ -96,6 +166,7 @@ void(async()=>{
       check('Split native writing preserves the primary source pair',before.body===after.body&&JSON.stringify(before.sidecar.blocks)===JSON.stringify(after.sidecar.blocks));
       click('Close second pane');await until(async()=>!(await rpc('workspace.get')).secondaryId,'single-page workspace persisted');
     }else if(phase==='smoke'){
+      if(document.querySelector('.secondary-pane')){click('Close second pane');await until(async()=>!(await rpc('workspace.get')).secondaryId,'single pane before smoke');}
       const previous=document.querySelector('.milkdown .ProseMirror');await newNote();
       const editor=await until(()=>{const node=document.querySelector('.milkdown .ProseMirror');return node?.isConnected&&node!==previous?node:null;},'default-bundle editor');
       editor.scrollIntoView({block:'center'});await wait(500);const rect=editor.getBoundingClientRect();NativeAcceptance.press(rect.x+30,rect.y+15,innerWidth,80);await wait(500);
@@ -206,12 +277,18 @@ void(async()=>{
       const paragraph=[...editor.querySelectorAll('p')].find(node=>node.textContent.startsWith('Selection quote'));
       if(NativeAcceptance.dismissKeyboardOnboarding())await wait(500);
       paragraph.scrollIntoView({block:'center'});await wait(300);const paragraphRect=paragraph.getBoundingClientRect();NativeAcceptance.press(paragraphRect.x+40,paragraphRect.y+10,innerWidth,80);await wait(400);
-      if(NativeAcceptance.dismissKeyboardOnboarding())await wait(500);NativeAcceptance.hideKeyboard();await wait(300);
+      if(NativeAcceptance.dismissKeyboardOnboarding())await wait(500);await until(()=>NativeAcceptance.keyboardVisible(),'keyboard visible for formatting selection');
       const text=paragraph.firstChild,range=document.createRange();range.setStart(text,10);range.setEnd(text,18);
       const selection=getSelection();selection.removeAllRanges();selection.addRange(range);document.dispatchEvent(new Event('selectionchange'));
       await wait(300);
       check('Selection uses the current target editor',editor.isConnected);
       checks.push({name:'Selection before toolbar touch',quote:getSelection()?.toString(),focusedElement:document.activeElement?.tagName,editorSelection:editor.pmViewDesc?.view?.state.selection.toJSON()});
+      const bold=button('Bold');bold.scrollIntoView({block:'nearest',inline:'nearest'});const boldRect=bold.getBoundingClientRect();
+      NativeAcceptance.press(boldRect.x+boldRect.width/2,boldRect.y+boldRect.height/2,innerWidth,80);
+      await until(()=>[...paragraph.querySelectorAll('strong')].some(node=>node.textContent==='quote 中文'),'native format touch applied to selected quote');
+      check('Native formatting keeps the selected text and editor instance',editor.isConnected&&getSelection()?.toString()==='quote 中文');
+      check('Native formatting strip stays at the visible IME',NativeAcceptance.keyboardVisible()&&Math.abs(document.querySelector('.format-toolbar').getBoundingClientRect().bottom-innerHeight)<=1);
+
       const actions=document.querySelector('summary[aria-label="Note actions"]');if(actions){const ar=actions.getBoundingClientRect();NativeAcceptance.press(ar.x+ar.width/2,ar.y+ar.height/2,innerWidth,80);await until(()=>actions.parentElement.open,'note actions expanded');}const linkButton=button('Selection link');linkButton.scrollIntoView({block:'center'});await wait(300);const rect=linkButton.getBoundingClientRect();NativeAcceptance.press(rect.x+rect.width/2,rect.y+rect.height/2,innerWidth,80);
       await until(()=>{const alert=document.querySelector('.message')?.textContent;if(alert?.includes('Error'))throw Error(alert);return alert?.includes('Link copied');},'selection link copied by native touch');
       const link=NativeAcceptance.clipboardText();check('Persistent selection link copied',link.includes('?selection='));

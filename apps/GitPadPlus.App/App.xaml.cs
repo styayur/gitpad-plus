@@ -27,7 +27,8 @@ public partial class App : Application
             if (window.Handler?.PlatformView is Microsoft.UI.Xaml.Window native)
             {
                 ExitDiagnostics.Record("window.created");
-                native.Closed += (_, _) => ExitDiagnostics.Record("window.closed");
+                var finishDispatcherObservation=ExitDiagnostics.ObserveDispatcher(native.DispatcherQueue);
+                native.Closed += (_, _) => {finishDispatcherObservation();ExitDiagnostics.Record("window.closed");};
                 page.AttachAppearance(native,titleBar);
                 // MAUI sizes the window in DIPs; AppWindow bounds are physical
                 // pixels. Clamp once to the actual work area so a high-DPI

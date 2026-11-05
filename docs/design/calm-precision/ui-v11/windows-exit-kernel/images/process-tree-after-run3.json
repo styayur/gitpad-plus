@@ -1,0 +1,6 @@
+{
+  "capturedAt": "2026-11-05T15:08:48.7470494+00:00",
+  "passed": true,
+  "remaining": [],
+  "scope": "App and six owned WebView2 processes captured before images run 3, observed after close"
+}

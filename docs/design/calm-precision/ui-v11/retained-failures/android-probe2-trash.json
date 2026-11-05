@@ -1,0 +1,57 @@
+{
+  "passed": false,
+  "phase": "trash",
+  "started": "2026-11-05T08:25:42.788Z",
+  "checks": [
+    {
+      "name": "Actual Android Release HybridWebView loaded",
+      "passed": true
+    },
+    {
+      "name": "Loaded embedded module",
+      "scripts": [
+        "./assets/index-oY5IC_up.js",
+        "./HybridWebView.js"
+      ]
+    },
+    {
+      "name": "Native vertical swipe preserves the note",
+      "passed": true
+    },
+    {
+      "name": "Native short swipe does not reveal or recycle",
+      "passed": true
+    }
+  ],
+  "saves": [
+    {
+      "requestId": "01a1aad0-666a-765a-b43b-70a92250732b",
+      "bodyLength": 0,
+      "blocks": 1,
+      "payloadLength": 463,
+      "invalidRanges": 0,
+      "duplicateIds": 0,
+      "started": 4669.199999999953,
+      "elapsedMs": 609.3000000000466,
+      "error": null,
+      "revision": 2
+    },
+    {
+      "requestId": "01a1aad0-68ce-724f-ba11-8c395e296b66",
+      "bodyLength": 54,
+      "blocks": 1,
+      "payloadLength": 520,
+      "invalidRanges": 0,
+      "duplicateIds": 0,
+      "started": 5281.399999999907,
+      "elapsedMs": 252.70000000006985,
+      "error": null,
+      "revision": 3
+    }
+  ],
+  "error": "Error: Timeout: native swipe reveals action",
+  "stack": "Error: Timeout: native swipe reveals action\n    at until (<anonymous>:6:156)\n    at async recycle (<anonymous>:59:170)\n    at async <anonymous>:60:7",
+  "footer": "Local: SavedGit: NotConfigured",
+  "activityRecreationVerified": false,
+  "backgroundForegroundRequested": false
+}

@@ -1,0 +1,8 @@
+{
+  "scenario": "empty-kernel-clock-probe",
+  "runs": 3,
+  "medianMs": 432.5914,
+  "p95Ms": 513.9771,
+  "maximumMs": 513.9771,
+  "scope": "Native close event to OS process exit, sampled every 10 ms. Operator clicks X. Physical click dispatch latency and UI-thread stalls require separate observation."
+}

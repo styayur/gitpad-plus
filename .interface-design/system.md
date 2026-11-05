@@ -83,4 +83,7 @@ A note row reveals an 88px trash action after a leftward touch of at least 48px.
 The first 24px at the screen edge is reserved for system navigation. Vertical
 intent cancels the gesture. Recycling requires the explicit trash action.
 Keyboard focus reveals the same action. Undo remains available for ten seconds,
-and Settings exposes persistent Trash and Restore. Native validation is pending.
+and Settings exposes persistent Trash and Restore. The signed development probe
+has passed actual Android touch reveal, short/vertical gesture protection, Undo
+and persistent Trash restore with equal raw Markdown and sidecar hashes. This
+qualifies the observed development probe, not a final release package.
