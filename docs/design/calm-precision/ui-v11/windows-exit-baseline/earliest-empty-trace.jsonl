@@ -1,0 +1,6 @@
+{"Phase":"window.created","ElapsedMs":0.1546,"Thread":2,"Dirty":null,"Timestamp":786768542041}
+{"Phase":"close.requested","ElapsedMs":1437659.2224,"Thread":2,"Dirty":false,"Timestamp":801145132688}
+{"Phase":"detach.started","ElapsedMs":1437675.4814,"Thread":2,"Dirty":null,"Timestamp":801145295288}
+{"Phase":"detach.completed","ElapsedMs":1437677.5042,"Thread":2,"Dirty":null,"Timestamp":801145315494}
+{"Phase":"window.closed","ElapsedMs":1437821.6274,"Thread":2,"Dirty":null,"Timestamp":801146756756}
+{"Phase":"process.exit","ElapsedMs":1441121.5891,"Thread":1,"Dirty":null,"Timestamp":801179756371}

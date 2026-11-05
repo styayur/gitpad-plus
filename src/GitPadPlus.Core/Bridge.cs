@@ -115,9 +115,12 @@ public sealed class Bridge(VaultStore store,PackagedPlugin[]? packagedPlugins=nu
                 StateChanged?.Invoke("Saved");
                 return Element(saved);
             case "documents.delete":
+                if (HasUnsavedChanges) throw new InvalidOperationException("Save pending edits before moving a note to trash.");
                 var delete = Get<DeleteParams>(parameters);
                 store.Delete(delete.Id, delete.Revision);
                 return Element(true);
+            case "documents.trash": return Element(store.ListTrash());
+            case "documents.restore": return Element(store.Restore(Get<IdParams>(parameters).Id));
             case "documents.dirty":
                 HasUnsavedChanges = Get<bool>(parameters);
                 StateChanged?.Invoke(HasUnsavedChanges ? "Unsaved" : "Saved");

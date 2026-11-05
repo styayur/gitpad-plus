@@ -1,0 +1,83 @@
+# GitPad+ UI v1.1 closeout
+
+## Implemented
+
+Branch `ui/mobile-workflow-v1.1` starts from main `63070c81c99f90cd4e46a7ce4d700ace2d08b5fa`. The existing alpha tag and public prerelease predate this work. PR [#6](https://github.com/styayur/gitpad-plus/pull/6) isolates the mobile workflow, recoverable trash and exit diagnostics. This report distinguishes development-probe acceptance from release qualification.
+
+Mobile writing keeps the existing editable title and one action row. Calendar, Settings, Save, Image and More share that row; Settings and Image overflow below 361px. Calendar offers Back to writing. The existing plugin-owned command strip docks to the resized viewport with status above it. Native Resize and SafeArea own IME compensation. Formatting follows the last focused editor without rebuilding it. The secondary pane has compact mobile Save/Close controls and status in the footer.
+
+Note rows expose an explicit trash action after 48px leftward touch movement. The action is 88px wide. Vertical intent cancels tracking, and the first 24px screen edge remains available for system navigation. Only one row expands. Keyboard focus offers the same action. A live gesture ref handles pointer move/up delivered within one React render turn; a real native swipe failure exposed the previous rendered-state race. Recycling closes matching tabs/panes and offers ten-second Undo. Settings has persistent Trash and per-note Restore. Dirty, Saving and SaveError states block recycling, and native deletion checks dirty state and revision. Navigation responses predating recycling cannot reopen the deleted note.
+
+Core adds shell RPCs `documents.trash` and `documents.restore` within protocol v1. Plugin capability allowlists are unchanged. Restore copies original source bytes, validates IDs and raw hashes, retains durable restore intent, completes interrupted operations before deletion recovery, and commits by moving the entire transaction folder into a retained restored archive. An exact replay after source commit but before index acknowledgement can rebuild the disposable index and return the original note. Changed active targets remain conflicts.
+
+Windows adds optional `GITPAD_EXIT_TRACE` phase and dispatcher measurements. Tracing is disabled normally and records no document text or credentials. The sampler observes visibility and waits for the OS process handle to signal, records build hashes, UTC/monotonic clock correlation and observer lag, and computes median/nearest-rank P95/maximum. A startup window handle can change, so visibility is armed only after a visible current handle is observed. No shutdown kill, skipped save or fixed-delay workaround was added. No operational exit-latency fix is claimed.
+
+## Automated Tested
+
+- Current local TypeScript, ESLint, 52 Vitest and 23 release/provenance/transport tests passed.
+- Core 51 passed, including exact source pairs and anchors, repeated restore/restart, simulated interrupted stages, conflicting targets, unrelated-note startup, retry after committed restore, and actual RPC rejection of dirty/stale/duplicate deletes with safe restore replay.
+- Four real restore subprocess terminations passed at `RestoreStaged`, `RestoreMarkdownReplaced`, `RestoreSidecarReplaced` and `RestoreCommitted`. Each fixture contains Unicode prose, a block UUID, a selection anchor and a tag. Restart recovered identical Markdown/sidecar bytes and the original indexed identity. This probe is now part of portable CI. [Process evidence](docs/design/calm-precision/ui-v11/restore-process-faults.json)
+- The focused batched-pointer browser regression passed. The test protects the native-discovered swipe race.
+- A focused background-tab recycle/restart test passed: the active editor instance and source stayed intact, the removed tab disappeared, calendar/search counts updated, Undo restored the original note, and workspace restart retained the active page without reopening the recycled tab.
+- CI [41992453693](https://github.com/styayur/gitpad-plus/actions/runs/41992453693) passed at checkpoint `427b695`, with 47 Playwright, 49 Core, 52 Vitest and 23 release/provenance/transport tests plus Windows compilation and source-built Win2D drawing. The later `cc0d9d5` portable job also passed, including 48 browser cases and the real restore subprocess probe. The current browser suite has 49 tests. Complete CI must include the additional RPC/background-tab regressions; final-head results are tracked in the [PR checks](https://github.com/styayur/gitpad-plus/pull/6/checks), and older checkpoints are not substitutes.
+- Earlier local browser failures remain recorded: an image-case context teardown timeout after 44 passes (focused rerun passed), an early second-pane recycle attempted before its initial save (both safety cases passed after correcting setup), and a loopback navigation/startup timeout in a later focused run. Timeout limits were not raised to hide failures.
+- The updated Windows development build compiled with zero warnings/errors. Android product probe 3 and test instrumentation compiled and passed signature checks. Instrumentation is a separate test-only APK and must never be distributed as a product asset.
+
+Local detailed logs are retained under `artifacts/ui-v11-*` and the dedicated acceptance root `E:\GitPadPlus-Acceptance\ui-v11-20261105`. Final-head CI and final release-package checks remain separate.
+
+## Native Verified
+
+### Android
+
+API 36 / Android 16 x86_64 AVD `GitPadPlus_API36_Pixel7`, actual installed signed Release configuration, development stamp and non-AOT probe scope. Probe 3 is 19,133,707 bytes, SHA-256 `7ea54ca1d245a253cb600d28be3105e25166a16e37362751cbe191925d2bd55e`. The installed `base.apk` hash matched. Certificate SHA-256 remains `4fe4a85c853243d9d7c1b0dc421b5786f1bb89a91f22f8c691fe6840824e9fd0`. [Build identity](docs/design/calm-precision/ui-v11/android-probe3-build-info.json)
+
+- Probe 2 passed actual 320px/393px single- and two-pane layout checks, including compact secondary controls, menu dismissal, real IME insets and zero CSS-pixel toolbar/viewport gap. At 320px, full viewport 716px became 457px with IME, leaving a 285px primary writing body. At 393px, 708px became 433px with a 261px body. Calendar targets were at least 44px. [320 geometry](docs/design/calm-precision/ui-v11/android-probe2-320-ui-design.json), [393 split geometry](docs/design/calm-precision/ui-v11/android-probe2-393-ui-two-pane.json)
+- Probe 3 passed real native vertical/short/complete swipes, explicit recycle, Undo, a second recycle, and Settings/Trash Restore. Raw Markdown and sidecar hashes before and after restoration were equal; the full loaded note, identity and metadata were equal. [Trash report](docs/design/calm-precision/ui-v11/android-probe3-trash.json), [Undo frame](docs/design/calm-precision/ui-v11/trash-native-recycled.png), [restored Trash frame](docs/design/calm-precision/ui-v11/trash-native-restored.png)
+- Probe 3 passed native Bold touch with an active selection and visible IME. The text selection and editor instance survived, the toolbar stayed at the keyboard edge, selection links reconstructed correctly, and official toolbar disable/reactivate disposed/recreated its commands. Native folds, image decoding, source peek, persisted anchors and SQLite search also passed. The selection was established by the test before native touch, so this does not qualify Android selection-handle dragging. [Feature report](docs/design/calm-precision/ui-v11/android-probe3-features.json)
+- Probe 3 passed four long-writing cases: 320px/393px, single/two-pane. Real native paste entered 201 paragraphs with Chinese, English, punctuation and newlines. The collapsed DOM caret remained in the final paragraph, visibly above status, with one toolbar at the actual IME edge. [320 split report](docs/design/calm-precision/ui-v11/320-writing-end-two-pane.json), [320 split frame](docs/design/calm-precision/ui-v11/320-writing-end-two-pane.png), [393 frame](docs/design/calm-precision/ui-v11/393-writing-end.png)
+- Probe 3 passed fresh smoke, process restart, Activity recreation and background/resume with source content, block identities and plugin identity retained. [Smoke](docs/design/calm-precision/ui-v11/smoke.json), [restart](docs/design/calm-precision/ui-v11/smoke-restart.json), [recreation](docs/design/calm-precision/ui-v11/smoke-recreate.json), [resume](docs/design/calm-precision/ui-v11/smoke-resume.json)
+
+Failures were retained rather than overwritten. The initial probe-3 attempt timed out during cold WebView evaluation; the next input was blocked by a real Android System UI ANR dialog. A normal emulator reboot cleared that environment failure. Later test-only failures used an unavailable editor-internal view property, created a secondary note without refreshing UI choices, or started single-pane smoke with a restored split workspace. The harness now measures the DOM caret, creates fixtures through the existing UI and waits for split closure persistence. Corrected runs passed. [Retained attempts](docs/design/calm-precision/ui-v11/retained-failures)
+
+Rendered review followed `interface-design` against the saved native frames and the existing Calm Precision tokens. The date track, plain note rows, quiet writing surface, compact title/actions and single command strip remain consistent. Status and Trash dialogs use the same surfaces and hierarchy. Native clipboard preview overlays visible in some frames belong to Android and are not product chrome. No new palette, decorative cards or global redesign was introduced. These are inspected development frames, not final-package visual acceptance.
+
+### Windows
+
+Computer Use clicked the real native X after a fresh target/screenshot observation. The user's later explicit Computer Use instruction superseded the earlier operator-only handoff. No terminal, browser, Codex or authentication UI was controlled. All vaults were synthetic.
+
+The corrected idle-host run used Windows build 26200, 16 logical processors, approximately 10.6 GiB initially free RAM and 1% captured CPU load. Android and builds were stopped. Product assembly SHA-256 `dab032b0661dd0ecbf2f392d79e6f30a1c4b52761c89c4552b1821cefe7d2956`. Each scenario retains its own environment, source hashes, trace and samples. The table measures the native close event to the kernel exit timestamp; physical mouse dispatch time is outside that boundary.
+
+| Scenario | Runs | Median ms | P95 ms | Max ms |
+|---|---:|---:|---:|---:|
+| Empty | 5 | 444.65 | 508.98 | 508.98 |
+| Ordinary note, plugins enabled | 3 | 509.45 | 540.01 | 540.01 |
+| 10,000 source paragraphs | 3 | 256.09 | 281.40 | 281.40 |
+| Two panes | 3 | 601.92 | 652.24 | 652.24 |
+| 40 references to one small image | 5 | 481.54 | 736.37 | 736.37 |
+| Official plugins disabled | 3 | 500.85 | 567.99 | 567.99 |
+
+All 22 exit codes were zero, each had one close request, visibility was observed in every case, and all repeated-run Markdown/sidecar hashes were unchanged. Native close-event to `window.closed` was at most 24.58ms. These small sample sizes do not establish a population tail percentile. The image workload is 40 references to one small PNG, not 40 large independent photos. One image run captured the app and six owned WebView2 processes before closing; all seven were absent at the post-close observation. [Summary](docs/design/calm-precision/ui-v11/windows-exit-kernel/summary.json), [source pairs](docs/design/calm-precision/ui-v11/windows-exit-kernel/source-pair-comparison.json), [process-tree check](docs/design/calm-precision/ui-v11/windows-exit-kernel/images/process-tree-after-run3.json)
+
+The initial pre-load image-fixture hashes differed from the later saved pair; that first comparison is retained as changed. The corrected repeated-run evidence starts from the saved pair and makes no unchanged-byte claim for the first image initialization. The first recent-edit attempts had already auto-saved by the actual close event, so they do not qualify pending-save shutdown. The separate locked-source rounds establish that coverage with `Dirty=true` in the native trace.
+
+Three additional real native save-failure/retry rounds held an exclusive read lock on the synthetic source file. Editing produced visible SaveError. X kept the window and unsaved buffer open. Releasing the lock and clicking X again requested a flush with `Dirty=true`, received `save.flushed` with `Dirty=false`, and exited normally. The three recovery flushes took 810.50/728.16/910.20ms; retry-to-kernel-exit took 1287.56/1178.32/1385.58ms. Deliberate lock/operator waiting time is excluded from those recovery timings and must not be treated as shutdown performance. Restart through Core preserved all three inserted markers, the original prose (comparison ignores whitespace after marker removal), metadata, document/block UUIDs, valid source-pair hashes and searchable index. No pending save transaction was created while reads were blocked. [Recovery timings](docs/design/calm-precision/ui-v11/windows-save-blocked-recovery/recovery-timings.json), [integrity](docs/design/calm-precision/ui-v11/exit-save-blocked-integrity.json), [SaveError frame](docs/design/calm-precision/ui-v11/windows-save-error-blocks-exit.png)
+
+The earlier samples include a 3835.90ms empty close and a 2614.84ms image close. They are retained. The first sampler used `HasExited`, could capture an initial hidden handle, and did not separate observer scheduling from the kernel timestamp. A calibration attempt also returned zero/1601 kernel exit times and is invalid for kernel-distribution claims. Correcting the observer is not an application latency fix. The corrected run did not reproduce the multi-second tail. The old slow traces place much of the delay after native window closure, and one after the managed `ProcessExit` record; this does not establish which native/runtime teardown or host-load condition caused it. Dispatcher summaries cover the observed app lifetime, including startup, and do not prove every close-path stall is absent. [Early sample](docs/design/calm-precision/ui-v11/windows-exit-baseline/earliest-empty-sample.json), [old image trace](docs/design/calm-precision/ui-v11/windows-exit-baseline/images-slow-trace.jsonl)
+
+## Not Verified
+
+- The reported intermittent multi-second Windows exit cause is unresolved. No application performance fix, eliminated UI-thread stall, production percentile or before/after improvement is claimed. A reproducible slow event with native/runtime profiling remains needed before choosing a teardown change.
+- Physical mouse dispatch latency, exhaustive WebView2 residue across every run, sustained repeated-close reentrancy, and save completion under every external conflict were not established by these samples.
+- Chinese IME composition, Android selection-handle dragging, rotation, three-button navigation, all accessibility/font scaling combinations and physical-device performance remain unverified. Clipboard Unicode input has a narrower scope.
+- Final universal AOT Android and distributable Windows packages from an accepted exact main SHA remain unqualified. Development probes do not satisfy final package provenance/runtime gates.
+- Final exact-main source/license/security evidence and full 17-gate package qualification must bind to the final packages. Branch CI and initial checkpoint results are not substitutes for exact-main release evidence.
+
+## Blocked
+
+There is no current desktop-input authorization blocker. Native tests use synthetic vaults and the existing signing identity. Publication remains gated by final source/package qualification and the unresolved Windows long-tail investigation. No release approval is inferred from development-probe success.
+
+## Release Impact
+
+Both affected platform packages and their native evidence must be regenerated after final integration. The existing public alpha assets and annotated tag remain tied to their earlier accepted source. Do not replace them with branch probes or retag that release.
+
+The 17 release gates remain authoritative for the next accepted package set: source, reproducible builds, signatures, native runtime/features, source fidelity, anchors/recovery, plugins, safe clear, security, licenses/provenance and downloaded asset verification must remain traceable. This mission does not authorize a new tag or public Release. The already published alpha version requires explicit future version/publication handling.

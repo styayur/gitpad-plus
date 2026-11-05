@@ -50,7 +50,7 @@ Depth strategy: opaque surface steps for functional content. Only transient menu
 
 ## Responsive behavior and accessibility
 
-At <=760px, one-column workspace with calendar navigation toggled by Calendar. Opening a note focuses the writing view; returning to dates is explicit. Header uses two compact rows. Tabs/formatting scroll horizontally, title/actions stay compact, body padding 20px. Layout uses dynamic viewport height and `interactive-widget=resizes-content` with Android AdjustResize. Keyboard-visible viewport retains scrollable editor and reachable toolbar, never hides commands permanently. Do not imitate software keyboard using an image or claim browser emulation as native Android evidence.
+At <=760px, one-column workspace with calendar navigation toggled by Calendar. Opening a note focuses the writing view; returning to dates is explicit. Browsing keeps date navigation, while writing uses one editable-title/action row without the brand header. Tabs/formatting scroll horizontally, title/actions stay compact, body padding 20px. Layout uses dynamic viewport height and `interactive-widget=resizes-content` with Android AdjustResize. Keyboard-visible viewport retains scrollable editor and reachable toolbar, never hides commands permanently. Do not imitate software keyboard using an image or claim browser emulation as native Android evidence.
 
 All controls: hover, pressed, focus-visible, disabled. Focus 2px with offset, visible in high contrast. Dialog semantics, form labels, real buttons/select/details. Calendar arrow keys move by day/week, Home/End within week, PageUp/PageDown month, Enter/Space select. Note selection uses aria-current. Overflow regions remain keyboard scrollable. Loading and errors remain textual/live; no fake status. Honor zoom and 320px widths; preserve usable editor line width at 1366/1920 screens and 100/125/150/200% browser scaling. Native DPI and software keyboard require actual native checks, separately documented from browser coverage.
 
@@ -65,3 +65,25 @@ Android requires the application-level MAUI WindowSoftInputModeAdjust.Resize pol
 ## Review discipline
 
 Methodology: Dammyjay93/interface-design at 2f9be3206855bcb2d1d0af262c8bae25cba6658d; read SKILL.md plus design-review and design-deslop commands. It supplies the review lenses, not a dashboard template. Screenshots must be actual application output. Review focal point, typography/color, surface/depth, composition, states, and reuse independently; record findings and fixes, with untested/native limits explicit. No stock moodboard, decorative artwork or fabricated runtime screenshot is needed for this writing tool.
+
+## Mobile workflow v1.1, in progress
+
+On writing widths up to 760 CSS px, use the existing editable title as the single
+document heading, with Calendar, Settings, Save, Image and More in its action row.
+At 360px and below, Settings and Image move into More. Calendar and Save retain
+44px targets. Browsing provides Back to writing when a document is open.
+
+The existing plugin-owned formatting strip docks to the bottom of the resized
+viewport. A 48px reserved strip keeps the shell status immediately above it.
+Native SafeArea and AdjustResize own keyboard compensation. CSS adds no keyboard
+height or second native inset. Commands target the editor that most recently
+received focus, preserving its instance and selection.
+
+A note row reveals an 88px trash action after a leftward touch of at least 48px.
+The first 24px at the screen edge is reserved for system navigation. Vertical
+intent cancels the gesture. Recycling requires the explicit trash action.
+Keyboard focus reveals the same action. Undo remains available for ten seconds,
+and Settings exposes persistent Trash and Restore. The signed development probe
+has passed actual Android touch reveal, short/vertical gesture protection, Undo
+and persistent Trash restore with equal raw Markdown and sidecar hashes. This
+qualifies the observed development probe, not a final release package.

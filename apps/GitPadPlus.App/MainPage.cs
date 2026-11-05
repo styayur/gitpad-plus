@@ -88,9 +88,11 @@ public sealed class MainPage : ContentPage
         bridge.StateChanged+=stateChanged;
         detach=()=>{attached=false;ActivationRouter.Changed-=Activate;bridge.StateChanged-=stateChanged;
 #if WINDOWS
+            ExitDiagnostics.Record("detach.started");
             nativeFileDrop.Dispose();
             appearanceReady=false;
             appearance?.Dispose();
+            ExitDiagnostics.Record("detach.completed");
 #endif
         };
         try{ApplyTheme();}catch(Exception ex)when(ex is IOException or JsonException){/* Settings RPC reports retained corrupt data without blocking the editor. */}
