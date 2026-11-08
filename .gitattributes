@@ -5,3 +5,5 @@ third-party/win2d/LICENSE.txt -whitespace linguist-vendored
 third-party/win2d/notices/** -whitespace linguist-vendored
 third-party/win2d/build-evidence/*.log.txt -whitespace
 third-party/win2d/feed/*.nupkg linguist-vendored
+
+.github/workflows/*.lock.yml linguist-generated=true
