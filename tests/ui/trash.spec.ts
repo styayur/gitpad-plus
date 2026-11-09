@@ -36,8 +36,11 @@ test('recycling the second pane closes that pane and undo keeps the first docume
   await page.locator('.open-note').filter({hasText:first.header.title}).click();
   await page.getByRole('combobox',{name:'Open beside',exact:true}).selectOption(second.header.id);
   await expect(page.locator('.ProseMirror')).toHaveCount(2);
+  await expect(page.getByText('Loading editor…',{exact:true})).toHaveCount(0);
+  await page.getByRole('button',{name:'Save',exact:true}).click();
   await page.getByRole('button',{name:'Save second pane',exact:true}).click();
   await expect(page.locator('.secondary-pane [role=status]')).toContainText('Saved');
+  await expect(page.locator('footer [role=status]')).toHaveText('Local: Saved');
   const row=page.locator('.note-row').filter({hasText:second.header.title});
   await row.locator('.recycle-note').focus();
   await row.locator('.recycle-note').press('Enter');
@@ -69,15 +72,21 @@ test('recycling a background tab preserves the active editor and survives worksp
   const active=await call(request,'documents.create',{date,title:'Active retained fixture'});
   await page.goto('/');
   await page.locator('.open-note').filter({hasText:background.header.title}).click();
+  await expect(page.getByRole('tab',{selected:true})).toHaveAttribute('title',background.header.id);
+  await expect(page.getByText('Loading editor…',{exact:true})).toHaveCount(0);
   await page.locator('.ProseMirror').fill('Background original 中文');
   await page.getByRole('button',{name:'Save',exact:true}).click();
   await expect(page.locator('footer [role=status]')).toContainText('Saved');
   const original=await call(request,'documents.load',{id:background.header.id});
+  expect(original.body).toContain('Background original 中文');
   await page.locator('.open-note').filter({hasText:active.header.title}).click();
+  await expect(page.getByRole('tab',{selected:true})).toHaveAttribute('title',active.header.id);
+  await expect(page.getByText('Loading editor…',{exact:true})).toHaveCount(0);
   await page.locator('.ProseMirror').fill('Active writing stays connected');
   await page.getByRole('button',{name:'Save',exact:true}).click();
   await expect(page.locator('footer [role=status]')).toContainText('Saved');
   const activeBefore=await call(request,'documents.load',{id:active.header.id});
+  expect(activeBefore.body).toContain('Active writing stays connected');
   const activeEditor=await page.locator('.ProseMirror').elementHandle();
   const row=page.locator('.note-row').filter({hasText:background.header.title});
   await row.locator('.recycle-note').focus();await row.locator('.recycle-note').press('Enter');
@@ -94,4 +103,25 @@ test('recycling a background tab preserves the active editor and survives worksp
   await expect(page.getByRole('tab',{selected:true})).toHaveAttribute('title',active.header.id);
   await expect(page.getByRole('tab').filter({hasText:background.header.title})).toHaveCount(0);
   await expect(page.locator('.ProseMirror')).toContainText('Active writing stays connected');
+});
+
+test('a failed restore explains its cause inside the active trash dialog',async({page,request})=>{
+  await page.setViewportSize({width:320,height:640});
+  const note=await call(request,'documents.create',{date:fixtureDate(),title:'Retained restore failure'});
+  await call(request,'documents.delete',{id:note.header.id,revision:note.sidecar.revision});
+  await page.goto('/');
+  await page.getByRole('button',{name:'Settings',exact:true}).click();
+  await page.getByRole('button',{name:'Trash',exact:true}).click();
+  const trash=page.getByRole('dialog',{name:'Trash',exact:true});
+  await page.route('**/rpc',async route=>{
+    const data=route.request().postDataJSON();
+    if(data.method!=='documents.restore'){await route.continue();return;}
+    await route.fulfill({json:{protocolVersion:1,requestId:data.requestId,result:null,error:{code:'Conflict',message:'A note with this identity already exists in the active vault. Both versions were retained.'}}});
+  });
+  await trash.getByRole('button',{name:'Restore '+note.header.title,exact:true}).click();
+  await expect(trash.getByRole('alert')).toContainText('active vault');
+  await expect(trash.getByRole('alert')).toBeInViewport();
+  await expect(trash.getByRole('button',{name:'Restore '+note.header.title,exact:true})).toBeVisible();
+  expect((await call(request,'documents.trash')).map((item:{id:string})=>item.id)).toContain(note.header.id);
+  await page.screenshot({path:'artifacts/ui-v11-trash-restore-error-320.png'});
 });

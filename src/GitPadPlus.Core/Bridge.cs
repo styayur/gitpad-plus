@@ -73,11 +73,13 @@ public sealed class Bridge(VaultStore store,PackagedPlugin[]? packagedPlugins=nu
     public string Handle(string json)
     {
         string id = "invalid";
+        string method = "invalid";
         try
         {
             if (json.Length > 24_000_000) throw new ArgumentException("Message exceeds limit.");
             var request = JsonSerializer.Deserialize<RpcRequest>(json, Options) ?? throw new ArgumentException("Invalid request.");
             id = request.RequestId;
+            method = request.Method;
             if (request.ProtocolVersion != Version || string.IsNullOrWhiteSpace(id) || id.Length > 100) throw new ArgumentException("Invalid protocol version or request ID.");
             var result = Dispatch(request.Method, request.Params);
             return JsonSerializer.Serialize(new RpcResponse(Version, id, result, null), ProtocolJson.Default.RpcResponse);
@@ -86,7 +88,15 @@ public sealed class Bridge(VaultStore store,PackagedPlugin[]? packagedPlugins=nu
         {
             var code = ex switch { RevisionConflictException => "Conflict", RecoveryRequiredException => "RecoveryRequired", UnauthorizedAccessException => "Forbidden", IOException => "StorageError", _ => "InvalidRequest" };
             // Do not leak filesystem paths or raw exception details to the WebView.
-            return JsonSerializer.Serialize(new RpcResponse(Version, id, null, new(code, code == "Conflict" ? "Stale revision; reload before saving." : code + ": operation rejected; data retained.")), ProtocolJson.Default.RpcResponse);
+            var message = (method, code) switch
+            {
+                ("documents.restore", "Conflict") => "A note with this identity already exists in the active vault. Both versions were retained.",
+                ("documents.restore", "RecoveryRequired") => "Restore needs recovery review: retained data or its destination has changed. Copies were retained.",
+                ("documents.restore", "StorageError") => "Could not read or write the restored note. Copies were retained; resolve the storage problem before retrying.",
+                (_, "Conflict") => "Stale revision; reload before saving.",
+                _ => code + ": operation rejected; data retained."
+            };
+            return JsonSerializer.Serialize(new RpcResponse(Version, id, null, new(code, message)), ProtocolJson.Default.RpcResponse);
         }
     }
     private JsonElement Dispatch(string method, JsonElement parameters)

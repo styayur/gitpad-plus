@@ -39,6 +39,7 @@ function App() {
   const [calendarOpen,setCalendarOpen]=useState(true);
   const [expandedNote,setExpandedNote]=useState<string|null>(null);
   const [trash,setTrash]=useState<Summary[]|null>(null),[undoId,setUndoId]=useState<string|null>(null);
+  const [trashError,setTrashError]=useState('');
   const recycling=useRef(false);
   const [recyclingNote,setRecyclingNote]=useState(false);
   useEffect(()=>{setExpandedNote(null);},[calendarOpen,date,search]);
@@ -162,11 +163,12 @@ function App() {
     }catch(e){error(e);}finally{recycling.current=false;setRecyclingNote(false);}
   }
   async function restore(id:string) {
+    setTrashError('');
     try {
       await rpc.call('documents.restore',{id});
       setUndoId(null);await refresh();host.emit('documents.changed',{});
       if(trash)setTrash(await rpc.call<Summary[]>('documents.trash'));
-    }catch(e){error(e);}
+    }catch(e){if(trash)setTrashError(String(e));else error(e);}
   }
   async function copy(level:'note'|'block'|'selection') {try{const value=level==='note'&&session?`gitpadplus://note/${session.note.header.id}`:level==='block'?editor.current?.blockLink():editor.current?.selectionLink();if(!value)throw new Error('Select text inside one paragraph first');await flush();await navigator.clipboard.writeText(value);setMessage('Link copied');}catch(e){error(e);}}
   const upload=async(file:File)=>{if(file.size>16_000_000)throw new Error('Images must be at most 16 MB.');const bytes=new Uint8Array(await file.arrayBuffer());let binary='';for(let i=0;i<bytes.length;i+=8192)binary+=String.fromCharCode(...bytes.subarray(i,i+8192));return await rpc.call<string>('media.import',{filename:file.name,base64:btoa(binary)});};
@@ -200,7 +202,7 @@ function App() {
       {secondary&&<section className="secondary-pane" aria-label="Second document pane"><div className="note-heading"><input aria-label="Second note title" value={secondary.title} onChange={e=>secondary.rename(e.target.value)}/><span role="status">Local: {secondary.state}</span><button className="secondary-bold" onClick={()=>secondaryEditor.current?.command('bold')}>Bold in second pane</button><button className="secondary-save" aria-label="Save second pane" onClick={()=>void secondary.flush().catch(error)}><Icon name="save"/><span>Save second pane</span></button><button className="secondary-close" aria-label="Close second pane" onClick={()=>void(async()=>{try{await secondary.flush();secondary.dispose();secondaryRef.current=null;setSecondary(null);}catch(e){error(e);}})()}><span>Close second pane</span><b aria-hidden="true">×</b></button></div><Editor key={secondary.instanceId+':'+editorKey} session={secondary} settings={settings} handle={value=>{secondaryEditor.current=value;}} upload={upload} imageUrl={imageUrl} pasteImage={()=>rpc.call<string>('media.importClipboard')} pickImage={pickImage}/></section>}
 </main></div><footer><span className="local-state" data-state={session?.state??'Saved'} role="status">Local: {session?.state??'Saved'}</span><span className="git-state">Git: NotConfigured</span>{secondary&&<span className="mobile-only" data-state={secondary.state}>Second: {secondary.state} {secondary.error}</span>}<span>{session?.error}</span></footer>
     {undoId&&<div className="trash-snackbar" role="status">Moved to trash<button onClick={()=>void restore(undoId)}>Undo</button></div>}
-    {trash&&<Modal label="Trash" onClose={()=>setTrash(null)}><h2>Trash</h2>{trash.length===0?<p>Trash is empty.</p>:trash.map(note=><div key={note.id}><strong>{note.title||'Untitled'}</strong><time>{note.date}</time><button onClick={()=>void restore(note.id)}>Restore {note.title||'Untitled'}</button></div>)}<button onClick={()=>setTrash(null)}>Close trash</button></Modal>}
+    {trash&&<Modal label="Trash" onClose={()=>{setTrash(null);setTrashError('');}}><h2>Trash</h2>{trashError&&<p role="alert" className="dialog-error">{trashError}</p>}{trash.length===0?<p>Trash is empty.</p>:trash.map(note=><div key={note.id} className="trash-entry"><strong>{note.title||'Untitled'}</strong><time dateTime={note.date}>{note.date}</time><button onClick={()=>void restore(note.id)}>Restore {note.title||'Untitled'}</button></div>)}<button onClick={()=>{setTrash(null);setTrashError('');}}>Close trash</button></Modal>}
     {message&&<div className="message" role="alert">{message}<button aria-label="Dismiss message" onClick={()=>setMessage('')}>×</button></div>}
     {repairSelection&&<section aria-label="Selection link repair"><p>Original quote: {session?.selections.find(a=>a.id===repairSelection)?.exact}. If the location needs repair, select the intended text in one paragraph and explicitly rebind this link.</p><button onMouseDown={e=>e.preventDefault()} onClick={()=>void(async()=>{try{if(!editor.current?.repairSelection(repairSelection))throw new Error('Select replacement text in one paragraph first');await flush();setRepairSelection(null);setMessage('Selection link repaired.');}catch(e){error(e);}})()}>Rebind link to selected text</button><button onClick={()=>setRepairSelection(null)}>Close repair</button></section>}
     {issues.length>0&&<section aria-label="Recovery issues"><h2>Recovery</h2>{issues.map((issue,index)=><p key={index}>{issue.code} {issue.documentId}{issue.documentId&&<button onClick={()=>void rpc.call<Recovery>('recovery.inspect',{id:issue.documentId}).then(value=>{setRecovery(value);setRecoveryText(value.versions[0].markdown);}).catch(error)}>Compare retained versions</button>}</p>)}</section>}

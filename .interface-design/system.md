@@ -87,3 +87,9 @@ and Settings exposes persistent Trash and Restore. The signed development probe
 has passed actual Android touch reveal, short/vertical gesture protection, Undo
 and persistent Trash restore with equal raw Markdown and sidecar hashes. This
 qualifies the observed development probe, not a final release package.
+
+Trash uses plain rows with a 600-weight title and a separate 12px metadata date,
+4px apart. Restore failures appear inside the active dialog as a 13px live alert
+using `--notice-danger`. The modal owns that feedback so its top layer cannot
+hide a global toast; closing or retrying clears the local error. No extra cards
+or new surface/color tokens are introduced.

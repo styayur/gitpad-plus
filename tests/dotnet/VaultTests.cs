@@ -354,6 +354,30 @@ public sealed class VaultTests : IDisposable
         Assert.NotEqual(JsonValueKind.Null, JsonDocument.Parse(Call("app.previewClear", "{}")).RootElement.GetProperty("error").ValueKind);
         Assert.Contains("NotConfigured", Call("git.status", "{}"));
     }
+    [Fact] public void RestoreRpcExplainsIdentityConflictAndRetainsBothSourcePairs()
+    {
+        var store = Store();
+        var note = store.Create("2026-11-05", "Restore conflict RPC");
+        var markdown = File.ReadAllBytes(store.Safe("Journal", note.Header.Id + ".md"));
+        var sidecar = File.ReadAllBytes(store.Safe(".gitpad", "anchors", note.Header.Id + ".json"));
+        store.Delete(note.Header.Id, note.Sidecar.Revision);
+        File.WriteAllBytes(store.Safe("Journal", note.Header.Id + ".md"), markdown);
+        File.WriteAllBytes(store.Safe(".gitpad", "anchors", note.Header.Id + ".json"), sidecar);
+        var response = new Bridge(store).Handle(JsonSerializer.Serialize(new {
+            protocolVersion = 1, requestId = "restore-conflict", method = "documents.restore", @params = new { id = note.Header.Id }
+        }));
+        using var parsed = JsonDocument.Parse(response);
+        var error = parsed.RootElement.GetProperty("error");
+        Assert.Equal("Conflict", error.GetProperty("code").GetString());
+        Assert.Contains("active vault", error.GetProperty("message").GetString());
+        Assert.Contains("Both versions were retained", error.GetProperty("message").GetString());
+        Assert.DoesNotContain(Root, response);
+        Assert.Equal(markdown, File.ReadAllBytes(store.Safe("Journal", note.Header.Id + ".md")));
+        Assert.Equal(sidecar, File.ReadAllBytes(store.Safe(".gitpad", "anchors", note.Header.Id + ".json")));
+        Assert.Equal(markdown, File.ReadAllBytes(store.Safe(".gitpad", "trash", note.Header.Id.ToString(), "document.md")));
+        Assert.Equal(sidecar, File.ReadAllBytes(store.Safe(".gitpad", "trash", note.Header.Id.ToString(), "sidecar.json")));
+        Assert.Single(store.ListTrash());
+    }
     [Fact] public void TrashRpcRejectsDirtyAndStaleDeletesAndKeepsDuplicateRequestsSafe()
     {
         var store = Store();

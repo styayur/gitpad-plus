@@ -1,0 +1,14 @@
+[WebServer] (node:12316) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 5 tests using 1 worker
+
+(node:18244) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 1 tests\ui\trash.spec.ts:14:1 › a failed save blocks recycling and retains the open buffer (31.0s)
+  ok 2 tests\ui\trash.spec.ts:31:1 › recycling the second pane closes that pane and undo keeps the first document (9.8s)
+  ok 3 tests\ui\trash.spec.ts:55:1 › a complete swipe delivered within one render turn expands without recycling (3.8s)
+  ok 4 tests\ui\trash.spec.ts:69:1 › recycling a background tab preserves the active editor and survives workspace restart (9.6s)
+  ok 5 tests\ui\trash.spec.ts:108:1 › a failed restore explains its cause inside the active trash dialog (4.2s)
+
+  5 passed (2.0m)

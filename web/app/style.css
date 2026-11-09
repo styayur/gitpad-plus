@@ -123,6 +123,8 @@ footer{flex-shrink:0;display:flex;align-items:center;gap:24px;min-height:28px;pa
 .modal{color:var(--ink-primary);background:var(--page-overlay);border:1px solid var(--line-control);border-radius:12px;padding:0;max-width:min(600px,94vw);max-height:88dvh;box-shadow:var(--overlay-shadow)}
 .modal::backdrop{background:#10152266}.modal section{padding:28px;overflow-wrap:anywhere}.modal h2{font-size:23px;font-weight:600;letter-spacing:-.4px;margin:0 0 12px}.modal h3{font-size:14px;font-weight:600;margin:24px 0 8px}
 .modal p{font-size:13px;color:var(--ink-secondary);line-height:1.7}.modal .dialog-intro{margin-bottom:24px}
+.modal .dialog-error{color:var(--notice-danger)}
+.trash-entry{padding:12px 0}.trash-entry strong,.trash-entry time{display:block}.trash-entry strong{font-weight:600}.trash-entry time{font-size:12px;color:var(--ink-meta);margin-top:4px}
 .modal label{display:flex;align-items:center;justify-content:space-between;gap:24px;min-height:48px;font-size:13px}.modal label:has(input[type=checkbox]){justify-content:flex-start;gap:12px}.modal select{min-width:128px}
 .modal textarea{display:block;width:100%;min-height:180px;font-family:'Cascadia Code',Consolas,monospace}.modal label:has(textarea){display:block}.modal pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:12px}
 .modal button{margin:8px 8px 0 0}.modal section>button:first-of-type{background:var(--date-accent);color:var(--date-accent-ink);border-color:transparent}.modal[role=alertdialog] section>button:first-of-type{background:var(--notice-danger);color:var(--page-paper)}
