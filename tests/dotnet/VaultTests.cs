@@ -13,6 +13,93 @@ public sealed class VaultTests : IDisposable
     private static SaveRequest Edit(Note note, string body, BlockAnchor[]? blocks = null, SelectionAnchor[]? selections = null) => new(note.Header.Id, body, note.Header.Title, note.Header.Tags, note.Sidecar.Revision, note.Sidecar.ContentHash, blocks ?? [], selections ?? []);
     public void Dispose() { if (Directory.Exists(parent)) Directory.Delete(parent, true); }
 
+    [Theory]
+    [InlineData("RestoreStaged")]
+    [InlineData("RestoreMarkdownReplaced")]
+    [InlineData("RestoreSidecarReplaced")]
+    public void RestoreCrashRetainsExactSourcePair(string phase)
+    {
+        var store = Store();
+        var first = store.Create("2026-11-05", "Restore 中文");
+        var block = new BlockAnchor(Guid.CreateVersion7(), "paragraph", 0, 7);
+        var selection = new SelectionAnchor(Guid.CreateVersion7(), block.Id, "中文", "", "", 0, 2);
+        var saved = store.Save(Edit(first, "中文 test", [block], [selection]));
+        var markdown = File.ReadAllBytes(store.Safe("Journal", saved.Header.Id + ".md"));
+        var sidecar = File.ReadAllBytes(store.Safe(".gitpad", "anchors", saved.Header.Id + ".json"));
+        store.Delete(saved.Header.Id, saved.Sidecar.Revision);
+        Assert.Empty(store.List());
+        Assert.Single(Store().ListTrash());
+        var interrupted = Store(point => { if (point == phase) throw new IOException("Simulated restore interruption"); });
+        Assert.Throws<IOException>(() => interrupted.Restore(saved.Header.Id));
+        var recovered = Store();
+        Assert.Empty(recovered.ListTrash());
+        Assert.Single(recovered.List("2026-11-05", "test"));
+        Assert.Equal(markdown, File.ReadAllBytes(recovered.Safe("Journal", saved.Header.Id + ".md")));
+        Assert.Equal(sidecar, File.ReadAllBytes(recovered.Safe(".gitpad", "anchors", saved.Header.Id + ".json")));
+        Assert.Equivalent(saved, recovered.Load(saved.Header.Id));
+    }
+
+    [Fact] public void TrashRestoreSurvivesRepeatedRoundTripsAndRestart()
+    {
+        var store = Store();
+        var note = store.Create("2026-11-05", "Round trip");
+        var raw = File.ReadAllBytes(store.Safe("Journal", note.Header.Id + ".md"));
+        var metadata = File.ReadAllBytes(store.Safe(".gitpad", "anchors", note.Header.Id + ".json"));
+        for (var round = 0; round < 2; round++)
+        {
+            store.Delete(note.Header.Id, note.Sidecar.Revision);
+            store = Store();
+            Assert.Single(store.ListTrash());
+            Assert.Equivalent(note, store.Restore(note.Header.Id));
+            store = Store();
+            Assert.Empty(store.ListTrash());
+            Assert.Single(store.List());
+            Assert.Equal(raw, File.ReadAllBytes(store.Safe("Journal", note.Header.Id + ".md")));
+            Assert.Equal(metadata, File.ReadAllBytes(store.Safe(".gitpad", "anchors", note.Header.Id + ".json")));
+        }
+    }
+
+    [Fact] public void InterruptedRestoreConflictRetainsCopiesAndAllowsOtherNotesToLoad()
+    {
+        var store = Store();
+        var note = store.Create("2026-11-05", "Interrupted target");
+        var other = store.Create("2026-11-05", "Unaffected note");
+        store.Delete(note.Header.Id, note.Sidecar.Revision);
+        var interrupted = Store(point => { if (point == "RestoreMarkdownReplaced") throw new IOException("Stop"); });
+        Assert.Throws<IOException>(() => interrupted.Restore(note.Header.Id));
+        File.WriteAllText(store.Safe("Journal", note.Header.Id + ".md"), "external conflict");
+        var reopened = Store();
+        Assert.Contains(reopened.RecoveryIssues, issue => issue.Code == "RestoreConflict");
+        Assert.Single(reopened.ListTrash());
+        Assert.Equivalent(other, reopened.Load(other.Header.Id));
+        Assert.Throws<RecoveryRequiredException>(() => reopened.Restore(note.Header.Id));
+        Assert.Equal("external conflict", File.ReadAllText(reopened.Safe("Journal", note.Header.Id + ".md")));
+    }
+
+    [Fact] public void RestoreCanRetryAfterSourceCommitBeforeIndexAcknowledgement()
+    {
+        var store = Store();
+        var note = store.Create("2026-11-05", "Committed restore");
+        store.Delete(note.Header.Id, note.Sidecar.Revision);
+        var interrupted = Store(point => { if (point == "RestoreCommitted") throw new IOException("Lost acknowledgement"); });
+        Assert.Throws<IOException>(() => interrupted.Restore(note.Header.Id));
+        Assert.Equivalent(note, interrupted.Restore(note.Header.Id));
+        Assert.Single(interrupted.List());
+        Assert.Empty(interrupted.ListTrash());
+        Assert.Equivalent(note, Store().Load(note.Header.Id));
+    }
+
+    [Fact] public void RestoreRejectsConflictingActiveSource()
+    {
+        var store = Store();
+        var note = store.Create("2026-11-05", "Restore conflict");
+        store.Delete(note.Header.Id, note.Sidecar.Revision);
+        File.WriteAllText(store.Safe("Journal", note.Header.Id + ".md"), "external conflict");
+        Assert.Throws<RevisionConflictException>(() => store.Restore(note.Header.Id));
+        Assert.Equal("external conflict", File.ReadAllText(store.Safe("Journal", note.Header.Id + ".md")));
+        Assert.Single(store.ListTrash());
+    }
+
     [Fact] public void CreateSaveReloadAndSearch()
     {
         var store = Store();
@@ -266,6 +353,68 @@ public sealed class VaultTests : IDisposable
         Assert.True(bridge.HasUnsavedChanges);
         Assert.NotEqual(JsonValueKind.Null, JsonDocument.Parse(Call("app.previewClear", "{}")).RootElement.GetProperty("error").ValueKind);
         Assert.Contains("NotConfigured", Call("git.status", "{}"));
+    }
+    [Fact] public void RestoreRpcExplainsIdentityConflictAndRetainsBothSourcePairs()
+    {
+        var store = Store();
+        var note = store.Create("2026-11-05", "Restore conflict RPC");
+        var markdown = File.ReadAllBytes(store.Safe("Journal", note.Header.Id + ".md"));
+        var sidecar = File.ReadAllBytes(store.Safe(".gitpad", "anchors", note.Header.Id + ".json"));
+        store.Delete(note.Header.Id, note.Sidecar.Revision);
+        File.WriteAllBytes(store.Safe("Journal", note.Header.Id + ".md"), markdown);
+        File.WriteAllBytes(store.Safe(".gitpad", "anchors", note.Header.Id + ".json"), sidecar);
+        var response = new Bridge(store).Handle(JsonSerializer.Serialize(new {
+            protocolVersion = 1, requestId = "restore-conflict", method = "documents.restore", @params = new { id = note.Header.Id }
+        }));
+        using var parsed = JsonDocument.Parse(response);
+        var error = parsed.RootElement.GetProperty("error");
+        Assert.Equal("Conflict", error.GetProperty("code").GetString());
+        Assert.Contains("active vault", error.GetProperty("message").GetString());
+        Assert.Contains("Both versions were retained", error.GetProperty("message").GetString());
+        Assert.DoesNotContain(Root, response);
+        Assert.Equal(markdown, File.ReadAllBytes(store.Safe("Journal", note.Header.Id + ".md")));
+        Assert.Equal(sidecar, File.ReadAllBytes(store.Safe(".gitpad", "anchors", note.Header.Id + ".json")));
+        Assert.Equal(markdown, File.ReadAllBytes(store.Safe(".gitpad", "trash", note.Header.Id.ToString(), "document.md")));
+        Assert.Equal(sidecar, File.ReadAllBytes(store.Safe(".gitpad", "trash", note.Header.Id.ToString(), "sidecar.json")));
+        Assert.Single(store.ListTrash());
+    }
+    [Fact] public void TrashRpcRejectsDirtyAndStaleDeletesAndKeepsDuplicateRequestsSafe()
+    {
+        var store = Store();
+        var first = store.Create("2026-11-05", "RPC recovery 中文");
+        var block = new BlockAnchor(Guid.CreateVersion7(), "paragraph", 0, 5);
+        var note = store.Save(Edit(first, "hello", [block]));
+        var markdown = File.ReadAllBytes(store.Safe("Journal", note.Header.Id + ".md"));
+        var sidecar = File.ReadAllBytes(store.Safe(".gitpad", "anchors", note.Header.Id + ".json"));
+        var bridge = new Bridge(store);
+        JsonElement Call(string method, object parameters)
+        {
+            using var response = JsonDocument.Parse(bridge.Handle(JsonSerializer.Serialize(new {
+                protocolVersion = 1, requestId = Guid.NewGuid().ToString(), method, @params = parameters
+            })));
+            return response.RootElement.Clone();
+        }
+        Call("documents.dirty", true);
+        var dirty = Call("documents.delete", new { id = note.Header.Id, revision = note.Sidecar.Revision });
+        Assert.Equal("InvalidRequest", dirty.GetProperty("error").GetProperty("code").GetString());
+        Assert.Single(store.List()); Assert.Empty(store.ListTrash());
+        Call("documents.dirty", false);
+        var stale = Call("documents.delete", new { id = note.Header.Id, revision = first.Sidecar.Revision });
+        Assert.Equal("Conflict", stale.GetProperty("error").GetProperty("code").GetString());
+        Assert.Equal(markdown, File.ReadAllBytes(store.Safe("Journal", note.Header.Id + ".md")));
+        Assert.Equal(JsonValueKind.Null, Call("documents.delete", new { id = note.Header.Id, revision = note.Sidecar.Revision }).GetProperty("error").ValueKind);
+        var duplicate = Call("documents.delete", new { id = note.Header.Id, revision = note.Sidecar.Revision });
+        Assert.NotEqual(JsonValueKind.Null, duplicate.GetProperty("error").ValueKind);
+        Assert.Empty(store.List());
+        Assert.Single(Call("documents.trash", new { }).GetProperty("result").EnumerateArray());
+        Assert.Equal(markdown, File.ReadAllBytes(store.Safe(".gitpad", "trash", note.Header.Id.ToString(), "document.md")));
+        Assert.Equal(sidecar, File.ReadAllBytes(store.Safe(".gitpad", "trash", note.Header.Id.ToString(), "sidecar.json")));
+        foreach (var attempt in new[] { 1, 2 })
+            Assert.Equal(JsonValueKind.Null, Call("documents.restore", new { id = note.Header.Id }).GetProperty("error").ValueKind);
+        Assert.Equal(markdown, File.ReadAllBytes(store.Safe("Journal", note.Header.Id + ".md")));
+        Assert.Equal(sidecar, File.ReadAllBytes(store.Safe(".gitpad", "anchors", note.Header.Id + ".json")));
+        Assert.Equivalent(note, Store().Load(note.Header.Id));
+        Assert.Empty(store.ListTrash());
     }
     [Fact] public void LinksAreStrictAndVersion7()
     {

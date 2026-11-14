@@ -1,0 +1,116 @@
+[
+  {
+    "scenario": "ordinary",
+    "files": [
+      {
+        "path": "Journal\\01a1aae3-2384-772c-a9a7-a1f10016edb3.md",
+        "before": "caccbd0d9adb912c5326ebffe0b5fa89faf0f3d2063af972808e02417044cb0c",
+        "after": "caccbd0d9adb912c5326ebffe0b5fa89faf0f3d2063af972808e02417044cb0c",
+        "unchanged": true
+      },
+      {
+        "path": ".gitpad\\anchors\\01a1aae3-2384-772c-a9a7-a1f10016edb3.json",
+        "before": "9058a8b9f669ed490d823f0dc0c7536bcdae2e8bd01ee2adea8d552e4e7b7ecd",
+        "after": "9058a8b9f669ed490d823f0dc0c7536bcdae2e8bd01ee2adea8d552e4e7b7ecd",
+        "unchanged": true
+      }
+    ]
+  },
+  {
+    "scenario": "long",
+    "files": [
+      {
+        "path": "Journal\\01a1aae3-2f28-729a-8b51-caa4854da712.md",
+        "before": "17ce558ead6f83501085c08413575ec999ece37ff3065d5cc1bf056ff78d7de5",
+        "after": "17ce558ead6f83501085c08413575ec999ece37ff3065d5cc1bf056ff78d7de5",
+        "unchanged": true
+      },
+      {
+        "path": ".gitpad\\anchors\\01a1aae3-2f28-729a-8b51-caa4854da712.json",
+        "before": "0e0f0631188741adc16d27b28393b68e24342dc34796c8d91a65570d380d6b7f",
+        "after": "0e0f0631188741adc16d27b28393b68e24342dc34796c8d91a65570d380d6b7f",
+        "unchanged": true
+      }
+    ]
+  },
+  {
+    "scenario": "two-pane",
+    "files": [
+      {
+        "path": "Journal\\01a1aae3-395b-75a5-9f82-7923187b31b8.md",
+        "before": "56aa71f6e89931279c3568f01f9fadf9b8bd4e4e8b319a0d1aed635d7b415604",
+        "after": "56aa71f6e89931279c3568f01f9fadf9b8bd4e4e8b319a0d1aed635d7b415604",
+        "unchanged": true
+      },
+      {
+        "path": "Journal\\01a1aae3-3f3d-7c05-9587-e2a8483beb13.md",
+        "before": "7519f7388307a77a58c9085d35ada8269ae07518d27ab9afb1af90c379d42289",
+        "after": "7519f7388307a77a58c9085d35ada8269ae07518d27ab9afb1af90c379d42289",
+        "unchanged": true
+      },
+      {
+        "path": ".gitpad\\anchors\\01a1aae3-395b-75a5-9f82-7923187b31b8.json",
+        "before": "07a61bb12dec71903252d0711046b7ac4788e90c95b9de1f3be5521cd3dec492",
+        "after": "07a61bb12dec71903252d0711046b7ac4788e90c95b9de1f3be5521cd3dec492",
+        "unchanged": true
+      },
+      {
+        "path": ".gitpad\\anchors\\01a1aae3-3f3d-7c05-9587-e2a8483beb13.json",
+        "before": "108edbee6a6aa4cf0bf3787f7c1f064dbce3dd184e0c87ce04a43af05d28ce56",
+        "after": "108edbee6a6aa4cf0bf3787f7c1f064dbce3dd184e0c87ce04a43af05d28ce56",
+        "unchanged": true
+      }
+    ]
+  },
+  {
+    "scenario": "images",
+    "files": [
+      {
+        "path": "Journal\\01a1aae3-48db-71c1-8e95-6050a9494e50.md",
+        "before": "023a00517962e973849ef2bcbc051fe7a00c19960eca86196cddcb2fe55b1bf5",
+        "after": "4374ca408dfee1268fea487e9d32cf2130ea5555f3a01ff091c520e8ea1e8758",
+        "unchanged": false
+      },
+      {
+        "path": ".gitpad\\anchors\\01a1aae3-48db-71c1-8e95-6050a9494e50.json",
+        "before": "1d4e9e2ecf7ad03854b9373e7451ebce3e2724e079099afb06bbf4e6723f2b27",
+        "after": "49cc4a831730cfc25aa8474e366071a895d2904a6b63449d234dcbbc444af6ac",
+        "unchanged": false
+      }
+    ]
+  },
+  {
+    "scenario": "plugins-disabled",
+    "files": [
+      {
+        "path": "Journal\\01a1aae3-51c0-7849-a56a-58e22c945318.md",
+        "before": "4a527b36e9c41de8497d34edeed215bbd69fb80e04216702225cb91c20ae3362",
+        "after": "4a527b36e9c41de8497d34edeed215bbd69fb80e04216702225cb91c20ae3362",
+        "unchanged": true
+      },
+      {
+        "path": ".gitpad\\anchors\\01a1aae3-51c0-7849-a56a-58e22c945318.json",
+        "before": "895c8237f8ed46ac693eaf09ef25b771c82bc589a44f1ba3008a8362ff10cb25",
+        "after": "895c8237f8ed46ac693eaf09ef25b771c82bc589a44f1ba3008a8362ff10cb25",
+        "unchanged": true
+      }
+    ]
+  },
+  {
+    "scenario": "pending-save",
+    "files": [
+      {
+        "path": "Journal\\01a1aae3-5b5b-7ab5-ab23-531f69b67a56.md",
+        "before": "bf7c7e11cd725824f1b63d04b31826c5980e05fd53bce01e781155b1dc9f0509",
+        "after": "1510221bdd7ddff76dc733c571dd438913d9e59b6ae94561f77c7bcc064e6b06",
+        "unchanged": false
+      },
+      {
+        "path": ".gitpad\\anchors\\01a1aae3-5b5b-7ab5-ab23-531f69b67a56.json",
+        "before": "ee090d0285f223b308038020ddc6676ad2b4d5ca3612d0e09276276a93cf223f",
+        "after": "01f2d28db03ce86cb0fc16f47124e8989436c3ec38112808169a355428c4bd18",
+        "unchanged": false
+      }
+    ]
+  }
+]

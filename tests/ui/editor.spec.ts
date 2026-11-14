@@ -18,16 +18,16 @@ test('calendar starts empty and creates two separate notes on the same day',asyn
   await page.goto('/');await expect(page.getByRole('heading',{name:'A place for today’s thoughts'})).toBeVisible();
   await page.getByRole('button',{name:'New note',exact:true}).click();await expect(page.locator('.ProseMirror')).toBeVisible();
   await page.getByRole('button',{name:'New note',exact:true}).click();await expect(page.getByRole('tab')).toHaveCount(2);
-  await expect(page.getByRole('navigation',{name:'Notes'}).getByRole('button')).toHaveCount(2);
+  await expect(page.getByRole('navigation',{name:'Notes'}).locator('.open-note')).toHaveCount(2);
 });
 test('edits Unicode Markdown, autosaves real files, reloads and searches SQLite',async({page})=>{
   await page.goto('/');await page.getByRole('button',{name:'New note',exact:true}).click();
   const editor=page.locator('.ProseMirror');await expect(editor).toBeVisible();await editor.fill('中文 👩🏽‍💻 Bonjour journal');
   await expect(page.getByRole('status')).toContainText('Local: Saved');
   await expect.poll(()=>{const files=readdirSync(join(process.env.GITPAD_TEST_VAULT!,'Journal'));return files.map(f=>readFileSync(join(process.env.GITPAD_TEST_VAULT!,'Journal',f),'utf8')).join('');}).toContain('Bonjour journal');
-  await page.reload();await page.getByRole('navigation',{name:'Notes'}).getByRole('button').click();await expect(page.locator('.ProseMirror')).toContainText('中文 👩🏽‍💻 Bonjour journal');
-  await page.getByRole('searchbox',{name:'Search notes'}).fill('Bonjour');await expect(page.getByRole('navigation',{name:'Notes'}).getByRole('button')).toHaveCount(1);
-  await page.getByRole('searchbox',{name:'Search notes'}).fill('absentword');await expect(page.getByRole('navigation',{name:'Notes'}).getByRole('button')).toHaveCount(0);
+  await page.reload();await page.getByRole('navigation',{name:'Notes'}).locator('.open-note').click();await expect(page.locator('.ProseMirror')).toContainText('中文 👩🏽‍💻 Bonjour journal');
+  await page.getByRole('searchbox',{name:'Search notes'}).fill('Bonjour');await expect(page.getByRole('navigation',{name:'Notes'}).locator('.open-note')).toHaveCount(1);
+  await page.getByRole('searchbox',{name:'Search notes'}).fill('absentword');await expect(page.getByRole('navigation',{name:'Notes'}).locator('.open-note')).toHaveCount(0);
 });
 test('official SDK toolbar formats a selection and unloads cleanly',async({page})=>{
   await page.goto('/');await page.getByRole('button',{name:'New note',exact:true}).click();const editor=page.locator('.ProseMirror');await editor.fill('format me');await editor.press('ControlOrMeta+a');
@@ -49,14 +49,14 @@ test('an intentional empty paragraph stays editable with stable identities after
 test('peek uses original source and closes after three seconds',async({page,request})=>{
   const note=await call(request,'documents.create',{date:fixtureDate(),title:'Peek fixture'});
   await call(request,'documents.save',{id:note.header.id,body:'__original__\n',title:note.header.title,tags:[],expectedRevision:note.sidecar.revision,expectedHash:note.sidecar.contentHash,blocks:[],selections:[]});
-  await page.goto('/');await page.getByRole('searchbox',{name:'Search notes'}).fill('Peek fixture');await page.getByRole('navigation',{name:'Notes'}).getByRole('button').click();
+  await page.goto('/');await page.getByRole('searchbox',{name:'Search notes'}).fill('Peek fixture');await page.getByRole('navigation',{name:'Notes'}).locator('.open-note').click();
   await expect(page.locator('.ProseMirror strong')).toHaveText('original');await noteAction(page,'Source peek');
   await expect(page.getByRole('textbox',{name:'Original Markdown source'})).toHaveValue('__original__');await expect(page.getByRole('dialog',{name:'Markdown source peek'})).toBeHidden({timeout:5000});await expect(page.locator('.ProseMirror strong')).toHaveText('original');
 });
 test('unknown directives survive an edit to another block',async({page,request})=>{
   const note=await call(request,'documents.create',{date:fixtureDate(),title:'Unknown fixture'});const body=':::future[Unknown]{z="last" a="first"}\nkeep **everything**\n:::\n\nEditable\n';
   await call(request,'documents.save',{id:note.header.id,body,title:note.header.title,tags:[],expectedRevision:note.sidecar.revision,expectedHash:note.sidecar.contentHash,blocks:[],selections:[]});
-  await page.goto('/');await page.getByRole('searchbox',{name:'Search notes'}).fill('Unknown fixture');await page.getByRole('navigation',{name:'Notes'}).getByRole('button').click();
+  await page.goto('/');await page.getByRole('searchbox',{name:'Search notes'}).fill('Unknown fixture');await page.getByRole('navigation',{name:'Notes'}).locator('.open-note').click();
   await expect(page.locator('[data-gitpad-unknown]')).toBeVisible();const paragraph=page.locator('.ProseMirror p').last();await paragraph.click();await page.keyboard.press('End');await page.keyboard.type(' changed');await page.getByRole('button',{name:'Save',exact:true}).click();
   // The click starts an asynchronous durable save. Wait for its public completion
   // state before a separate HTTP client reads the authoritative source pair.
@@ -73,7 +73,7 @@ test('clear data requires a separate confirmation and preserves data on cancel',
 for(const fixture of readdirSync('tests/markdown-fixtures'))test(`opening/saving fixture preserves source bytes: ${fixture}`,async({page,request})=>{
   const body=readFileSync(join('tests/markdown-fixtures',fixture),'utf8');const note=await call(request,'documents.create',{date:fixtureDate(),title:fixture});
   await call(request,'documents.save',{id:note.header.id,body,title:fixture,tags:[],expectedRevision:note.sidecar.revision,expectedHash:note.sidecar.contentHash,blocks:[],selections:[]});
-  await page.goto('/');await page.getByRole('searchbox',{name:'Search notes'}).fill(fixture);await page.getByRole('navigation',{name:'Notes'}).getByRole('button').click();
+  await page.goto('/');await page.getByRole('searchbox',{name:'Search notes'}).fill(fixture);await page.getByRole('navigation',{name:'Notes'}).locator('.open-note').click();
   if(fixture==='html.md'||fixture==='frontmatter.md')await expect(page.getByRole('region',{name:'Markdown editor'}).getByRole('alert')).toContainText('read-only');
   else await expect(page.locator('.ProseMirror')).toBeVisible();
   await page.getByRole('button',{name:'Save',exact:true}).click();const loaded=await call(request,'documents.load',{id:note.header.id});expect(loaded.body).toBe(body);
@@ -83,7 +83,7 @@ test('renders directives, GFM table, mathematics and callout without raw HTML',a
   const note=await call(request,'documents.create',{date:fixtureDate(),title:'Rich fixture'});
   const body=':underline[underlined] :mark[highlight]{color="yellow"}\n\n| A | B |\n| - | - |\n| 1 | 2 |\n\nInline $x^2$\n\n> [!NOTE]\n> Context\n\n:::fold[Details]{default="closed"}\nFolded body\n:::\n';
   await call(request,'documents.save',{id:note.header.id,body,title:note.header.title,tags:[],expectedRevision:note.sidecar.revision,expectedHash:note.sidecar.contentHash,blocks:[],selections:[]});
-  await page.goto('/');await page.getByRole('searchbox',{name:'Search notes'}).fill('Rich fixture');await page.getByRole('navigation',{name:'Notes'}).getByRole('button').click();
+  await page.goto('/');await page.getByRole('searchbox',{name:'Search notes'}).fill('Rich fixture');await page.getByRole('navigation',{name:'Notes'}).locator('.open-note').click();
   await expect(page.locator('[data-gitpad-format="underline"]')).toContainText('underlined');await expect(page.getByRole('table')).toBeVisible();await expect(page.getByRole('cell',{name:'2',exact:true})).toBeVisible();await expect(page.locator('.katex').first()).toBeVisible();await expect(page.locator('blockquote[data-callout="note"]')).toContainText('Context');
   await expect(page.locator('details[data-gitpad-fold]')).toHaveJSProperty('open',false);
   await page.getByRole('toolbar').getByRole('button',{name:'Expand all',exact:true}).click();await expect(page.locator('details[data-gitpad-fold]')).toHaveJSProperty('open',true);
@@ -92,7 +92,7 @@ test('renders directives, GFM table, mathematics and callout without raw HTML',a
 test('source peek editing cancels the timer and remains undoable without rebuilding the editor',async({page,request})=>{
   const note=await call(request,'documents.create',{date:fixtureDate(),title:'Undo fixture'});
   await call(request,'documents.save',{id:note.header.id,body:'Original paragraph\n',title:note.header.title,tags:[],expectedRevision:note.sidecar.revision,expectedHash:note.sidecar.contentHash,blocks:[],selections:[]});
-  await page.goto('/');await page.getByRole('searchbox',{name:'Search notes'}).fill('Undo fixture');await page.getByRole('navigation',{name:'Notes'}).getByRole('button').click();await expect(page.locator('.ProseMirror')).toBeVisible();await noteAction(page,'Source peek');
+  await page.goto('/');await page.getByRole('searchbox',{name:'Search notes'}).fill('Undo fixture');await page.getByRole('navigation',{name:'Notes'}).locator('.open-note').click();await expect(page.locator('.ProseMirror')).toBeVisible();await noteAction(page,'Source peek');
   const source=page.getByRole('textbox',{name:'Original Markdown source'});await source.fill('Changed **source**');await page.waitForTimeout(3200);await expect(source).toBeVisible();await page.getByRole('button',{name:'Apply source edit'}).click();await expect(page.locator('.ProseMirror strong')).toHaveText('source');
   await page.locator('.ProseMirror').press('ControlOrMeta+z');await expect(page.locator('.ProseMirror')).toHaveText('Original paragraph');
 });
@@ -116,7 +116,7 @@ test('imports an image into the real vault and renders its local persisted conte
 
 test('two distinct editable panes save independently and restore after restart',async({page,request})=>{
   const first=await call(request,'documents.create',{date:fixtureDate(),title:'First pane'}),second=await call(request,'documents.create',{date:fixtureDate(),title:'Second pane'});
-  await page.goto('/');await page.getByRole('navigation',{name:'Notes'}).getByRole('button').filter({hasText:'First pane'}).click();
+  await page.goto('/');await page.getByRole('navigation',{name:'Notes'}).locator('.open-note').filter({hasText:'First pane'}).click();
   await expect(page.locator('.ProseMirror')).toHaveCount(1);await page.getByRole('combobox',{name:'Open beside'}).selectOption(second.header.id);
   await expect(page.locator('.ProseMirror')).toHaveCount(2);await page.locator('.ProseMirror').first().fill('Primary 中文');await page.locator('.ProseMirror').last().fill('Secondary 👩🏽‍💻');
   await page.getByRole('button',{name:'Save',exact:true}).click();
@@ -129,7 +129,7 @@ test('image trailing paragraph keeps its identity through settings rebuild and r
   const note=await call(request,'documents.create',{date:fixtureDate(),title:'Trailing identity'});
   const asset=await call(request,'media.import',{filename:'pixel.png',base64:'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aZyoAAAAASUVORK5CYII='});
   await call(request,'documents.save',{id:note.header.id,body:`Before image\n\n![pixel](${asset})\n`,title:note.header.title,tags:[],expectedRevision:note.sidecar.revision,expectedHash:note.sidecar.contentHash,blocks:[],selections:[]});
-  await page.goto('/');await page.getByRole('navigation',{name:'Notes'}).getByRole('button').filter({hasText:'Trailing identity'}).click();
+  await page.goto('/');await page.getByRole('navigation',{name:'Notes'}).locator('.open-note').filter({hasText:'Trailing identity'}).click();
   await expect(page.locator('.ProseMirror')).toContainText('Before image');
   await expect.poll(async()=>(await call(request,'documents.load',{id:note.header.id})).sidecar.blocks.length).toBe(2);
   const initial=await call(request,'documents.load',{id:note.header.id});
@@ -170,7 +170,7 @@ test('native drop messages target the original pane and ignore completion after 
   // This verifies the native/web contract with real persisted assets, not an OS drag gesture.
   const first=await call(request,'documents.create',{date:fixtureDate(),title:'Drop primary'}),second=await call(request,'documents.create',{date:fixtureDate(),title:'Drop secondary'});
   const path=await call(request,'media.import',{filename:'native.png',base64:'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aZyoAAAAASUVORK5CYII='});
-  await page.goto('/');await page.getByRole('navigation',{name:'Notes'}).getByRole('button').filter({hasText:'Drop primary'}).click();
+  await page.goto('/');await page.getByRole('navigation',{name:'Notes'}).locator('.open-note').filter({hasText:'Drop primary'}).click();
   await page.getByRole('combobox',{name:'Open beside'}).selectOption(second.header.id);
   const secondary=page.getByRole('region',{name:'Second document pane'}).locator('.ProseMirror');await expect(secondary).toBeVisible();
   const start=async(id:string)=>secondary.evaluate((element,dropId)=>{const rect=element.getBoundingClientRect();window.dispatchEvent(new CustomEvent('HybridWebViewMessageReceived',{detail:{message:JSON.stringify({type:'native-drop-start',id:dropId,x:(rect.left+20)/innerWidth,y:(rect.top+15)/innerHeight})}}));},id);
@@ -193,7 +193,7 @@ test('native drop retains its text position across cursor movement, edits, zoom 
   const body=Array.from({length:35},(_,i)=>`Paragraph ${i}`).join('\n\n')+'\n\nTarget here\n\nAfter paragraph\n';
   await call(request,'documents.save',{id:note.header.id,body,title:note.header.title,tags:[],expectedRevision:note.sidecar.revision,expectedHash:note.sidecar.contentHash,blocks:[],selections:[]});
   const path=await call(request,'media.import',{filename:'anchor.png',base64:'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aZyoAAAAASUVORK5CYII='});
-  await page.goto('/');await page.getByRole('navigation',{name:'Notes'}).getByRole('button').click();const editor=page.locator('.ProseMirror');await expect(editor).toBeVisible();
+  await page.goto('/');await page.getByRole('navigation',{name:'Notes'}).locator('.open-note').click();const editor=page.locator('.ProseMirror');await expect(editor).toBeVisible();
   await page.evaluate(()=>{document.documentElement.style.zoom='1.25';});
   const target=editor.locator('p').filter({hasText:/^Target here$/});await target.scrollIntoViewIfNeeded();
   const focusUnchanged=await target.evaluate(element=>{const focused=document.activeElement,range=document.createRange();range.setStart(element.firstChild!,7);range.collapse(true);const rect=range.getBoundingClientRect();
@@ -210,7 +210,7 @@ test('native drop retains its text position across cursor movement, edits, zoom 
 
 test('external Markdown is compared, archived and explicitly reconciled through the UI',async({page,request})=>{
   const note=await call(request,'documents.create',{date:fixtureDate(),title:'External recovery'});
-  await page.goto('/');await page.getByRole('navigation',{name:'Notes'}).getByRole('button').click();await expect(page.locator('.ProseMirror')).toBeVisible();await page.getByRole('button',{name:'Save',exact:true}).click();
+  await page.goto('/');await page.getByRole('navigation',{name:'Notes'}).locator('.open-note').click();await expect(page.locator('.ProseMirror')).toBeVisible();await page.getByRole('button',{name:'Save',exact:true}).click();
   appendFileSync(join(process.env.GITPAD_TEST_VAULT!,'Journal',note.header.id+'.md'),'External 中文\n');
   await page.getByRole('button',{name:'Check recovery'}).click();await page.getByRole('button',{name:'Compare retained versions'}).click();
   await expect(page.getByRole('dialog',{name:'Reconcile external changes'})).toBeVisible();const merged=page.getByRole('textbox',{name:'Merged Markdown'});await expect(merged).toContainText('External 中文');

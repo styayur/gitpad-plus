@@ -11,6 +11,7 @@ concurrency:
   cancel-in-progress: true
 jobs:
   portable:
+    name: Portable build tests security
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
@@ -36,6 +37,8 @@ jobs:
         run: |
           pnpm exec playwright install --with-deps chromium --only-shell
           pnpm test:ui
+      - name: Restore survives real writer process termination
+        run: dotnet run --project tools/GitPadPlus.FaultProbe -c Release -- "${{ runner.temp }}/gitpad-restore-faults" artifacts/restore-process-faults.json --restore
       - name: Dependency security
         run: |
           pnpm audit --json > artifacts/npm-audit.json

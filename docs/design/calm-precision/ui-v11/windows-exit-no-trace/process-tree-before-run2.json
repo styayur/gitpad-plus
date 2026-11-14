@@ -1,0 +1,44 @@
+[
+  {
+    "Name": "GitPadPlus.App.exe",
+    "ProcessId": 25840,
+    "ParentProcessId": 2160,
+    "CreationDate": "2026-11-05T23:32:01.063909+08:00"
+  },
+  {
+    "Name": "msedgewebview2.exe",
+    "ProcessId": 6692,
+    "ParentProcessId": 25840,
+    "CreationDate": "2026-11-05T23:32:03.254689+08:00"
+  },
+  {
+    "Name": "msedgewebview2.exe",
+    "ProcessId": 6620,
+    "ParentProcessId": 6692,
+    "CreationDate": "2026-11-05T23:32:03.283344+08:00"
+  },
+  {
+    "Name": "msedgewebview2.exe",
+    "ProcessId": 4000,
+    "ParentProcessId": 6692,
+    "CreationDate": "2026-11-05T23:32:03.482982+08:00"
+  },
+  {
+    "Name": "msedgewebview2.exe",
+    "ProcessId": 6356,
+    "ParentProcessId": 6692,
+    "CreationDate": "2026-11-05T23:32:03.518117+08:00"
+  },
+  {
+    "Name": "msedgewebview2.exe",
+    "ProcessId": 25468,
+    "ParentProcessId": 6692,
+    "CreationDate": "2026-11-05T23:32:03.629895+08:00"
+  },
+  {
+    "Name": "msedgewebview2.exe",
+    "ProcessId": 22236,
+    "ParentProcessId": 6692,
+    "CreationDate": "2026-11-05T23:32:03.851821+08:00"
+  }
+]

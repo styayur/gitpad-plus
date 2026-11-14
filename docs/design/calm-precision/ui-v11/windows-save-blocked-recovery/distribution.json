@@ -1,0 +1,11 @@
+{
+  "scenario": "unsaved-locked-source-recovery",
+  "runs": 3,
+  "medianMs": 34465.6975,
+  "p95Ms": 42995.1641,
+  "maximumMs": 42995.1641,
+  "kernelMedianMs": 34347.6144,
+  "kernelP95Ms": 42944.5652,
+  "kernelMaximumMs": 42944.5652,
+  "scope": "Native close event to OS process exit, sampled every 10 ms. Operator clicks X. Physical click dispatch latency and UI-thread stalls require separate observation."
+}

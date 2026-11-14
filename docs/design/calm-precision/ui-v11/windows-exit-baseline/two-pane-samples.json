@@ -1,0 +1,47 @@
+[
+  {
+    "run": 1,
+    "scenario": "two-pane",
+    "executableSha256": "8e4f878962a0234bae14a4ad3fe3d32715d76e9295a18f8245fe8d8733a4595e",
+    "assemblySha256": "944a2263e7b691215233f06148a88cbe012f9239e1653d5a38f54ef433a28c6d",
+    "closeRequestToProcessExitMs": 581.8821,
+    "closeRequestToWindowHiddenMs": null,
+    "windowHiddenToProcessExitMs": null,
+    "windowHiddenObserved": false,
+    "windowHiddenToExitUpperBoundMs": null,
+    "exitCode": 0,
+    "closeRequests": 1,
+    "unsavedAtClose": false,
+    "trace": "trace-1.jsonl"
+  },
+  {
+    "run": 2,
+    "scenario": "two-pane",
+    "executableSha256": "8e4f878962a0234bae14a4ad3fe3d32715d76e9295a18f8245fe8d8733a4595e",
+    "assemblySha256": "944a2263e7b691215233f06148a88cbe012f9239e1653d5a38f54ef433a28c6d",
+    "closeRequestToProcessExitMs": 538.4472,
+    "closeRequestToWindowHiddenMs": null,
+    "windowHiddenToProcessExitMs": null,
+    "windowHiddenObserved": false,
+    "windowHiddenToExitUpperBoundMs": null,
+    "exitCode": 0,
+    "closeRequests": 1,
+    "unsavedAtClose": false,
+    "trace": "trace-2.jsonl"
+  },
+  {
+    "run": 3,
+    "scenario": "two-pane",
+    "executableSha256": "8e4f878962a0234bae14a4ad3fe3d32715d76e9295a18f8245fe8d8733a4595e",
+    "assemblySha256": "944a2263e7b691215233f06148a88cbe012f9239e1653d5a38f54ef433a28c6d",
+    "closeRequestToProcessExitMs": 518.7192,
+    "closeRequestToWindowHiddenMs": null,
+    "windowHiddenToProcessExitMs": null,
+    "windowHiddenObserved": false,
+    "windowHiddenToExitUpperBoundMs": null,
+    "exitCode": 0,
+    "closeRequests": 1,
+    "unsavedAtClose": false,
+    "trace": "trace-3.jsonl"
+  }
+]
