@@ -42,7 +42,7 @@ export function verifyPicomatchBackport(store) {
     execFileSync(process.execPath, ['--input-type=commonjs', '-e', `
       const assert = require('node:assert/strict');
       const pm = require(process.argv[1]);
-      for (const pattern of ['+(*)', '*(*a)', '+(*a)', '*(a*)', '+(*?)', '+(*a|b)']) {
+      for (const pattern of ['+(*)', '*(*a)', '+(*a)', '*(a*)', '+(*?)', '+(*a|b)', '+(@(*a))', '*(a@(*a))', '+(@(*))']) {
         assert.equal(pm.isMatch('a'.repeat(64) + '!', pattern), false, pattern);
         assert.equal(pm.isMatch(pattern, pattern), true, 'risky pattern remains literal');
       }

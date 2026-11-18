@@ -17,8 +17,8 @@ version, new advisory or audit error fails the security gate.
 The upstream advisory links PR 194, but its own description explicitly leaves
 `+(*a)` exponential. We therefore do not claim that PR fixes this vulnerability.
 The local patch extends upstream's existing risky-pattern literalization to a
-top-level unescaped, unquoted star in **any** repeated extglob branch, including
-a single branch. Escapes, character classes, ordinary literal repetitions and
+unescaped, unquoted star in **any** repeated extglob branch, including
+a single branch or nested `@(...)` wrapper. Escapes, character classes, ordinary literal repetitions and
 the existing safe nested character-class rewrite are preserved. This changes
 risky repeated-wildcard matching to literal matching, following upstream's
 existing security policy. The explicit upstream `maxExtglobRecursion:false`
