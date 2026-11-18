@@ -1,0 +1,18 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+import { execFileSync } from 'node:child_process';
+import { writeFileSync } from 'node:fs';
+const adb = args => execFileSync('adb', args, { encoding: 'utf8', timeout: 360_000, maxBuffer: 10_000_000 });
+console.log(adb(['install', '-r', process.env.GITPAD_ANDROID_APK]));
+console.log(adb(['install', '-r', 'artifacts/android/instrumentation/GitPadPlus-Acceptance-Tests.apk']));
+// All data are disposable emulator fixtures. Never run clear on a user's device.
+for (const phase of ['smoke', 'smoke-restart', 'smoke-recreate', 'smoke-resume', 'features-default', 'ui-design', 'ui-two-pane', 'trash', 'clear']) {
+  adb(['shell', 'am', 'force-stop', 'io.github.styayur.gitpadplus']);
+  const log = adb(['shell', 'am', 'instrument', '-w', '-e', 'phase', phase, '-e', 'disposable', 'true', 'io.github.styayur.gitpadplus.acceptance/io.github.styayur.gitpadplus.acceptance.AcceptanceInstrumentation']);
+  writeFileSync(`artifacts/android/${phase}.log`, log);
+  const raw = /^INSTRUMENTATION_RESULT: report=(.+)$/m.exec(log)?.[1];
+  if (!raw) throw Error('Native report missing: ' + phase + '\n' + log);
+  const report = JSON.parse(raw);
+  writeFileSync(`artifacts/android/${phase}.json`, JSON.stringify(report, null, 2) + '\n');
+  if (!report.passed || !log.includes('INSTRUMENTATION_CODE: -1')) throw Error('Native regression failed: ' + phase);
+  console.log('PASS actual Android instrumentation: ' + phase);
+}

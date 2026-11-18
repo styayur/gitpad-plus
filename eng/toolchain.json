@@ -1,0 +1,5 @@
+{
+  "workloadSetVersion": "10.0.400",
+  "supportedDotnetMajor": 10,
+  "supportedMauiMajor": 10
+}

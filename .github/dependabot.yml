@@ -63,105 +63,20 @@ updates:
           - minor
           - patch
   - package-ecosystem: nuget
-    directory: /apps/GitPadPlus.App
+    directory: /
     schedule:
       interval: cron
       cronjob: 0 9 1,15 * *
       timezone: Asia/Singapore
     open-pull-requests-limit: 3
-    allow:
+    ignore:
       - dependency-name: "*"
-        update-types:
-          - version-update:semver-minor
-          - version-update:semver-patch
+        update-types: ["version-update:semver-major"]
     groups:
       nuget-compatible:
         applies-to: version-updates
-        patterns:
-          - "*"
-        update-types:
-          - minor
-          - patch
-  - package-ecosystem: nuget
-    directory: /apps/GitPadPlus.DevHost
-    schedule:
-      interval: cron
-      cronjob: 0 9 1,15 * *
-      timezone: Asia/Singapore
-    open-pull-requests-limit: 3
-    allow:
-      - dependency-name: "*"
-        update-types:
-          - version-update:semver-minor
-          - version-update:semver-patch
-    groups:
-      nuget-compatible:
-        applies-to: version-updates
-        patterns:
-          - "*"
-        update-types:
-          - minor
-          - patch
-  - package-ecosystem: nuget
-    directory: /src/GitPadPlus.Core
-    schedule:
-      interval: cron
-      cronjob: 0 9 1,15 * *
-      timezone: Asia/Singapore
-    open-pull-requests-limit: 3
-    allow:
-      - dependency-name: "*"
-        update-types:
-          - version-update:semver-minor
-          - version-update:semver-patch
-    groups:
-      nuget-compatible:
-        applies-to: version-updates
-        patterns:
-          - "*"
-        update-types:
-          - minor
-          - patch
-  - package-ecosystem: nuget
-    directory: /tools/GitPadPlus.Benchmarks
-    schedule:
-      interval: cron
-      cronjob: 0 9 1,15 * *
-      timezone: Asia/Singapore
-    open-pull-requests-limit: 3
-    allow:
-      - dependency-name: "*"
-        update-types:
-          - version-update:semver-minor
-          - version-update:semver-patch
-    groups:
-      nuget-compatible:
-        applies-to: version-updates
-        patterns:
-          - "*"
-        update-types:
-          - minor
-          - patch
-  - package-ecosystem: nuget
-    directory: /tools/GitPadPlus.FaultProbe
-    schedule:
-      interval: cron
-      cronjob: 0 9 1,15 * *
-      timezone: Asia/Singapore
-    open-pull-requests-limit: 3
-    allow:
-      - dependency-name: "*"
-        update-types:
-          - version-update:semver-minor
-          - version-update:semver-patch
-    groups:
-      nuget-compatible:
-        applies-to: version-updates
-        patterns:
-          - "*"
-        update-types:
-          - minor
-          - patch
+        patterns: ["*"]
+        update-types: [minor, patch]
   - package-ecosystem: github-actions
     directory: /
     schedule:

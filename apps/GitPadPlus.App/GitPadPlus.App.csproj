@@ -25,14 +25,14 @@
   <ItemGroup>
     <AssemblyMetadata Include="GitPadSourceCommit" Value="$(GitPadSourceCommit)"/>
     <EmbeddedResource Include="$(GitPadPackagedRegistry)" LogicalName="GitPadPlus.PackagedPlugins.json"/>
-    <PackageReference Include="Microsoft.Maui.Controls" Version="10.0.120"/>
+    <PackageReference Include="Microsoft.Maui.Controls"/>
     <ProjectReference Include="../../src/GitPadPlus.Core/GitPadPlus.Core.csproj" GlobalPropertiesToRemove="RuntimeIdentifier;RuntimeIdentifiers;SelfContained"/>
     <MauiIcon Include="Resources/AppIcon/appicon.svg" Color="#285FC4"/>
     <MauiSplashScreen Include="Resources/Splash/splash.svg" Color="#285FC4" BaseSize="128,128"/>
     <MauiAsset Include="../../web-dist/**/*" LogicalName="wwwroot/%(RecursiveDir)%(Filename)%(Extension)"/>
   </ItemGroup>
   <ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">
-    <PackageReference Include="Microsoft.Graphics.Win2D" Version="[1.4.1-gitpadplus.1]" />
+    <PackageReference Include="Microsoft.Graphics.Win2D" />
   </ItemGroup>
   <Target Name="VerifySourceBuiltWin2D" BeforeTargets="ResolveReferences" Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">
     <Exec Command="node &quot;$(MSBuildThisFileDirectory)..\..\scripts\win2d-source.mjs&quot; &quot;$(NuGetPackageRoot)/microsoft.graphics.win2d/1.4.1-gitpadplus.1&quot;" />
