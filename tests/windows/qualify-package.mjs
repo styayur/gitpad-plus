@@ -125,7 +125,7 @@ try{
   await page.getByRole('button',{name:'Clear Local GitPad+ Data',exact:true}).click();await page.getByRole('button',{name:'Confirm permanent deletion',exact:true}).click();
   await expect(page.locator('.ProseMirror')).toHaveCount(0);
   // The restored note is closed, so no editor is not a clear-completion signal.
-  await expect.poll(()=>readdirSync(join(vault,'Journal')).length).toBe(0);
+  await expect.poll(()=>{try{return readdirSync(join(vault,'Journal')).length;}catch(error){if(error.code==='ENOENT')return -1;throw error;}}).toBe(0);
   await page.waitForFunction(()=>document.documentElement.dataset.workspaceReady==='true');
   await expect.poll(async()=>{try{return (await rpc('documents.list')).length;}catch{return -1;}}).toBe(0);
   check('Explicit native clear removed notes and retained external sentinel',readdirSync(join(vault,'Journal')).length===0&&readFileSync(sentinel,'utf8')==='Synthetic native clear sentinel');

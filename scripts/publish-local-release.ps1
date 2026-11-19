@@ -99,7 +99,11 @@ try {
         @{releaseId=$release.id;sourceCommit=$commit;tag=$tag;manifestSha256=$manifestHash} | ConvertTo-Json | Set-Content -LiteralPath $statePath -Encoding utf8
     }
     $uploaded=@(Run gh @('api',"repos/$repo/releases/$($release.id)/assets",'--paginate','--jq','.[].name'))
-    foreach($name in $assetNames){if($name -notin $uploaded){Run gh @('release','upload',$tag,(Join-Path $candidate $name),'--repo',$repo) | Out-Host}}
+    $missing=@($assetNames | Where-Object {$_ -notin $uploaded})
+    if($missing.Count){
+        $uploadArguments=@('release','upload',$tag,'--repo',$repo)+@($missing | ForEach-Object {Join-Path $candidate $_})
+        Run gh $uploadArguments | Out-Host
+    }
     Verify-Download $release
     Write-Host 'Verified DRAFT retained. Authorized publication uses -Publish -ApprovePublication.'
 } finally {Pop-Location}
