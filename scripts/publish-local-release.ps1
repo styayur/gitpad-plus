@@ -25,7 +25,7 @@ function Run([string]$Program,[string[]]$Arguments) {
         if(!$process.Start()){throw 'Unable to start release CLI'}
         $outTask=$process.StandardOutput.ReadToEndAsync();$errTask=$process.StandardError.ReadToEndAsync()
         $process.WaitForExit();$stdout=$outTask.GetAwaiter().GetResult();$stderr=$errTask.GetAwaiter().GetResult()
-        $exitCode=$process.ExitCode;$process.Dispose()
+        $exitCode=$process.ExitCode;$global:LASTEXITCODE=$exitCode;$process.Dispose()
         if($exitCode -eq 0){if($stdout.Length){return ($stdout.TrimEnd([char[]]"`r`n") -split '\r?\n')};return}
         $transient=$stderr -match '(?i)TLS handshake timeout|SSL/TLS connection failed|failed to receive handshake|connection.*reset|timed out|HTTP (502|503|504)|unexpected EOF'
         if(($gitRead -or $ghRead) -and $transient -and $attempt -lt 3){Write-Host "Retrying read-only $Program transport failure ($($attempt+1)/3)";continue}
