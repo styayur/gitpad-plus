@@ -167,7 +167,7 @@ overrides:
   minimatch@<11.0.1: 11.0.1
 
 patchedDependencies:
-  picomatch@4.0.7: 25932adf2cbe2fde3fda8ffa1cf37e5e572cd12da9779b97112edd36583f1784
+  picomatch@4.0.7: 8688d2efb382ffb2fc685e0b1a64964625053f76393885b252d651e8f043ef20
 
 importers:
 
@@ -3270,9 +3270,9 @@ snapshots:
     dependencies:
       format: 0.2.2
 
-  fdir@6.5.0(picomatch@4.0.7(patch_hash=25932adf2cbe2fde3fda8ffa1cf37e5e572cd12da9779b97112edd36583f1784)):
+  fdir@6.5.0(picomatch@4.0.7(patch_hash=8688d2efb382ffb2fc685e0b1a64964625053f76393885b252d651e8f043ef20)):
     optionalDependencies:
-      picomatch: 4.0.7(patch_hash=25932adf2cbe2fde3fda8ffa1cf37e5e572cd12da9779b97112edd36583f1784)
+      picomatch: 4.0.7(patch_hash=8688d2efb382ffb2fc685e0b1a64964625053f76393885b252d651e8f043ef20)
 
   file-entry-cache@11.1.5:
     dependencies:
@@ -3893,7 +3893,7 @@ snapshots:
 
   picocolors@1.1.1: {}
 
-  picomatch@4.0.7(patch_hash=25932adf2cbe2fde3fda8ffa1cf37e5e572cd12da9779b97112edd36583f1784): {}
+  picomatch@4.0.7(patch_hash=8688d2efb382ffb2fc685e0b1a64964625053f76393885b252d651e8f043ef20): {}
 
   playwright-core@1.65.0: {}
 
@@ -4139,8 +4139,8 @@ snapshots:
 
   tinyglobby@0.2.17:
     dependencies:
-      fdir: 6.5.0(picomatch@4.0.7(patch_hash=25932adf2cbe2fde3fda8ffa1cf37e5e572cd12da9779b97112edd36583f1784))
-      picomatch: 4.0.7(patch_hash=25932adf2cbe2fde3fda8ffa1cf37e5e572cd12da9779b97112edd36583f1784)
+      fdir: 6.5.0(picomatch@4.0.7(patch_hash=8688d2efb382ffb2fc685e0b1a64964625053f76393885b252d651e8f043ef20))
+      picomatch: 4.0.7(patch_hash=8688d2efb382ffb2fc685e0b1a64964625053f76393885b252d651e8f043ef20)
 
   tldts-core@7.4.20: {}
 
@@ -4239,7 +4239,7 @@ snapshots:
   vite@8.3.8(@types/node@26.6.6):
     dependencies:
       lightningcss: 1.33.0
-      picomatch: 4.0.7(patch_hash=25932adf2cbe2fde3fda8ffa1cf37e5e572cd12da9779b97112edd36583f1784)
+      picomatch: 4.0.7(patch_hash=8688d2efb382ffb2fc685e0b1a64964625053f76393885b252d651e8f043ef20)
       postcss: 8.5.32
       rolldown: 1.2.19
       tinyglobby: 0.2.17
@@ -4256,7 +4256,7 @@ snapshots:
       expect-type: 1.4.0
       magic-string: 1.4.5
       obug: 3.0.0
-      picomatch: 4.0.7(patch_hash=25932adf2cbe2fde3fda8ffa1cf37e5e572cd12da9779b97112edd36583f1784)
+      picomatch: 4.0.7(patch_hash=8688d2efb382ffb2fc685e0b1a64964625053f76393885b252d651e8f043ef20)
       std-env: 4.3.0
       tinybench: 6.2.3
       tinyexec: 1.3.1

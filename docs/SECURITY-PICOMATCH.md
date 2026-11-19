@@ -1,8 +1,9 @@
 # Picomatch 4.0.7 local security backport
 
-GHSA-fc5q-39xc-vjpf / CVE-2026-112366 remains published against all npm
-versions through 4.0.7, with no fixed release as inspected on 2026-11-18.
-The raw `pnpm audit` report is retained in CI, including this high finding.
+GHSA-fc5q-39xc-vjpf / CVE-2026-112366 was withdrawn upstream at
+2026-11-18T15:38:56Z. No fixed npm release was published. The linked maintainer
+discussion disputes its classification and advises against untrusted glob input.
+The raw `pnpm audit` report is retained in CI with its actual registry result.
 No advisory is ignored, dismissed or relabelled by changing the package version.
 
 The installed dependency is still upstream MIT picomatch 4.0.7, pinned by the
@@ -12,17 +13,25 @@ upstream commit `6bb40679c218cefba5d4e9662408c5fdf699a8bb`.
 package manifest and original license. `scripts/picomatch-backport.mjs` checks
 every installed copy and runs exploit/compatibility cases in a child with a
 three-second process deadline. A missing patch, changed payload, additional
-version, new advisory or audit error fails the security gate.
+version, new advisory or audit error fails the security gate. Installed hardening
+verification runs even when the withdrawn advisory is absent from the raw audit.
 
 The upstream advisory links PR 194, but its own description explicitly leaves
 `+(*a)` exponential. We therefore do not claim that PR fixes this vulnerability.
-The local patch extends upstream's existing risky-pattern literalization to a
-unescaped, unquoted star in **any** repeated extglob branch, including
-a single branch or nested `@(...)` wrapper. Escapes, character classes, ordinary literal repetitions and
-the existing safe nested character-class rewrite are preserved. This changes
-risky repeated-wildcard matching to literal matching, following upstream's
-existing security policy. The explicit upstream `maxExtglobRecursion:false`
-opt-out still disables that policy; GitPad+ does not configure it.
+The local patch preserves the existing proven character-star flattening, then
+literalizes other nested groups/braces or unbounded syntax in repeated bodies.
+It also rejects ambiguous literal-prefix alternatives and complex alternatives
+whose disjointness has not been established. This deliberately makes some
+otherwise valid nested patterns literal; ordinary non-repeating extglobs,
+character classes and simple non-overlapping repetitions retain their behavior.
+The explicit upstream `maxExtglobRecursion:false` opt-out remains unchanged;
+GitPad+ does not configure it.
+
+The earlier patch SHA256 `25932adf...` was withdrawn after independent testing
+found `+(@(*(a)))` and `+(@(+(a)))` still hang. Retained evidence records those
+failures. The replacement corpus varies wrapper depth, repeat operators,
+subjects and parser options; it also preserves `+(*(a)|*(b))`. This is bounded
+corpus evidence for the current backport, not a proof about all regular expressions.
 
 Reachability is in developer tooling: Vite, Vitest, typescript-eslint and
 tinyglobby/fdir. No application dependency directly imports picomatch; Vite's

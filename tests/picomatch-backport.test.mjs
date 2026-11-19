@@ -5,6 +5,7 @@ import { readFileSync, cpSync, mkdtempSync, writeFileSync, rmSync } from 'node:f
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { execFileSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import { verifyPicomatchBackport, installedPicomatchRoots } from '../scripts/picomatch-backport.mjs';
 
 test('all installed picomatch copies bind the backport and reject the exploit', () => {
@@ -25,12 +26,21 @@ test('the same exploit times out on the original upstream parser', t => {
   t.after(() => rmSync(root, { recursive: true }));
   cpSync(installedPicomatchRoots()[0], root, { recursive: true });
   const file = join(root, 'lib/parse.js');
-  const patched = readFileSync(file, 'utf8');
-  const start = patched.indexOf('  // GHSA-fc5q-39xc-vjpf:');
-  const end = patched.indexOf('  if (branches.length > 1)', start);
-  assert.ok(start > 0 && end > start);
-  writeFileSync(file, patched.slice(0, start) + patched.slice(end));
-  assert.throws(() => execFileSync(process.execPath, ['-e',
-    "require(process.argv[1]).isMatch('a'.repeat(64)+'!', '+(*a)')", root],
-    { timeout: 1500, stdio: 'pipe' }), error => error.code === 'ETIMEDOUT');
+  let original = readFileSync(file, 'utf8');
+  const hunks = readFileSync('patches/picomatch@4.0.7.patch', 'utf8').split(/^@@.*@@.*\n/m).slice(1);
+  for (const hunk of hunks) {
+    const lines = hunk.trimEnd().split('\n');
+    const before = lines.filter(line => line.startsWith(' ') || line.startsWith('-')).map(line => line.slice(1)).join('\n');
+    const after = lines.filter(line => line.startsWith(' ') || line.startsWith('+')).map(line => line.slice(1)).join('\n');
+    assert.equal(original.split(after).length, 2, 'patch hunk matches exactly once');
+    original = original.replace(after, before);
+  }
+  const binding = JSON.parse(readFileSync('patches/picomatch-provenance.json'));
+  assert.equal(createHash('sha256').update(original).digest('hex'), binding.upstreamParserSha256);
+  writeFileSync(file, original);
+  for (const pattern of ['+(*a)', '+(@(*(a)))']) {
+    assert.throws(() => execFileSync(process.execPath, ['-e',
+      "require(process.argv[1]).isMatch('a'.repeat(96)+'!',process.argv[2])", root, pattern],
+      { timeout: 1500, stdio: 'pipe' }), error => error.code === 'ETIMEDOUT');
+  }
 });

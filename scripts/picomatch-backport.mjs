@@ -3,6 +3,7 @@ import { createHash } from 'node:crypto';
 import { readFileSync, readdirSync } from 'node:fs';
 import { resolve, join } from 'node:path';
 import { execFileSync } from 'node:child_process';
+import { exploitCorpus, compatibilityCorpus } from './picomatch-corpus.mjs';
 
 const digest = path => createHash('sha256').update(readFileSync(path)).digest('hex');
 export function installedPicomatchRoots() {
@@ -42,18 +43,18 @@ export function verifyPicomatchBackport(store) {
     execFileSync(process.execPath, ['--input-type=commonjs', '-e', `
       const assert = require('node:assert/strict');
       const pm = require(process.argv[1]);
-      for (const pattern of ['+(*)', '*(*a)', '+(*a)', '*(a*)', '+(*?)', '+(*a|b)', '+(@(*a))', '*(a@(*a))', '+(@(*))']) {
-        assert.equal(pm.isMatch('a'.repeat(64) + '!', pattern), false, pattern);
-        assert.equal(pm.isMatch(pattern, pattern), true, 'risky pattern remains literal');
+      const corpus = JSON.parse(process.argv[2]);
+      for (const options of [{}, {fastpaths: false, maxExtglobRecursion: 2}]) {
+        for (const {pattern, subject} of corpus.exploits) {
+          assert.equal(pm.isMatch(subject, pattern, options), false, pattern);
+        }
+        for (const [value, pattern, expected] of corpus.compatibility) {
+          assert.equal(pm.isMatch(value, pattern, options), expected, pattern);
+        }
       }
-      for (const [value, pattern, expected] of [
-        ['web/editor.ts', '**/*.ts', true], ['web/editor.js', '**/*.ts', false],
-        ['abcabc', '+(abc)', true], ['foobar', '*(foo|bar)', true],
-        ['abab', '+([ab])', true], ['aab', '+(*(a)|*(b))', true],
-        ['abc', 'a?c', true], ['test.ts', '*.{ts,tsx}', true]
-      ]) assert.equal(pm.isMatch(value, pattern), expected, pattern);
-    `, root], { timeout: 3000, stdio: 'pipe' });
+    `, root, JSON.stringify({exploits: exploitCorpus, compatibility: compatibilityCorpus})], { timeout: 3000, stdio: 'pipe' });
     checked.push(root);
   }
-  return { advisory: binding.advisory, status: 'VERIFIED_LOCAL_BACKPORT', checked };
+  return { advisory: binding.advisory, status: 'VERIFIED_LOCAL_BACKPORT', checked,
+    exploitCases: exploitCorpus.length * 2, compatibilityCases: compatibilityCorpus.length * 2 };
 }

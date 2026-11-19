@@ -4,16 +4,17 @@
   "upstreamCommit": "6bb40679c218cefba5d4e9662408c5fdf699a8bb",
   "version": "4.0.7",
   "license": "MIT",
-  "patchSha256": "25932adf2cbe2fde3fda8ffa1cf37e5e572cd12da9779b97112edd36583f1784",
+  "patchSha256": "8688d2efb382ffb2fc685e0b1a64964625053f76393885b252d651e8f043ef20",
   "installedSha256": {
     "index.js": "02ae26406508e28f9ba0865be16cf77f0b33de6c4d4d49c212c4176df1d5625a",
     "posix.js": "5695ff5dfcd5a338a40630bd506056f2950bcb08fe1cc068519cbbfe60add480",
     "lib/constants.js": "c28f952d2758261fe5428a121add485cc25b03e0193633f649de903dc0e5e222",
-    "lib/parse.js": "9a9afeb1bdc45521e4a09c291fe21aae6cb557f15d16bcb0696e57503c49f428",
+    "lib/parse.js": "b366dd417d86fd7361ac96a73813942329bf84a0f692445d430ddc18d8d9cc29",
     "lib/picomatch.js": "fdd249d7ffff853f3bb1c77eafc8baa1a437bea85a94c35877b83c6a40d9ca94",
     "lib/scan.js": "6457a1764e5c2e543cc3a0c00ce12ebb3764097628868198370b64d4e642aaae",
     "lib/utils.js": "f04604f70cd1a3f6ace80b84766468674ff38b4bb83818d2ef1d81fc6355f935",
     "LICENSE": "d0cd141b0c322fded5dfad1d4645bb2fedfc05b7321fe1009469638190d59ef9",
     "package.json": "479b70b87aa7b44344d62c8a459ae7e53dd2bca6c61f1396bd55e63e9de73fc6"
-  }
+  },
+  "upstreamParserSha256": "4e1e05447668aa1e94366c5516a2bcd8f5fff800cc92b1d0cd7d77703b8618c4"
 }

@@ -1,33 +1,49 @@
 diff --git a/lib/parse.js b/lib/parse.js
 --- a/lib/parse.js
 +++ b/lib/parse.js
-@@ -296,6 +296,29 @@ const analyzeRepeatedExtglob = (body, options) => {
+@@ -284,6 +284,26 @@
+   return depth;
+ };
  
-   const branches = splitTopLevel(body).map(branch => branch.trim());
- 
-+  // GHSA-fc5q-39xc-vjpf: one branch can also nest an unbounded wildcard
-+  // inside a repeat. Follow the existing risky-pattern literalization policy.
-+  // Ignore escaped/quoted stars, bracket classes and extglob openers. Scan
-+  // through nested wrappers: +(@(*a)) is just as risky as +(*a).
-+  const hasUnboundedWildcard = branch => {
-+    let escaped = false;
-+    let quoted = false;
-+    let bracket = 0;
-+    for (let i = 0; i < branch.length; i++) {
-+      const ch = branch[i];
-+      if (escaped) { escaped = false; continue; }
-+      if (ch === '\\') { escaped = true; continue; }
-+      if (ch === '"') { quoted = !quoted; continue; }
-+      if (quoted) continue;
-+      if (ch === '[') { bracket++; continue; }
-+      if (ch === ']' && bracket > 0) { bracket--; continue; }
-+      if (bracket > 0) continue;
-+      if (ch === '*' && branch[i + 1] !== '(') return true;
-+    }
-+    return false;
-+  };
-+  if (branches.some(hasUnboundedWildcard)) return { risky: true };
++// GHSA-fc5q-39xc-vjpf: repeated bodies must not hide another variable-length
++// expression behind wrappers. Existing proven character-star flattening runs
++// before this conservative guard. Unescaped nested groups/braces and quantifiers
++// otherwise become literals, including +(@(*(a))) and nested negative extglobs.
++const hasRiskyRepeatedSyntax = branch => {
++  let escaped = false;
++  let quoted = false;
++  let bracket = false;
++  for (const ch of branch) {
++    if (escaped) { escaped = false; continue; }
++    if (ch === '\\') { escaped = true; continue; }
++    if (bracket) { if (ch === ']') bracket = false; continue; }
++    if (ch === '"') { quoted = !quoted; continue; }
++    if (quoted) continue;
++    if (ch === '[') { bracket = true; continue; }
++    if (ch === '*' || ch === '+' || ch === '(' || ch === '{') return true;
++  }
++  return bracket || quoted || escaped;
++};
 +
-   if (branches.length > 1) {
-     if (
-       branches.some(branch => branch === '') ||
+ const analyzeRepeatedExtglob = (body, options) => {
+   if (options.maxExtglobRecursion === false) {
+     return { risky: false };
+@@ -343,6 +363,18 @@
+       : { risky: true };
+   }
+ 
++  if (branches.some(hasRiskyRepeatedSyntax)) return { risky: true };
++  if (branches.length > 1) {
++    const literals = branches.map(normalizeSimpleBranch);
++    if (literals.some(value => value === undefined)) return { risky: true };
++    for (let i = 0; i < literals.length; i++) {
++      for (let j = i + 1; j < literals.length; j++) {
++        if (literals[i].startsWith(literals[j]) || literals[j].startsWith(literals[i])) {
++          return { risky: true };
++        }
++      }
++    }
++  }
+   return { risky: false };
+ };
+ 
