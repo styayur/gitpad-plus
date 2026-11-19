@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 const patterns = new Set(['+(*)', '*(*a)', '+(*a)', '*(a*)', '+(*?)', '+(*a|b)', '+(a|aa)', '+(ab|abab)']);
-for (const body of ['*a', '*(a)', '+(a)', '!(b)', '(a+)', 'a{1,}', '{a,aa}']) {
+for (const body of ['*a', '*(a)', '+(a)', '!(b)', '(a+)', '(a|aa)', '(a)+', 'a{1,}', '{a,aa}']) {
   let nested = body;
   for (let depth = 0; depth <= 5; depth++) {
     for (const repeat of ['+', '*']) patterns.add(`${repeat}(${nested})`);
