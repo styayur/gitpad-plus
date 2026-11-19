@@ -22,7 +22,7 @@ const gh=(parameters,input,bytes=false)=>{
     catch(error){
       const raw=String(error.stderr??error.message),message=redactUploadOutput(raw);
       const lookupFailedBeforeDispatch=parameters[0]==='workflow'&&parameters[1]==='run'&&parameters[2]==='candidate-upload.yml'&&/^Get "https:\/\/api\.github\.com\/repos\/styayur\/gitpad-plus\/actions\/workflows\/candidate-upload\.yml"/m.test(raw);
-      const transientTransport=/(TLS handshake timeout|connection reset|timed out|502|503|504|unexpected EOF)/i.test(message);
+      const transientTransport=/(TLS handshake timeout|connection reset|timed out|502|503|504|\bEOF\b)/i.test(message);
       if(!(readOnly||lookupFailedBeforeDispatch)||attempt===3||!transientTransport)throw Error('GitHub CLI failed: '+message.slice(-1600));
       console.log('Retrying a read-only GitHub transport failure ('+(attempt+1)+'/3)');
     }

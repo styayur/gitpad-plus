@@ -27,7 +27,7 @@ function Run([string]$Program,[string[]]$Arguments) {
         $process.WaitForExit();$stdout=$outTask.GetAwaiter().GetResult();$stderr=$errTask.GetAwaiter().GetResult()
         $exitCode=$process.ExitCode;$global:LASTEXITCODE=$exitCode;$process.Dispose()
         if($exitCode -eq 0){if($stdout.Length){return ($stdout.TrimEnd([char[]]"`r`n") -split '\r?\n')};return}
-        $transient=$stderr -match '(?i)TLS handshake timeout|SSL/TLS connection failed|failed to receive handshake|connection.*reset|timed out|HTTP (502|503|504)|unexpected EOF'
+        $transient=$stderr -match '(?i)TLS handshake timeout|SSL/TLS connection failed|failed to receive handshake|connection.*reset|timed out|HTTP (502|503|504)|\bEOF\b'
         if(($gitRead -or $ghRead) -and $transient -and $attempt -lt 3){Write-Host "Retrying read-only $Program transport failure ($($attempt+1)/3)";continue}
         $safe=[regex]::Replace($stderr+"`n"+$stdout,'https?://[^\s"<>]+','[redacted URL]')
         $safe=[regex]::Replace($safe,'(?i)\b(?:gh[pousr]_|github_pat_)[A-Za-z0-9_]+','[redacted credential]')
