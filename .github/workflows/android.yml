@@ -50,6 +50,8 @@ jobs:
           printf '%s' "$KEYSTORE" | base64 --decode > "$RUNNER_TEMP/gitpad-release.keystore"
           echo "GITPAD_ANDROID_KEY_PATH=$RUNNER_TEMP/gitpad-release.keystore" >> "$GITHUB_ENV"
           echo "JAVA_HOME=$JAVA_HOME_21_X64" >> "$GITHUB_ENV"
+      - name: Provision Android command-line tools
+        uses: android-actions/setup-android@9fc6c4e9069bf8d3d10b2204b1fb8f6ef7065407
       - name: Install pinned native workload and editor
         run: |
           npm install --global corepack@0.34.6
