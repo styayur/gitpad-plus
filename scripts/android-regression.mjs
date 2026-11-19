@@ -34,7 +34,7 @@ for(const [width,height]of [[320,716],[393,708]]){
   adb(['shell','wm','size',`${width*3}x${height*3}`]);adb(['shell','wm','density','480']);
   for(const phase of ['ui-design','ui-two-pane','writing-end','writing-end-two-pane'])runPhase(phase,`${width}-${phase}`);
 }
-for(const phase of ['trash','clear'])runPhase(phase);
+for(const phase of ['trash','performance','performance-restart','clear'])runPhase(phase);
 }finally{
   // Capture while the emulator action still owns its running guest.
   try{writeFileSync('artifacts/android/logcat.log',adb(['logcat','-d','-t','5000']));}catch(error){writeFileSync('artifacts/android/logcat-error.txt',String(error));}

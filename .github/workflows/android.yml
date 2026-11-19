@@ -107,6 +107,7 @@ jobs:
           "$ANDROID_HOME/build-tools/36.0.0/aapt2" dump xmltree artifacts/android/GitPadPlus-Android-Release.apk --file AndroidManifest.xml > artifacts/android/manifest.log
           node scripts/verify-android-package.mjs
           sha256sum artifacts/android/GitPadPlus-Android-Release.apk > artifacts/android/SHA256SUMS.txt
+          dotnet run --project tools/GitPadPlus.Benchmarks -c Release -- artifacts/android/fixture-generation.json --index-fixture --keep-fixture
           node scripts/android-instrumentation.mjs
       - name: Fetch the immutable prior alpha for signed upgrade acceptance
         if: inputs.candidate_run_id != ''

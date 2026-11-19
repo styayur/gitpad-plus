@@ -3,7 +3,7 @@
 import {chromium,expect} from '@playwright/test';
 import {spawn,execFileSync} from 'node:child_process';
 import {createHash} from 'node:crypto';
-import {readFileSync,writeFileSync,mkdirSync,readdirSync,existsSync,realpathSync} from 'node:fs';
+import {readFileSync,writeFileSync,appendFileSync,mkdirSync,readdirSync,existsSync,realpathSync} from 'node:fs';
 import {resolve,join,dirname,basename,sep} from 'node:path';
 import {createServer} from 'node:net';
 import {platform,release} from 'node:os';
@@ -28,6 +28,12 @@ const rpc=(method,params={})=>page.evaluate(({method,params})=>new Promise((reso
   window.HybridWebView.SendRawMessage(JSON.stringify({protocolVersion:1,requestId,method,params}));
 }),{method,params});
 const pair=id=>({markdown:hash(readFileSync(join(vault,'Journal',id+'.md'))),sidecar:hash(readFileSync(join(vault,'.gitpad/anchors',id+'.json')))});
+async function activate(uri){
+  const forwarded=spawn(exe,[uri],{cwd:dirname(exe),env:{...process.env,GITPAD_ACCEPTANCE_VAULT:vault},stdio:'ignore'});
+  const code=await new Promise((done,reject)=>{forwarded.once('error',reject);forwarded.once('exit',done);setTimeout(()=>reject(Error('Native activation forwarding timed out')),30000).unref();});
+  check('Native single-instance activation forwarded and exited',code===0);
+}
+async function action(name){await page.getByLabel('Note actions',{exact:true}).click();await page.getByRole('button',{name,exact:true}).click();}
 async function launch(){
   const server=createServer();await new Promise(done=>server.listen(0,'127.0.0.1',done));const port=server.address().port;await new Promise(done=>server.close(done));
   child=spawn(exe,[],{cwd:dirname(exe),env:{...process.env,GITPAD_ACCEPTANCE_VAULT:vault,WEBVIEW2_USER_DATA_FOLDER:profile,WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS:`--remote-debugging-port=${port} --remote-debugging-address=127.0.0.1`},stdio:'ignore'});
@@ -55,6 +61,7 @@ async function close(){
   check('Owned WebView2 profile processes exited',owned===0);browser=undefined;page=undefined;child=undefined;
 }
 try{
+  if(Number(execFileSync('pwsh.exe',['-NoProfile','-Command',"@(Get-Process -Name GitPadPlus.App -ErrorAction SilentlyContinue).Count"],{encoding:'utf8',windowsHide:true}).trim()))throw Error('Close the existing GitPad+ instance before isolated native qualification');
   await launch();
   const newNote=page.getByRole('button',{name:'New note',exact:true});
   if(!await newNote.isVisible())await page.getByRole('button',{name:'Calendar',exact:true}).click();
@@ -74,10 +81,39 @@ try{
   const restarted=await rpc('documents.load',{id}),afterPlugin=await rpc('plugins.storage.read',{pluginId:'official-calendar-stats'});
   check('Source body and block UUIDs survived native process restart',restarted.body===saved.body&&JSON.stringify(restarted.sidecar.blocks)===JSON.stringify(saved.sidecar.blocks));
   check('Plugin UUID survived native restart',afterPlugin.objectIds['calendar-statistics']===plugin.objectIds['calendar-statistics']);
+  // Rich Markdown and media traverse the actual packaged Core/WebView bridge.
+  const rich=await rpc('documents.create',{date:new Date().toISOString().slice(0,10),title:'Native rich fixture'});
+  const asset=await rpc('media.import',{filename:'native-pixel.png',base64:'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aZyoAAAAASUVORK5CYII='});
+  const body='## Native rich fixture\n\nSelection quote 中文 👩🏽‍💻 context\n\n> [!NOTE]\n> Retained callout\n\n:::fold[Details]{default="open"}\nFold content\n:::\n\n![Native pixel]('+asset+')\n';
+  await rpc('documents.save',{id:rich.header.id,body,title:rich.header.title,tags:[],expectedRevision:rich.sidecar.revision,expectedHash:rich.sidecar.contentHash,blocks:[],selections:[]});
+  await activate('gitpadplus://note/'+rich.header.id);
+  await expect(page.locator('.ProseMirror h2')).toHaveText('Native rich fixture');
+  await expect(page.locator('.ProseMirror blockquote[data-callout=note]')).toBeVisible();await expect(page.locator('.ProseMirror details[data-gitpad-fold]')).toBeVisible();
+  await expect.poll(()=>page.locator('.ProseMirror img').evaluate(image=>image.complete&&image.naturalWidth>0)).toBe(true);
+  await page.getByRole('button',{name:'Save',exact:true}).click();
+  await expect(page.locator('footer [role=status]').first()).toHaveText('Local: Saved');
+  const richBefore=await rpc('documents.load',{id:rich.header.id});await action('Source peek');
+  await expect(page.getByRole('textbox',{name:'Original Markdown source'})).toHaveValue(richBefore.body.trimEnd());await page.getByRole('button',{name:'Close peek',exact:true}).click();
+  await page.locator('.ProseMirror').evaluate(editor=>{const text=[...editor.querySelectorAll('p')].find(node=>node.textContent.startsWith('Selection quote')).firstChild;const range=document.createRange();range.setStart(text,10);range.setEnd(text,18);const selection=window.getSelection();selection.removeAllRanges();selection.addRange(range);document.dispatchEvent(new Event('selectionchange'));});
+  await action('Selection link');await expect(page.getByRole('alert')).toContainText('Link copied');
+  const link=execFileSync('pwsh.exe',['-NoProfile','-Command','Get-Clipboard -Raw'],{encoding:'utf8',windowsHide:true}).trim();check('Native clipboard contains persistent selection URI',link.startsWith('gitpadplus://note/'+rich.header.id)&&link.includes('?selection='));
+  await activate(link);await expect(page.getByRole('alert')).toContainText('Selection located.');await expect.poll(()=>page.evaluate(()=>getSelection()?.toString())).toBe('quote 中文');
+  const anchored=await rpc('documents.load',{id:rich.header.id});check('Selection anchor persisted through native transport',anchored.sidecar.selections.some(item=>item.exact==='quote 中文'));
+  await page.getByRole('button',{name:'Settings',exact:true}).click();await page.getByLabel('Official toolbar',{exact:true}).uncheck();await page.getByRole('button',{name:'Close settings',exact:true}).click();
+  await expect(page.getByRole('toolbar',{name:'Formatting'}).getByRole('button')).toHaveCount(0);await close();await launch();
+  await page.getByRole('button',{name:'Settings',exact:true}).click();await expect(page.getByLabel('Official toolbar',{exact:true})).not.toBeChecked();
+  await page.getByLabel('Official toolbar',{exact:true}).check();await page.getByRole('button',{name:'Close settings',exact:true}).click();
+  await expect(page.getByRole('button',{name:'Bold',exact:true})).toBeVisible();check('Plugin disposal and preference survived native process restart',true);
+  let denied=false;try{await rpc('plugins.storage.read',{pluginId:'../outside-vault'});}catch{denied=true;}check('Native plugin storage rejects path escape',denied);
+  appendFileSync(join(vault,'Journal',rich.header.id+'.md'),'External native recovery 中文\n');
+  await page.getByRole('button',{name:'Check recovery',exact:true}).click();await page.getByRole('button',{name:'Compare retained versions',exact:true}).click();
+  await expect(page.getByRole('textbox',{name:'Merged Markdown'})).toContainText('External native recovery 中文');await page.getByRole('button',{name:'Archive versions and apply',exact:true}).click();
+  await expect(page.locator('.ProseMirror')).toContainText('External native recovery 中文');check('Native recovery archived source versions',readdirSync(join(vault,'.gitpad/recovery')).length>0);
+  await page.screenshot({path:join(out,'native-rich-recovery.png')});await activate('gitpadplus://note/'+id);await expect(page.locator('.ProseMirror')).toContainText('Windows exact-package native');
   const beforeTrash=pair(id);
   await page.getByLabel('Note actions',{exact:true}).click();await page.getByRole('button',{name:'Move to trash',exact:true}).click();
   await page.getByRole('button',{name:'Settings',exact:true}).click();await page.getByRole('button',{name:'Trash',exact:true}).click();
-  await page.getByRole('dialog',{name:'Trash',exact:true}).getByRole('button',{name:'Restore',exact:true}).click();
+  await page.getByRole('dialog',{name:'Trash',exact:true}).getByRole('button',{name:/^Restore /}).click();
   check('Native Trash restore retained exact Markdown and sidecar bytes',JSON.stringify(pair(id))===JSON.stringify(beforeTrash));
   await page.getByRole('button',{name:'Close trash',exact:true}).click();
   const sentinel=join(out,'outside-vault-sentinel.txt');writeFileSync(sentinel,'Synthetic native clear sentinel');
