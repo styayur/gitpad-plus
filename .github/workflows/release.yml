@@ -94,6 +94,8 @@ jobs:
             artifacts/native-security-gate.log
             artifacts/native-upstream-advisories.json
             artifacts/restore-assets/
+            artifacts/workload-package-metadata/
+            artifacts/workload-payload-comparison/
             public/THIRD_PARTY_LICENSES.txt
   verify:
     if: inputs.operation != 'build'

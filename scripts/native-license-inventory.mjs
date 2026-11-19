@@ -3,6 +3,7 @@ import {readFileSync,writeFileSync,mkdirSync,readdirSync,existsSync,cpSync} from
 import {resolve,join,relative} from 'node:path';
 import {createHash} from 'node:crypto';
 import {verifyWin2DSource,win2dVersion} from './win2d-source.mjs';
+import {readZip} from './release-evidence.mjs';
 
 // Run after portable licenses.mjs, with snapshots of each actual native restore.
 const inputs=process.argv.slice(2);
@@ -88,12 +89,25 @@ function workloadRecord(name,version,scope){
   const binaries=walk(installed).filter(file=>/\.(?:dll|exe|so|a|lib|bc|dat|bin|wasm|jar|dylib|winmd)$/i.test(file));
   if(!binaries.length)throw Error('No installed workload binary payload: '+installed);
   const payload=binaries.map(file=>{
-    const path=relative(installed,file),source=join(packageRoot,path),sha256=hash(readFileSync(file));
-    if(!existsSync(source)||hash(readFileSync(source))!==sha256)throw Error('Installed workload differs from exact official NuGet payload: '+path);
-    return {path:path.replaceAll('\\','/'),sha256};
+    const path=relative(installed,file),source=join(packageRoot,path),actual=readFileSync(file),sha256=hash(actual);
+    if(!existsSync(source))throw Error('Installed workload payload is absent from official NuGet package: '+path);
+    const expected=readFileSync(source),packageSha256=hash(expected);
+    if(packageSha256===sha256)return {path:path.replaceAll('\\','/'),sha256};
+    const evidence=join('artifacts/workload-payload-comparison',name,version,path);
+    mkdirSync(resolve(evidence,'..'),{recursive:true});
+    writeFileSync(evidence+'.installed',actual);writeFileSync(evidence+'.nuget',expected);
+    if(!path.endsWith('.jar'))throw Error('Installed workload differs from exact official NuGet payload: '+path);
+    // JAR compression/timestamps/order need not be reproducible. Every named
+    // entry, including manifests/signature files, must retain identical bytes.
+    const entries=readZip(actual),original=readZip(expected);
+    const different=[...new Set([...entries.keys(),...original.keys()])].filter(key=>!entries.get(key)?.equals(original.get(key)??Buffer.alloc(0))||!original.has(key));
+    const comparison={path:path.replaceAll('\\','/'),sha256,packageSha256,differentEntries:different,installedEntries:entries.size,packageEntries:original.size};
+    writeFileSync(evidence+'.json',JSON.stringify(comparison,null,2)+'\n');
+    if(different.length||entries.size!==original.size)throw Error('Installed JAR entry bytes differ from official NuGet package: '+path+' '+different.join(','));
+    return {...comparison,comparison:'All ZIP entry names and decompressed bytes identical; only archive container encoding differs'};
   });
   record(name,version,packageRoot,scope);
-  ids.get(name.toLowerCase()+'/'+version).installedPack={version,binaryFiles:payload.length,payload,metadataSource:`https://api.nuget.org/v3-flatcontainer/${name.toLowerCase()}/${version}/${name.toLowerCase()}.${version}.nupkg`,scope:'Official exact NuGet metadata/notices retained; every installed runtime binary matches its package bytes; installer metadata is not fabricated'};
+  ids.get(name.toLowerCase()+'/'+version).installedPack={version,binaryFiles:payload.length,payload,metadataSource:`https://api.nuget.org/v3-flatcontainer/${name.toLowerCase()}/${version}/${name.toLowerCase()}.${version}.nupkg`,scope:'Official exact NuGet metadata/notices retained; installed binaries match package bytes, with every JAR entry byte checked if container encoding differs; installer metadata is not fabricated'};
 }
 for(const abi of ['android-arm64','android-x64']){
   const name='Microsoft.NETCore.App.Runtime.Mono.'+abi;
