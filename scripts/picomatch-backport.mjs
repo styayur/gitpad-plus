@@ -27,10 +27,13 @@ export function installedPicomatchRoots() {
   return [...roots];
 }
 export function verifyPicomatchBackport(store) {
+  const roots = store ? readdirSync(store).filter(name => /^picomatch@/.test(name)).map(folder => join(store, folder, 'node_modules/picomatch')) : installedPicomatchRoots();
+  return verifyPicomatchRoots(roots);
+}
+export function verifyPicomatchRoots(roots) {
   const binding = JSON.parse(readFileSync('patches/picomatch-provenance.json'));
   if (binding.advisory !== 'GHSA-fc5q-39xc-vjpf' ||
       digest('patches/picomatch@4.0.7.patch') !== binding.patchSha256) throw Error('Picomatch patch identity mismatch');
-  const roots = store ? readdirSync(store).filter(name => /^picomatch@/.test(name)).map(folder => join(store, folder, 'node_modules/picomatch')) : installedPicomatchRoots();
   if (!roots.length) throw Error('Missing installed picomatch inventory');
   const checked = [];
   for (const root of roots) {
@@ -43,7 +46,7 @@ export function verifyPicomatchBackport(store) {
     execFileSync(process.execPath, ['--input-type=commonjs', '-e', `
       const assert = require('node:assert/strict');
       const pm = require(process.argv[1]);
-      const corpus = JSON.parse(process.argv[2]);
+      const corpus = JSON.parse(require('node:fs').readFileSync(0, 'utf8'));
       for (const options of [{}, {fastpaths: false, maxExtglobRecursion: 2}]) {
         for (const {pattern, subject} of corpus.exploits) {
           assert.equal(pm.isMatch(subject, pattern, options), false, pattern);
@@ -52,7 +55,7 @@ export function verifyPicomatchBackport(store) {
           assert.equal(pm.isMatch(value, pattern, options), expected, pattern);
         }
       }
-    `, root, JSON.stringify({exploits: exploitCorpus, compatibility: compatibilityCorpus})], { timeout: 3000, stdio: 'pipe' });
+    `, root], { timeout: 3000, stdio: 'pipe', input: JSON.stringify({exploits: exploitCorpus, compatibility: compatibilityCorpus}) });
     checked.push(root);
   }
   return { advisory: binding.advisory, status: 'VERIFIED_LOCAL_BACKPORT', checked,
