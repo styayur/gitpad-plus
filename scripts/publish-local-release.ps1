@@ -10,9 +10,30 @@ param(
 $ErrorActionPreference='Stop'
 $repo='styayur/gitpad-plus';$version=(Get-Content (Join-Path $PSScriptRoot '../package.json') -Raw|ConvertFrom-Json).version;$tag='v'+$version
 function Run([string]$Program,[string[]]$Arguments) {
-    $output=& $Program @Arguments
-    if($LASTEXITCODE -ne 0){throw "$Program failed (exit $LASTEXITCODE). Inspect the recorded release state before retrying."}
-    return $output
+    $gitRead=$Program -eq 'git' -and ($Arguments[0] -in @('ls-remote','rev-parse','status','remote','show-ref','cat-file') -or ($Arguments -join ' ') -eq 'fetch origin main --no-tags')
+    $ghRead=$Program -eq 'gh' -and (($Arguments[0] -eq 'api' -and !($Arguments | Where-Object {$_ -in @('--method','-X','--field','-F','--raw-field','-f','--input')})) -or ($Arguments[0] -eq 'run' -and $Arguments[1] -eq 'list'))
+    for($attempt=0;$attempt -lt 4;$attempt++){
+        $startInfo=[Diagnostics.ProcessStartInfo]::new()
+        $startInfo.FileName=(Get-Command $Program -CommandType Application -ErrorAction Stop | Select-Object -First 1).Source
+        $startInfo.WorkingDirectory=(Get-Location).ProviderPath
+        $startInfo.UseShellExecute=$false;$startInfo.CreateNoWindow=$true
+        $startInfo.RedirectStandardOutput=$true;$startInfo.RedirectStandardError=$true
+        foreach($argument in $Arguments){$startInfo.ArgumentList.Add($argument)}
+        $startInfo.Environment['GH_DEBUG']='';$startInfo.Environment['GH_PROMPT_DISABLED']='1'
+        $startInfo.Environment['GIT_TERMINAL_PROMPT']='0';$startInfo.Environment['GCM_INTERACTIVE']='Never'
+        $process=[Diagnostics.Process]::new();$process.StartInfo=$startInfo
+        if(!$process.Start()){throw 'Unable to start release CLI'}
+        $outTask=$process.StandardOutput.ReadToEndAsync();$errTask=$process.StandardError.ReadToEndAsync()
+        $process.WaitForExit();$stdout=$outTask.GetAwaiter().GetResult();$stderr=$errTask.GetAwaiter().GetResult()
+        $exitCode=$process.ExitCode;$global:LASTEXITCODE=$exitCode;$process.Dispose()
+        if($exitCode -eq 0){if($stdout.Length){return ($stdout.TrimEnd([char[]]"`r`n") -split '\r?\n')};return}
+        $transient=$stderr -match '(?i)TLS handshake timeout|SSL/TLS connection failed|failed to receive handshake|connection.*reset|timed out|HTTP (502|503|504)|\bEOF\b'
+        if(($gitRead -or $ghRead) -and $transient -and $attempt -lt 3){Write-Host "Retrying read-only $Program transport failure ($($attempt+1)/3)";continue}
+        $safe=[regex]::Replace($stderr+"`n"+$stdout,'https?://[^\s"<>]+','[redacted URL]')
+        $safe=[regex]::Replace($safe,'(?i)\b(?:gh[pousr]_|github_pat_)[A-Za-z0-9_]+','[redacted credential]')
+        if($safe.Trim()){Write-Host $safe.Substring([Math]::Max(0,$safe.Length-1600))}
+        throw "$Program failed (exit $exitCode). Inspect the recorded release state before retrying."
+    }
 }
 $root=Split-Path $PSScriptRoot -Parent
 Push-Location $root
@@ -60,10 +81,11 @@ try {
     Write-Host "Android certificate SHA-256: $($acceptance.android.certificateSha256)"
     if($Publish){
         if(!$ApprovePublication){throw 'Explicit final publication approval is required'}
-        if(!$release -or !$release.draft -or !$release.prerelease -or !$state -or $state.releaseId -ne $release.id -or $state.sourceCommit -ne $commit -or $state.manifestSha256 -ne $manifestHash){throw 'No matching verified draft created by this process'}
-        Verify-Download $release
+        if(!$release -or !$release.prerelease -or !$state -or $state.releaseId -ne $release.id -or $state.sourceCommit -ne $commit -or $state.manifestSha256 -ne $manifestHash){throw 'No matching owned prerelease created by this process'}
         $remoteTag=Run git @('ls-remote','origin',"refs/tags/$tag^{}")
         if(($remoteTag -split '\s+')[0] -ne $commit){throw 'Remote annotated tag points at the wrong commit'}
+        Verify-Download $release
+        if(!$release.draft){Write-Host "Public pre-release re-download verified without mutation: $($release.html_url)";return}
         Run gh @('release','edit',$tag,'--repo',$repo,'--draft=false','--prerelease') | Out-Host
         $public=Run gh @('api',"repos/$repo/releases/$($release.id)") | ConvertFrom-Json
         if($public.draft -or !$public.prerelease -or $public.tag_name -ne $tag){throw 'Public pre-release metadata verification failed'}
@@ -99,7 +121,11 @@ try {
         @{releaseId=$release.id;sourceCommit=$commit;tag=$tag;manifestSha256=$manifestHash} | ConvertTo-Json | Set-Content -LiteralPath $statePath -Encoding utf8
     }
     $uploaded=@(Run gh @('api',"repos/$repo/releases/$($release.id)/assets",'--paginate','--jq','.[].name'))
-    foreach($name in $assetNames){if($name -notin $uploaded){Run gh @('release','upload',$tag,(Join-Path $candidate $name),'--repo',$repo) | Out-Host}}
+    $missing=@($assetNames | Where-Object {$_ -notin $uploaded})
+    if($missing.Count){
+        $uploadArguments=@('release','upload',$tag,'--repo',$repo)+@($missing | ForEach-Object {Join-Path $candidate $_})
+        Run gh $uploadArguments | Out-Host
+    }
     Verify-Download $release
     Write-Host 'Verified DRAFT retained. Authorized publication uses -Publish -ApprovePublication.'
 } finally {Pop-Location}

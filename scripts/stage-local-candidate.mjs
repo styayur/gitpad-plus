@@ -14,7 +14,20 @@ const tool=JSON.parse(readFileSync(join(root,'scripts/candidate-upload-tool.json
 const sha=bytes=>createHash('sha256').update(bytes).digest('hex');
 if(sha(readFileSync(uploader))!==tool.sha256)throw Error('Uploader differs from the reviewed pinned official action');
 const git=(...parameters)=>execFileSync('git',parameters,{cwd:root,encoding:'utf8'}).trim();
-const gh=(parameters,input,bytes=false)=>{try{return execFileSync('gh',parameters,{cwd:root,input,encoding:bytes?undefined:'utf8',maxBuffer:10_000_000,env:{...process.env,GH_HOST:'github.com',GH_DEBUG:''}});}catch(error){throw Error('GitHub CLI failed: '+redactUploadOutput(String(error.stderr??error.message)).slice(-1600));}};
+const gh=(parameters,input,bytes=false)=>{
+  const mutatingFlags=['--method','-X','--field','-F','--raw-field','-f','--input'];
+  const readOnly=(parameters[0]==='api'&&input===undefined&&!parameters.some(value=>mutatingFlags.includes(value)))||(parameters[0]==='run'&&parameters[1]==='list');
+  for(let attempt=0;attempt<4;attempt++){
+    try{return execFileSync('gh',parameters,{cwd:root,input,stdio:['pipe','pipe','pipe'],encoding:bytes?undefined:'utf8',maxBuffer:10_000_000,env:{...process.env,GH_HOST:'github.com',GH_DEBUG:''}});}
+    catch(error){
+      const raw=String(error.stderr??error.message),message=redactUploadOutput(raw);
+      const lookupFailedBeforeDispatch=parameters[0]==='workflow'&&parameters[1]==='run'&&parameters[2]==='candidate-upload.yml'&&/^Get "https:\/\/api\.github\.com\/repos\/styayur\/gitpad-plus\/actions\/workflows\/candidate-upload\.yml"/m.test(raw);
+      const transientTransport=/(TLS handshake timeout|connection reset|timed out|502|503|504|\bEOF\b)/i.test(message);
+      if(!(readOnly||lookupFailedBeforeDispatch)||attempt===3||!transientTransport)throw Error('GitHub CLI failed: '+message.slice(-1600));
+      console.log('Retrying a read-only GitHub transport failure ('+(attempt+1)+'/3)');
+    }
+  }
+};
 const api=path=>JSON.parse(gh(['api',path]));
 const wait=()=>new Promise(done=>setTimeout(done,5000));
 async function poll(read,label,attempts=120){for(let i=0;i<attempts;i++){const result=read();if(result)return result;await wait();}throw Error('Timed out: '+label);}
