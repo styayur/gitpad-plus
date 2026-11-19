@@ -12,6 +12,7 @@ import * as Y from 'yjs';
 import { identityPlugin, blockKey, sourceBlocks } from './identity';
 import { directives, directiveMark, foldNode, opaqueDirective, calloutBlockquote } from './extensions';
 import { MarkdownPeek } from './peek';
+import { caretVisibilityPlugin } from './caret';
 import { SourceDocument, preserveSource } from '../markdown/source';
 import { createAnchor, LiveAnchors } from '../anchors';
 import type { DocumentSession } from './session';
@@ -44,7 +45,7 @@ export function Editor({session, settings, handle, upload, imageUrl, pasteImage,
     });
     crepeRef.current = editor;
     void editor.editor.remove(blockquoteSchema);
-    editor.editor.use(calloutBlockquote).use(directives).use(directiveMark).use(foldNode).use(opaqueDirective).use($prose(() => identityPlugin(session.blocks)));
+    editor.editor.use(calloutBlockquote).use(directives).use(directiveMark).use(foldNode).use(opaqueDirective).use($prose(() => identityPlugin(session.blocks))).use($prose(caretVisibilityPlugin));
     let initialized = false;
     const capture = (value: string) => {
       if (!alive || !initialized) return;
