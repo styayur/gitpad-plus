@@ -81,10 +81,11 @@ try {
     Write-Host "Android certificate SHA-256: $($acceptance.android.certificateSha256)"
     if($Publish){
         if(!$ApprovePublication){throw 'Explicit final publication approval is required'}
-        if(!$release -or !$release.draft -or !$release.prerelease -or !$state -or $state.releaseId -ne $release.id -or $state.sourceCommit -ne $commit -or $state.manifestSha256 -ne $manifestHash){throw 'No matching verified draft created by this process'}
-        Verify-Download $release
+        if(!$release -or !$release.prerelease -or !$state -or $state.releaseId -ne $release.id -or $state.sourceCommit -ne $commit -or $state.manifestSha256 -ne $manifestHash){throw 'No matching owned prerelease created by this process'}
         $remoteTag=Run git @('ls-remote','origin',"refs/tags/$tag^{}")
         if(($remoteTag -split '\s+')[0] -ne $commit){throw 'Remote annotated tag points at the wrong commit'}
+        Verify-Download $release
+        if(!$release.draft){Write-Host "Public pre-release re-download verified without mutation: $($release.html_url)";return}
         Run gh @('release','edit',$tag,'--repo',$repo,'--draft=false','--prerelease') | Out-Host
         $public=Run gh @('api',"repos/$repo/releases/$($release.id)") | ConvertFrom-Json
         if($public.draft -or !$public.prerelease -or $public.tag_name -ne $tag){throw 'Public pre-release metadata verification failed'}
