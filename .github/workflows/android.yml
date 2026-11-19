@@ -6,8 +6,13 @@ on:
         description: Refresh every NuGet and platform lock on Windows
         type: boolean
         default: false
+      candidate_run_id:
+        description: Optional successful exact-source package-build run to test without rebuilding its APK
+        required: false
+        default: ''
 permissions:
   contents: read
+  actions: read
 jobs:
   refresh:
     if: inputs.refresh_locks
@@ -32,6 +37,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 45
     env:
+      CANDIDATE_RUN_ID: ${{ inputs.candidate_run_id }}
       GITPAD_ANDROID_PASSWORD: ${{ secrets.GITPAD_ANDROID_PASSWORD }}
       GITPAD_ANDROID_CERTIFICATE_SHA256: ${{ secrets.GITPAD_ANDROID_CERTIFICATE_SHA256 }}
     steps:
@@ -57,15 +63,18 @@ jobs:
           log-accepted-android-sdk-licenses: false
       - name: Install pinned native workload and editor
         run: |
-          npm install --global corepack@0.34.6
-          corepack enable
-          corepack install --global pnpm@12.16.1
-          pnpm install --frozen-lockfile
-          pnpm build
-          dotnet workload install maui-android --version "$(node -p 'JSON.parse(require("fs").readFileSync("eng/toolchain.json")).workloadSetVersion')"
+          if [ -z "$CANDIDATE_RUN_ID" ]; then
+            npm install --global corepack@0.34.6
+            corepack enable
+            corepack install --global pnpm@12.16.1
+            pnpm install --frozen-lockfile
+            pnpm build
+            dotnet workload install maui-android --version "$(node -p 'JSON.parse(require("fs").readFileSync("eng/toolchain.json")).workloadSetVersion')"
+          fi
           yes | sdkmanager --licenses > /dev/null || test "${PIPESTATUS[1]}" = 0
           sdkmanager 'platforms;android-36' 'build-tools;36.0.0'
       - name: Build signed universal Release candidate
+        if: inputs.candidate_run_id == ''
         run: |
           mkdir -p artifacts/android
           dotnet publish apps/GitPadPlus.App -c Release -f net10.0-android -p:GitPadTargetFramework=net10.0-android -p:GitPadAndroidReleaseUniversal=true -p:RestoreLockedMode=true -p:GitPadSourceCommit="$GITHUB_SHA" -p:AndroidKeyStore=true -p:AndroidSigningKeyStore="$GITPAD_ANDROID_KEY_PATH" -p:AndroidSigningKeyAlias=gitpadplus-release -p:AndroidSigningStorePass=env:GITPAD_ANDROID_PASSWORD -p:AndroidSigningKeyPass=env:GITPAD_ANDROID_PASSWORD -o artifacts/android/publish
@@ -73,11 +82,42 @@ jobs:
           test "$(printf '%s\n' "$apk" | wc -l)" = 1
           cp "$apk" artifacts/android/GitPadPlus-Android-Release.apk
           echo "GITPAD_ANDROID_APK=artifacts/android/GitPadPlus-Android-Release.apk" >> "$GITHUB_ENV"
+      - name: Download immutable APK from the exact-source package run
+        if: inputs.candidate_run_id != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          test "$CANDIDATE_RUN_ID" -eq "$CANDIDATE_RUN_ID"
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$CANDIDATE_RUN_ID" > package-run.json
+          node -e 'const r=JSON.parse(require("fs").readFileSync("package-run.json"));if(r.head_sha!==process.env.GITHUB_SHA||r.conclusion!=="success"||r.path!==".github/workflows/release.yml")throw Error("Package run is not accepted exact-source build")'
+          gh run download "$CANDIDATE_RUN_ID" --name native-candidate-packages --dir artifacts/download
+          mkdir -p artifacts/android
+          apk=$(find artifacts/download -name GitPadPlus-Android-Release.apk)
+          test "$(printf '%s\n' "$apk" | wc -l)" = 1
+          info=$(find artifacts/download -name android-build-info.json)
+          test "$(printf '%s\n' "$info" | wc -l)" = 1
+          node --input-type=module -e 'import fs from "node:fs";import {createHash} from "node:crypto";const info=JSON.parse(fs.readFileSync(process.argv[2]));if(info.sourceCommit!==process.env.GITHUB_SHA||info.sha256!==createHash("sha256").update(fs.readFileSync(process.argv[1])).digest("hex"))throw Error("APK source/hash mismatch")' "$apk" "$info"
+          cp "$apk" artifacts/android/GitPadPlus-Android-Release.apk
+          echo "GITPAD_ANDROID_APK=artifacts/android/GitPadPlus-Android-Release.apk" >> "$GITHUB_ENV"
+      - name: Independently verify APK signature, version and source stamp
+        run: |
           "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose --print-certs artifacts/android/GitPadPlus-Android-Release.apk > artifacts/android/signature.log
           grep -F "$GITPAD_ANDROID_CERTIFICATE_SHA256" artifacts/android/signature.log
           "$ANDROID_HOME/build-tools/36.0.0/aapt2" dump badging artifacts/android/GitPadPlus-Android-Release.apk > artifacts/android/badging.log
+          "$ANDROID_HOME/build-tools/36.0.0/aapt2" dump xmltree artifacts/android/GitPadPlus-Android-Release.apk --file AndroidManifest.xml > artifacts/android/manifest.log
+          node scripts/verify-android-package.mjs
           sha256sum artifacts/android/GitPadPlus-Android-Release.apk > artifacts/android/SHA256SUMS.txt
+          dotnet run --project tools/GitPadPlus.Benchmarks -c Release -- artifacts/android/fixture-generation.json --index-fixture --keep-fixture
           node scripts/android-instrumentation.mjs
+      - name: Fetch the immutable prior alpha for signed upgrade acceptance
+        if: inputs.candidate_run_id != ''
+        run: |
+          curl --fail --location --retry 2 --max-time 180 'https://github.com/styayur/gitpad-plus/releases/download/v0.1.0-alpha.1/GitPadPlus-Android-Release.apk' -o artifacts/android/alpha1-baseline.apk
+          echo '681b8b93b34385aa248413713876bd45400b04934a05228a4564f399ece3d07e  artifacts/android/alpha1-baseline.apk' | sha256sum --check
+          "$ANDROID_HOME/build-tools/36.0.0/aapt2" dump xmltree artifacts/android/alpha1-baseline.apk --file AndroidManifest.xml > artifacts/android/alpha1-baseline-manifest.log
+          grep -F '63070c81c99f90cd4e46a7ce4d700ace2d08b5fa' artifacts/android/alpha1-baseline-manifest.log
+          echo 'GITPAD_BASELINE_APK=artifacts/android/alpha1-baseline.apk' >> "$GITHUB_ENV"
+          echo 'GITPAD_BASELINE_SOURCE_COMMIT=63070c81c99f90cd4e46a7ce4d700ace2d08b5fa' >> "$GITHUB_ENV"
       - name: Enable KVM for the disposable emulator
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
@@ -97,8 +137,8 @@ jobs:
         if: always()
         run: |
           mkdir -p artifacts/android
-          adb logcat -d > artifacts/android/logcat.log || true
-          adb pull /sdcard/Pictures/ artifacts/android/screenshots || true
+          timeout 15s adb logcat -d > artifacts/android/post-emulator-logcat.log || true
+          timeout 15s adb pull /sdcard/Android/data/io.github.styayur.gitpadplus/files/acceptance/ artifacts/android/post-emulator-screenshots || true
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
         with:

@@ -8,7 +8,7 @@ param(
     [Parameter(ParameterSetName='Publish',Mandatory)][switch]$ApprovePublication
 )
 $ErrorActionPreference='Stop'
-$repo='styayur/gitpad-plus';$tag='v0.1.0-alpha.1'
+$repo='styayur/gitpad-plus';$version=(Get-Content (Join-Path $PSScriptRoot '../package.json') -Raw|ConvertFrom-Json).version;$tag='v'+$version
 function Run([string]$Program,[string[]]$Arguments) {
     $output=& $Program @Arguments
     if($LASTEXITCODE -ne 0){throw "$Program failed (exit $LASTEXITCODE). Inspect the recorded release state before retrying."}
@@ -89,17 +89,17 @@ try {
             # failed push/draft creation can resume without replacing any tag.
             @{releaseId=$null;sourceCommit=$commit;tag=$tag;manifestSha256=$manifestHash} | ConvertTo-Json | Set-Content -LiteralPath $statePath -Encoding utf8
         }
-        if(!$localExists){Run git @('tag','-a',$tag,$commit,'-m','GitPad+ v0.1.0-alpha.1 verified early alpha') | Out-Host}
+        if(!$localExists){Run git @('tag','-a',$tag,$commit,'-m',"GitPad+ $tag verified early alpha") | Out-Host}
         if((Run git @('rev-parse',"refs/tags/$tag^{}")) -ne $commit -or (Run git @('cat-file','-t',"refs/tags/$tag")) -ne 'tag'){throw 'Recorded tag must be annotated and target the accepted commit'}
         if(!$tags){Run git @('push','origin',"refs/tags/$tag") | Out-Host}
         $remoteTag=Run git @('ls-remote','origin',"refs/tags/$tag^{}")
         if(($remoteTag -split '\s+')[0] -ne $commit){throw 'Remote annotated tag points at the wrong commit'}
-        Run gh @('release','create',$tag,'--repo',$repo,'--verify-tag','--draft','--prerelease','--title','GitPad+ v0.1.0-alpha.1 — Early Alpha','--notes-file',(Join-Path $candidate 'RELEASE_NOTES.md')) | Out-Host
+        Run gh @('release','create',$tag,'--repo',$repo,'--verify-tag','--draft','--prerelease','--title',"GitPad+ $tag — Early Alpha",'--notes-file',(Join-Path $candidate 'RELEASE_NOTES.md')) | Out-Host
         $release=Run gh @('api',"repos/$repo/releases",'--jq',('.[] | select(.tag_name=="'+$tag+'")')) | ConvertFrom-Json
         @{releaseId=$release.id;sourceCommit=$commit;tag=$tag;manifestSha256=$manifestHash} | ConvertTo-Json | Set-Content -LiteralPath $statePath -Encoding utf8
     }
     $uploaded=@(Run gh @('api',"repos/$repo/releases/$($release.id)/assets",'--paginate','--jq','.[].name'))
     foreach($name in $assetNames){if($name -notin $uploaded){Run gh @('release','upload',$tag,(Join-Path $candidate $name),'--repo',$repo) | Out-Host}}
     Verify-Download $release
-    Write-Host 'Verified DRAFT retained. Obtain separate final user approval before -Publish -ApprovePublication.'
+    Write-Host 'Verified DRAFT retained. Authorized publication uses -Publish -ApprovePublication.'
 } finally {Pop-Location}

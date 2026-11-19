@@ -40,6 +40,11 @@ try {
     foreach($target in $targets){
         if($Refresh){Run-Dotnet (@('restore')+$target+@('--force-evaluate','-p:RestoreLockedMode=false'))}
         Run-Dotnet (@('restore')+$target+@('--locked-mode'))
+        if($target[0] -eq 'apps/GitPadPlus.App'){
+            $label=if($target -contains '-p:GitPadTargetFramework=net10.0-android'){'android-app'}else{'windows-app'}
+            New-Item -ItemType Directory -Force artifacts/restore-assets|Out-Null
+            Copy-Item -LiteralPath apps/GitPadPlus.App/obj/project.assets.json -Destination "artifacts/restore-assets/$label.json"
+        }
     }
     Write-Output "Verified $($targets.Count) restore graphs ($Scope); SDK $($pins.sdk.version), workload $($nativePins.workloadSetVersion)."
 } finally {Pop-Location}

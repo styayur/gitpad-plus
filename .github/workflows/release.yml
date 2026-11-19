@@ -2,17 +2,140 @@ name: Verify uploaded Alpha candidate (no publication)
 on:
   workflow_dispatch:
     inputs:
+      operation:
+        description: Build immutable packages or verify a fully accepted upload
+        type: choice
+        options: [build, verify]
+        default: verify
+        required: true
       source_commit:
         description: Exact accepted commit SHA
         required: true
       candidate_run_id:
         description: Successful workflow run containing a release-candidate artifact and actual native evidence
-        required: true
+        required: false
 permissions:
   contents: read
   actions: read
 jobs:
+  build:
+    if: inputs.operation == 'build'
+    runs-on: windows-latest
+    environment: android-alpha-signing
+    timeout-minutes: 60
+    env:
+      GITPAD_ANDROID_PASSWORD: ${{ secrets.GITPAD_ANDROID_PASSWORD }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ inputs.source_commit }}
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version-file: .node-version
+      - uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9
+        with:
+          global-json-file: global.json
+      - name: Require exact clean main and successful corresponding CI
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EXPECTED: ${{ inputs.source_commit }}
+        run: |
+          $head=(git rev-parse HEAD).Trim()
+          if($head -ne $env:EXPECTED -or (gh api "repos/$env:GITHUB_REPOSITORY/git/ref/heads/main" --jq .object.sha) -ne $head){throw 'Candidate is not exact current main'}
+          $runs=gh run list --repo $env:GITHUB_REPOSITORY --workflow ci.yml --commit $head --limit 20 --json headSha,conclusion,status | ConvertFrom-Json
+          if(!($runs | Where-Object {$_.headSha -eq $head -and $_.conclusion -eq 'success' -and $_.status -eq 'completed'})){throw 'Corresponding main CI is not successful'}
+          "JAVA_HOME=$env:JAVA_HOME_21_X64" >> $env:GITHUB_ENV
+          "NUGET_PACKAGES=$env:USERPROFILE\.nuget\packages" >> $env:GITHUB_ENV
+      - uses: android-actions/setup-android@9fc6c4e9069bf8d3d10b2204b1fb8f6ef7065407
+        with:
+          packages: platform-tools platforms;android-36 build-tools;36.0.0
+      - name: Prepare pinned tools and all locked graphs
+        shell: pwsh
+        run: |
+          npm install --global corepack@0.34.6
+          corepack enable
+          corepack install --global pnpm@12.16.1
+          pnpm install --frozen-lockfile
+          if($LASTEXITCODE){exit $LASTEXITCODE}
+          ./scripts/refresh-dotnet.ps1 -Scope all -InstallWorkloads
+          if($LASTEXITCODE){exit $LASTEXITCODE}
+          dotnet restore apps/GitPadPlus.App -p:GitPadTargetFramework=net10.0-windows10.0.19041.0 -p:RuntimeIdentifier=win-x64 --locked-mode
+          if($LASTEXITCODE){exit $LASTEXITCODE}
+      - name: Audit actual restored Windows and Android dependencies
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          pnpm audit --json > artifacts/npm-audit.json
+          if($LASTEXITCODE){throw 'Raw npm audit did not pass'}
+          $env:GitPadTargetFramework='net10.0-windows10.0.19041.0'
+          dotnet list apps/GitPadPlus.App package --no-restore --vulnerable --include-transitive --framework net10.0-windows10.0.19041 --format json > artifacts/windows-nuget-audit.json
+          if($LASTEXITCODE){throw 'Windows audit query failed'}
+          dotnet list apps/GitPadPlus.App package --no-restore --include-transitive --framework net10.0-windows10.0.19041 --format json > artifacts/windows-nuget-audit.inventory.json
+          if($LASTEXITCODE){throw 'Windows inventory query failed'}
+          dotnet restore apps/GitPadPlus.App -p:GitPadTargetFramework=net10.0-android -p:GitPadAndroidReleaseUniversal=true -p:Configuration=Release --locked-mode
+          if($LASTEXITCODE){throw 'Android locked restore failed'}
+          $env:GitPadTargetFramework='net10.0-android'
+          dotnet list apps/GitPadPlus.App package --no-restore --vulnerable --include-transitive --framework net10.0-android36.0 --format json > artifacts/android-nuget-audit.json
+          if($LASTEXITCODE){throw 'Android audit query failed'}
+          dotnet list apps/GitPadPlus.App package --no-restore --include-transitive --framework net10.0-android36.0 --format json > artifacts/android-nuget-audit.inventory.json
+          if($LASTEXITCODE){throw 'Android inventory query failed'}
+          $env:GitPadTargetFramework=$null
+          node scripts/security-gate.mjs artifacts/windows-nuget-audit.json artifacts/android-nuget-audit.json > artifacts/native-security-gate.log
+          if($LASTEXITCODE){throw 'Installed dependency security gate failed'}
+          $pins=(Get-Content eng/toolchain.json -Raw|ConvertFrom-Json).nativeRuntimePins
+          $queries=@('Microsoft.Graphics.Win2D@1.4.0',"Microsoft.NETCore.App.Runtime.win-x64@$($pins.windowsRuntimeVersion)","Microsoft.NETCore.App.Runtime.Mono.android-arm64@$($pins.androidMonoRuntimeVersion)","Microsoft.NETCore.App.Runtime.Mono.android-x64@$($pins.androidMonoRuntimeVersion)")
+          $records=@()
+          foreach($query in $queries){
+            $raw=gh api --method GET /advisories -f ecosystem=nuget -f "affects=$query"
+            if($LASTEXITCODE){throw 'Native upstream advisory query failed'}
+            $found=$raw|ConvertFrom-Json
+            $records+=@{package=$query;advisories=@($found)}
+            if(@($found).Count){throw "Review native upstream advisory: $query"}
+          }
+          $records|ConvertTo-Json -Depth 30|Set-Content artifacts/native-upstream-advisories.json
+      - name: Build complete offline native and web license inventory
+        shell: pwsh
+        run: |
+          node scripts/licenses.mjs
+          if($LASTEXITCODE){exit $LASTEXITCODE}
+          node scripts/native-license-inventory.mjs artifacts/restore-assets/windows-app.json artifacts/restore-assets/android-app.json
+          if($LASTEXITCODE){exit $LASTEXITCODE}
+          node scripts/bundle-notices.mjs
+          if($LASTEXITCODE){exit $LASTEXITCODE}
+      - name: Restore existing signing identity and build immutable packages
+        shell: pwsh
+        env:
+          KEYSTORE: ${{ secrets.GITPAD_ANDROID_KEYSTORE }}
+        run: |
+          $key=Join-Path $env:RUNNER_TEMP 'gitpad-release.keystore'
+          [IO.File]::WriteAllBytes($key,[Convert]::FromBase64String($env:KEYSTORE))
+          try {
+            ./scripts/build-windows-release.ps1 -OutputDirectory artifacts/candidate-packages/windows
+            if($LASTEXITCODE){exit $LASTEXITCODE}
+            ./scripts/build-android-release.ps1 -KeystorePath $key -SigningPasswordEnvironmentVariable GITPAD_ANDROID_PASSWORD -AndroidSdkDirectory $env:ANDROID_HOME -JavaSdkDirectory $env:JAVA_HOME -OutputDirectory artifacts/candidate-packages/android
+            if($LASTEXITCODE){exit $LASTEXITCODE}
+          } finally {Remove-Item -LiteralPath $key -Force -ErrorAction SilentlyContinue}
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: native-candidate-packages
+          path: |
+            artifacts/candidate-packages/windows/GitPadPlus-Windows-x64.zip
+            artifacts/candidate-packages/android/GitPadPlus-Android-Release.apk
+            artifacts/candidate-packages/**/*.json
+            artifacts/candidate-packages/**/*.log
+            artifacts/SBOM.spdx.json
+            artifacts/license-inventory.json
+            artifacts/native-license-inventory.json
+            artifacts/*audit*.json
+            artifacts/native-security-gate.log
+            artifacts/native-upstream-advisories.json
+            artifacts/restore-assets/
+            public/THIRD_PARTY_LICENSES.txt
   verify:
+    if: inputs.operation != 'build'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
@@ -33,6 +156,10 @@ jobs:
           node -e 'const r=JSON.parse(require("fs").readFileSync("ci.json"));if(r[0]?.headSha!==process.env.EXPECTED||r[0]?.conclusion!=="success")process.exit(1)'
           gh run download "$RUN_ID" --name release-candidate --dir release-candidate
       - name: Install APK verification tools
+        uses: android-actions/setup-android@9fc6c4e9069bf8d3d10b2204b1fb8f6ef7065407
+        with:
+          packages: build-tools;36.0.0
+      - name: Verify APK tool availability
         run: sdkmanager "build-tools;36.0.0"
       - name: Fail closed on missing native acceptance, signatures or asset checks
         env:

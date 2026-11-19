@@ -1,6 +1,6 @@
 # Security reporting
 
-This is unreleased development software. Avoid sole-copy production use and back up your vault. Do not publish a personal diary, tokens, keystores or unredacted diagnostic dumps in an issue.
+This is early-alpha software. Avoid sole-copy production use and back up your vault. Do not publish a personal diary, tokens, keystores or unredacted diagnostic dumps in an issue.
 
 Use GitHub's private vulnerability reporting for `styayur/gitpad-plus` when available. If it is unavailable, open a minimal public issue requesting a private contact without disclosing exploit details or private data. No private reporting address is fabricated here.
 

@@ -73,7 +73,7 @@ if (args.Length == 3 && args[0] == "--exit-fixtures")
 }
 
 // Measures portable storage, not native application startup or mobile input latency.
-var benchmarkRoot=Path.GetFullPath(Environment.GetEnvironmentVariable("GITPAD_BENCHMARK_TEMP")??Path.GetTempPath());
+var benchmarkRoot=Path.TrimEndingDirectorySeparator(Path.GetFullPath(Environment.GetEnvironmentVariable("GITPAD_BENCHMARK_TEMP")??Path.GetTempPath()));
 var temp = Path.Combine(benchmarkRoot, "gitpad-benchmark-" + Guid.NewGuid().ToString("N"));
 var fixtureOnly=args.Contains("--index-fixture");
 var keepFixture=args.Contains("--keep-fixture");

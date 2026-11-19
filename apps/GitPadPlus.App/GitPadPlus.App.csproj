@@ -5,8 +5,8 @@
     <TargetFrameworks Condition="'$(GitPadTargetFramework)' != ''">$(GitPadTargetFramework)</TargetFrameworks>
     <OutputType>Exe</OutputType><RootNamespace>GitPadPlus.App</RootNamespace><UseMaui>true</UseMaui><SingleProject>true</SingleProject>
     <ApplicationTitle>GitPad+</ApplicationTitle><ApplicationId>io.github.styayur.gitpadplus</ApplicationId>
-    <ApplicationDisplayVersion>0.1.0</ApplicationDisplayVersion><ApplicationVersion>1</ApplicationVersion>
-    <ApplicationDisplayVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">0.1.0-alpha.1</ApplicationDisplayVersion>
+    <ApplicationDisplayVersion>0.1.0</ApplicationDisplayVersion><ApplicationVersion>$(GitPadAndroidVersionCode)</ApplicationVersion>
+    <ApplicationDisplayVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">$(Version)</ApplicationDisplayVersion>
     <WindowsPackageType>None</WindowsPackageType>
     <SelfContained Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">true</SelfContained>
     <WindowsAppSDKSelfContained Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">true</WindowsAppSDKSelfContained>

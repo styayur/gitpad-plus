@@ -1,5 +1,11 @@
 {
-  "workloadSetVersion": "10.0.400",
+  "workloadSetVersion": "10.0.404",
   "supportedDotnetMajor": 10,
-  "supportedMauiMajor": 10
+  "supportedMauiMajor": 10,
+  "nativeRuntimePins": {
+    "windowsRuntimeVersion": "10.0.15",
+    "androidMonoRuntimeVersion": "10.0.15",
+    "androidRuntimeGlueVersion": "36.1.118",
+    "windowsSdkReferenceVersion": "10.0.19041.57"
+  }
 }

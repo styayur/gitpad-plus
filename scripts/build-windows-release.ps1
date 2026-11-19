@@ -7,6 +7,7 @@ Push-Location $root
 try{
     $output=[IO.Path]::GetFullPath($OutputDirectory)
     if(Test-Path -LiteralPath $output){if(Get-ChildItem -LiteralPath $output -Force){throw 'Output must be new/empty'}}
+    $version=(Get-Content package.json -Raw|ConvertFrom-Json).version
     $sha=(& git rev-parse HEAD).Trim();if($LASTEXITCODE -ne 0){throw 'Cannot resolve source commit'}
     $dirty=!!(& git status --porcelain)
     if($dirty -and !$AllowDirtyDevelopmentBuild){throw 'Release source must be committed and clean'}
@@ -33,6 +34,6 @@ try{
     $zip=Join-Path $output 'GitPadPlus-Windows-x64.zip'
     # Freeze the package before any executable is launched and creates a profile.
     [IO.Compression.ZipFile]::CreateFromDirectory($publish,$zip,[IO.Compression.CompressionLevel]::Optimal,$false)
-    @{sourceCommit=$stamp;checkoutCommit=$sha;dirty=$dirty;version='0.1.0-alpha.1';configuration='Release';architecture='x64';signature=$signatureLabel;packagedExecutableSha256=(Get-FileHash -LiteralPath $exe -Algorithm SHA256).Hash.ToLowerInvariant();bytes=(Get-Item -LiteralPath $zip).Length;sha256=(Get-FileHash -LiteralPath $zip -Algorithm SHA256).Hash.ToLowerInvariant();scope='Package built; clean extraction and native runtime acceptance still required'}|ConvertTo-Json|Set-Content -LiteralPath (Join-Path $output 'windows-build-info.json') -Encoding utf8
+    @{sourceCommit=$stamp;checkoutCommit=$sha;dirty=$dirty;version=$version;configuration='Release';architecture='x64';signature=$signatureLabel;packagedExecutableSha256=(Get-FileHash -LiteralPath $exe -Algorithm SHA256).Hash.ToLowerInvariant();bytes=(Get-Item -LiteralPath $zip).Length;sha256=(Get-FileHash -LiteralPath $zip -Algorithm SHA256).Hash.ToLowerInvariant();scope='Package built; clean extraction and native runtime acceptance still required'}|ConvertTo-Json|Set-Content -LiteralPath (Join-Path $output 'windows-build-info.json') -Encoding utf8
     Get-Content -LiteralPath (Join-Path $output 'windows-build-info.json')
 }finally{Pop-Location}
