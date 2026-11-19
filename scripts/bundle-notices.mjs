@@ -12,7 +12,8 @@ for(const path of [...walk('artifacts/third-party'),'LICENSE','THIRD_PARTY_NOTIC
   const hash=createHash('sha256').update(bytes).digest('hex');
   if(texts.has(hash))texts.get(hash).paths.push(path);else texts.set(hash,{paths:[path],text:bytes.toString('utf8')});
 }
-const intro=['GitPad+ 0.1.0-alpha.1 — bundled third-party license texts',
+const version=JSON.parse(readFileSync('package.json')).version;
+const intro=[`GitPad+ ${version} — bundled third-party license texts`,
   'Original source: AGPL-3.0-only. Dependencies retain their own terms. User diary content is not relicensed.',
   'Inventory is a record of upstream terms, not a grant of additional rights.',
   'Portable dependency inventory:\n'+JSON.stringify(portable.inventory,null,2),

@@ -7,6 +7,7 @@ param(
     [Parameter(Mandatory)][string]$OutputDirectory,
     [string]$Alias='gitpadplus-release',
     [string]$BuildToolsVersion='36.0.0',
+    [string]$SigningPasswordEnvironmentVariable,
     [string]$PackagedRegistryPath,
     [switch]$QuickProbe,
     [switch]$AllowDirtyDevelopmentBuild
@@ -17,6 +18,11 @@ Push-Location $root
 $pointer=[IntPtr]::Zero
 try {
     $key=(Resolve-Path -LiteralPath $KeystorePath).Path
+    $version=(Get-Content package.json -Raw|ConvertFrom-Json).version
+    [xml]$buildProps=Get-Content Directory.Build.props -Raw
+    $versionCode=[string]$buildProps.Project.PropertyGroup.GitPadAndroidVersionCode
+    $identity=Get-Content eng/android-signing.json -Raw|ConvertFrom-Json
+    if($Alias -ne $identity.alias){throw 'Release signing alias mismatch'}
     if($key.StartsWith($root+[IO.Path]::DirectorySeparatorChar,[StringComparison]::OrdinalIgnoreCase)){throw 'Signing identity must be outside the repository'}
     $output=[IO.Path]::GetFullPath($OutputDirectory)
     if(Test-Path -LiteralPath $output){if(Get-ChildItem -LiteralPath $output -Force){throw 'Output must be a new/empty directory; existing assets will not be overwritten'}}
@@ -32,10 +38,15 @@ try {
     if($LASTEXITCODE -ne 0){throw 'Embedded editor build failed'}
     [string[]]$modeArguments=if($QuickProbe){@('-p:GitPadAndroidReleaseUniversal=false','-p:RuntimeIdentifier=android-x64','-p:RunAOTCompilation=false')}else{@('-p:GitPadAndroidReleaseUniversal=true')}
     $modeArguments+=if($QuickProbe){'-p:RestoreLockedMode=false'}else{'-p:RestoreLockedMode=true'}
-    $protectedPassword=(Get-Content -LiteralPath ($key+'.password.dpapi') -Raw).Trim()
-    $secure=ConvertTo-SecureString -String $protectedPassword
-    $pointer=[Runtime.InteropServices.Marshal]::SecureStringToBSTR($secure)
-    $env:GITPAD_RELEASE_PASSWORD=[Runtime.InteropServices.Marshal]::PtrToStringBSTR($pointer)
+    if($SigningPasswordEnvironmentVariable){
+        $env:GITPAD_RELEASE_PASSWORD=[Environment]::GetEnvironmentVariable($SigningPasswordEnvironmentVariable)
+        if(!$env:GITPAD_RELEASE_PASSWORD){throw 'Requested signing password environment variable is empty'}
+    }else{
+        $protectedPassword=(Get-Content -LiteralPath ($key+'.password.dpapi') -Raw).Trim()
+        $secure=ConvertTo-SecureString -String $protectedPassword
+        $pointer=[Runtime.InteropServices.Marshal]::SecureStringToBSTR($secure)
+        $env:GITPAD_RELEASE_PASSWORD=[Runtime.InteropServices.Marshal]::PtrToStringBSTR($pointer)
+    }
     $env:JAVA_HOME=$JavaSdkDirectory
     $env:ANDROID_HOME=$AndroidSdkDirectory
     $publish=Join-Path $output 'publish'
@@ -53,12 +64,13 @@ try {
     & $aapt dump badging $apk > (Join-Path $output 'android-badging.log')
     if($LASTEXITCODE -ne 0){throw 'APK manifest inspection failed'}
     $badging=Get-Content -LiteralPath (Join-Path $output 'android-badging.log') -Raw
-    if($badging -match 'application-debuggable' -or $badging -notmatch "versionName='0.1.0-alpha.1'" -or $badging -notmatch "versionCode='1'" -or $badging -notmatch "name='io.github.styayur.gitpadplus'"){throw 'APK identity, version or Release configuration mismatch'}
+    if($badging -match 'application-debuggable' -or $badging -notmatch ("versionName='"+[regex]::Escape($version)+"'") -or $badging -notmatch ("versionCode='"+$versionCode+"'") -or $badging -notmatch ("name='"+[regex]::Escape($identity.applicationId)+"'")){throw 'APK identity, version or Release configuration mismatch'}
     & $aapt dump xmltree $apk --file AndroidManifest.xml > (Join-Path $output 'android-manifest.log')
     if($LASTEXITCODE -ne 0){throw 'APK source stamp inspection failed'}
     $fingerprint=[regex]::Match($signature,'certificate SHA-256 digest:\s*([a-f0-9]{64})',[Text.RegularExpressions.RegexOptions]::IgnoreCase).Groups[1].Value.ToLowerInvariant()
     if(!$fingerprint){throw 'Missing certificate fingerprint'}
-    @{sourceCommit=$stamp;checkoutCommit=$sha;dirty=$dirty;quickProbe=[bool]$QuickProbe;packagedRegistrySha256=(Get-FileHash -LiteralPath $registry -Algorithm SHA256).Hash.ToLowerInvariant();version='0.1.0-alpha.1';configuration='Release';certificateSha256=$fingerprint;bytes=(Get-Item -LiteralPath $apk).Length;sha256=(Get-FileHash -LiteralPath $apk -Algorithm SHA256).Hash.ToLowerInvariant();physicalDeviceVerified=$false;scope=if($stamp -eq 'development'){'Development signed probe; not release-ready'}else{'Candidate awaiting exact APK emulator acceptance'}} | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $output 'android-build-info.json') -Encoding utf8
+    if($fingerprint -ne $identity.certificateSha256){throw 'Existing Android release certificate changed'}
+    @{sourceCommit=$stamp;checkoutCommit=$sha;dirty=$dirty;quickProbe=[bool]$QuickProbe;packagedRegistrySha256=(Get-FileHash -LiteralPath $registry -Algorithm SHA256).Hash.ToLowerInvariant();version=$version;versionCode=$versionCode;configuration='Release';certificateSha256=$fingerprint;bytes=(Get-Item -LiteralPath $apk).Length;sha256=(Get-FileHash -LiteralPath $apk -Algorithm SHA256).Hash.ToLowerInvariant();physicalDeviceVerified=$false;scope=if($stamp -eq 'development'){'Development signed probe; not release-ready'}else{'Candidate awaiting exact APK emulator acceptance'}} | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $output 'android-build-info.json') -Encoding utf8
     Get-Content -LiteralPath (Join-Path $output 'android-build-info.json')
 } finally {
     $env:GITPAD_RELEASE_PASSWORD=$null

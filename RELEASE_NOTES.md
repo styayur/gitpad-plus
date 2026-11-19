@@ -1,6 +1,6 @@
-# GitPad+ v0.1.0-alpha.1 — Early Alpha candidate
+# GitPad+ v0.1.0-alpha.2 — Early Alpha candidate
 
-This local candidate is not approved for publication. See `docs/acceptance/v0.1.0-alpha.1.md` and the candidate's `acceptance.json` for actual qualification and blocking gates.
+This update adds compact mobile writing, recoverable Trash/Undo and crash-consistent source-pair restoration. The versioned acceptance manifest records exact source, tests and package qualification. The existing alpha.1 release is preserved.
 
 GitPad+ stores notes as Markdown with UUIDv7 sidecars and a rebuildable SQLite index. This alpha includes calendar navigation, multiple notes per date, tabs, two independently editable panes, WYSIWYG editing, source peek, callouts and nested folds, document/block/selection links, image import, native image clipboard paste, and trusted bundled plugins. External-file reconciliation archives conflicting source/metadata and the open editor buffer before an explicit choice is applied. Plugin settings and named object identities persist across restart and survive disable/removal.
 

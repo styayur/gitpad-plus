@@ -4,6 +4,7 @@ import { resolve, sep, isAbsolute } from 'node:path';
 import { createHash } from 'node:crypto';
 import { inflateRawSync, crc32 } from 'node:zlib';
 import { execFileSync } from 'node:child_process';
+import { releaseVersion, androidVersionCode } from './release-version.mjs';
 
 export const requiredGates = ['windowsBuild','windowsRuntime','windowsPackagedRuntime','androidBuild','androidReleaseSignature','androidRuntime','markdownFidelity','saveRecovery','blockIdentity','selectionAnchors','pluginIsolation','pluginPersistence','safeClear','security','licenses','nativeFeatureAcceptance','verifiedAssets'];
 const hash = value => createHash('sha256').update(value).digest('hex');
@@ -34,7 +35,7 @@ export function readZip(bytes) {
 }
 
 export function verifyAndroidBadging(badging) {
-  if(!badging.includes("name='io.github.styayur.gitpadplus'")||!badging.includes("versionName='0.1.0-alpha.1'")||!badging.includes("versionCode='1'")||badging.includes('application-debuggable'))fail('Wrong package/version or Debug APK');
+  if(!badging.includes("name='io.github.styayur.gitpadplus'")||!badging.includes(`versionName='${releaseVersion}'`)||!badging.includes(`versionCode='${androidVersionCode}'`)||badging.includes('application-debuggable'))fail('Wrong package/version or Debug APK');
   const abis=/^native-code:\s*(.+)\r?$/m.exec(badging)?.[1]??'';
   if(!/^(?:minSdkVersion|sdkVersion):'26'\r?$/m.test(badging)||!/^targetSdkVersion:'36'\r?$/m.test(badging)||!abis.includes("'arm64-v8a'")||!abis.includes("'x86_64'"))fail('Wrong minimum/target SDK or missing distributed Android ABI');
 }
@@ -58,7 +59,7 @@ export function inspectAndroid(apk, evidence) {
 export function verifyEvidence(directory, sourceCommit, inspectApk=inspectAndroid) {
   directory=realpathSync(resolve(directory));
   const evidence=JSON.parse(readFileSync(resolve(directory,'acceptance.json'),'utf8'));
-  if(evidence.schemaVersion!==2||evidence.version!=='0.1.0-alpha.1'||!/^[a-f0-9]{40}$/.test(sourceCommit??'')||evidence.sourceCommit!==sourceCommit)fail('Commit/version/schema mismatch');
+  if(evidence.schemaVersion!==2||evidence.version!==releaseVersion||!/^[a-f0-9]{40}$/.test(sourceCommit??'')||evidence.sourceCommit!==sourceCommit)fail('Commit/version/schema mismatch');
   if(evidence.devices?.android?.kind!=='emulator'||evidence.devices.android.physicalDeviceVerified!==false||evidence.physicalDeviceVerified!==false)fail('Android acceptance must explicitly identify emulator-only scope');
   for(const platform of ['windows','android'])if(!evidence.devices?.[platform]?.description?.trim())fail('Missing real device description: '+platform);
   for(const gate of requiredGates){

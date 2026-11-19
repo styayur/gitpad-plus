@@ -4,9 +4,9 @@ A local-first Markdown journal with calendar navigation, WYSIWYG editing and per
 
 [简体中文](README.zh-CN.md) · [Specification](docs/PRODUCT-SPEC.md) · [Architecture](docs/ARCHITECTURE.md) · [Acceptance](docs/acceptance/v0.1.0-alpha.1.md)
 
-## Status: development toward v0.1.0-alpha.1
+## Status: Early Alpha
 
-**Unreleased. No public pre-release download is approved.** Actual Windows 11 and signed Android Release development probes have run locally. The current closeout integrates a verified source-built Windows x64 Win2D package with retained source and runtime terms; exact clean-main candidate acceptance and all release gates remain pending. Android evidence is emulator-only. Do not use this development version as the only copy of important notes.
+Public prereleases and their exact package acceptance evidence are available on the [Releases page](https://github.com/styayur/gitpad-plus/releases). Current source targets `v0.1.0-alpha.2`; the existing alpha.1 release is preserved. Native packages are qualified separately from browser tests, and Android evidence is emulator-only. Do not use an alpha as the sole copy of important notes.
 
 Implemented and tested in the portable core/browser workflow:
 
@@ -52,7 +52,7 @@ Plugins are reviewed/bundled code in this alpha. The permission adapter is not a
 
 ## Roadmap
 
-- v0.1: complete remaining native acceptance and reliability gates before publishing the first alpha.
+- v0.1: qualify each alpha with native acceptance and data-reliability gates.
 - v0.2: GitHub/GitLab sync, diff/history and conflict handling.
 - v0.3: timelines, backlinks and export.
 - v0.4: graph, canvas, bases and advanced statistics.
