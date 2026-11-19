@@ -114,7 +114,10 @@ jobs:
         run: |
           curl --fail --location --retry 2 --max-time 180 'https://github.com/styayur/gitpad-plus/releases/download/v0.1.0-alpha.1/GitPadPlus-Android-Release.apk' -o artifacts/android/alpha1-baseline.apk
           echo '681b8b93b34385aa248413713876bd45400b04934a05228a4564f399ece3d07e  artifacts/android/alpha1-baseline.apk' | sha256sum --check
+          "$ANDROID_HOME/build-tools/36.0.0/aapt2" dump xmltree artifacts/android/alpha1-baseline.apk --file AndroidManifest.xml > artifacts/android/alpha1-baseline-manifest.log
+          grep -F '63070c81c99f90cd4e46a7ce4d700ace2d08b5fa' artifacts/android/alpha1-baseline-manifest.log
           echo 'GITPAD_BASELINE_APK=artifacts/android/alpha1-baseline.apk' >> "$GITHUB_ENV"
+          echo 'GITPAD_BASELINE_SOURCE_COMMIT=63070c81c99f90cd4e46a7ce4d700ace2d08b5fa' >> "$GITHUB_ENV"
       - name: Enable KVM for the disposable emulator
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules

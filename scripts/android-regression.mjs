@@ -10,7 +10,9 @@ function runPhase(phase, label=phase) {
   const raw = /^INSTRUMENTATION_RESULT: report=(.+)$/m.exec(log)?.[1];
   if (!raw) throw Error('Native report missing: ' + phase + '\n' + log);
   const report = JSON.parse(raw);
-  report.sourceCommit=process.env.GITHUB_SHA;
+  report.testHarnessSourceCommit=process.env.GITHUB_SHA;
+  report.sourceCommit=label==='upgrade-baseline'?process.env.GITPAD_BASELINE_SOURCE_COMMIT:process.env.GITHUB_SHA;
+  if(!/^[a-f0-9]{40}$/.test(report.sourceCommit??''))throw Error('Installed APK source identity missing');
   report.installedApkSha256=createHash('sha256').update(readFileSync(label==='upgrade-baseline'?process.env.GITPAD_BASELINE_APK:process.env.GITPAD_ANDROID_APK)).digest('hex');
   report.phase=label;
   writeFileSync(`artifacts/android/${label}.json`, JSON.stringify(report, null, 2) + '\n');
