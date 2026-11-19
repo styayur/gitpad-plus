@@ -1,6 +1,6 @@
 # Building
 
-Use .NET SDK **10.0.403**, Node **24.19.0**, Corepack **0.34.6**, pnpm **12.16.1** and committed lockfiles. MAUI Controls is pinned to **10.0.130**. Linux supports portable Core/frontend tests; WinUI requires Windows. Native builds and runtime acceptance are separate checks.
+Use .NET SDK **10.0.404**, Node **24.19.0**, Corepack **0.34.6**, pnpm **12.16.1** and committed lockfiles. MAUI Controls is pinned to **10.0.130**. Linux supports portable Core/frontend tests; WinUI requires Windows. Native builds and runtime acceptance are separate checks.
 
 Windows requires the `maui-windows` workload and Windows SDK 10.0.26100. Use the app-only framework selector to avoid restoring Android. The project enables .NET self-contained deployment, `WindowsAppSDKSelfContained=true` and `WindowsPackageType=None` for Windows.
 
@@ -18,7 +18,7 @@ dotnet publish apps/GitPadPlus.App/GitPadPlus.App.csproj -c Release -f net10.0-w
 
 For candidate packaging, run `scripts/build-windows-release.ps1 -OutputDirectory <new-directory>` after generating the portable/native inventories and offline notices. It requires clean committed source and creates the ZIP before runtime-generated WebView2 profiles exist. Package the **whole** publish directory, including native/runtime libraries and third-party notices. Extract the ZIP into a new directory and test that executable. The package still requires Windows x64 10.0.19041 or newer and working Evergreen WebView2. Testing Windows 11 does not qualify every supported OS version. State the publisher signature status explicitly; a self-issued certificate is not a trusted Authenticode publisher certificate.
 
-Android requires `maui-android` (local workload installation used `--version 10.0.400`), JDK 21, SDK platform 36 and build-tools 36.0.0. Set `JAVA_HOME`, `ANDROID_HOME` and `ANDROID_SDK_ROOT`. Emulator acceptance also needs platform-tools, the emulator and one compatible x86_64 system image. Local probes use Android 16/API 36 Google APIs. The manual Android CI Debug output is not a release asset.
+Android requires `maui-android` (local workload installation used `--version 10.0.404`), JDK 21, SDK platform 36 and build-tools 36.0.0. Set `JAVA_HOME`, `ANDROID_HOME` and `ANDROID_SDK_ROOT`. Emulator acceptance also needs platform-tools, the emulator and one compatible x86_64 system image. Local probes use Android 16/API 36 Google APIs. The manual Android CI Debug output is not a release asset.
 
 ```powershell
 ./scripts/build-android-release.ps1 -KeystorePath <outside-repository-keystore> -AndroidSdkDirectory $env:ANDROID_HOME -JavaSdkDirectory $env:JAVA_HOME -OutputDirectory <new-output-directory>

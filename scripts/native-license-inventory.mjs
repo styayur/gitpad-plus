@@ -6,6 +6,8 @@ import {verifyWin2DSource,win2dVersion} from './win2d-source.mjs';
 
 // Run after portable licenses.mjs, with snapshots of each actual native restore.
 const inputs=process.argv.slice(2);
+const runtimePins=JSON.parse(readFileSync('eng/toolchain.json')).nativeRuntimePins;
+if(!runtimePins)throw Error('Missing reviewed native runtime pins');
 if(!inputs.length)throw Error('Supply actual native project.assets.json snapshot(s)');
 const nuget=process.env.NUGET_PACKAGES;if(!nuget)throw Error('Set NUGET_PACKAGES to the restored package cache');
 const sbom=JSON.parse(readFileSync('artifacts/SBOM.spdx.json','utf8'));
@@ -76,14 +78,14 @@ for(const input of inputs){
   }
 }
 // Self-contained Windows and Mono Android runtime packs are not normal PackageReferences.
-record('Microsoft.NETCore.App.Runtime.win-x64','10.0.14',join(nuget,'microsoft.netcore.app.runtime.win-x64','10.0.14'),'Windows published runtime');
-record('Microsoft.Windows.SDK.NET.Ref','10.0.19041.57',join(nuget,'microsoft.windows.sdk.net.ref','10.0.19041.57'),'Windows SDK projections');
+record('Microsoft.NETCore.App.Runtime.win-x64',runtimePins.windowsRuntimeVersion,join(nuget,'microsoft.netcore.app.runtime.win-x64',runtimePins.windowsRuntimeVersion),'Windows published runtime');
+record('Microsoft.Windows.SDK.NET.Ref',runtimePins.windowsSdkReferenceVersion,join(nuget,'microsoft.windows.sdk.net.ref',runtimePins.windowsSdkReferenceVersion),'Windows SDK projections');
 const packs=join(process.env.DOTNET_ROOT??'','packs');
 for(const abi of ['android-arm64','android-x64']){
   const name='Microsoft.NETCore.App.Runtime.Mono.'+abi;
-  record(name,'10.0.11',join(packs,name,'10.0.11'),'Android published Mono runtime '+abi);
+  record(name,runtimePins.androidMonoRuntimeVersion,join(packs,name,runtimePins.androidMonoRuntimeVersion),'Android published Mono runtime '+abi);
   const android='Microsoft.Android.Runtime.Mono.36.'+abi;
-  record(android,'36.1.69',join(packs,android,'36.1.69'),'Android native runtime glue '+abi);
+  record(android,runtimePins.androidRuntimeGlueVersion,join(packs,android,runtimePins.androidRuntimeGlueVersion),'Android native runtime glue '+abi);
 }
 const fontText=readFileSync('docs/licenses/katex-fonts-OFL-1.1.txt','utf8');
 if(!fontText.includes('SIL OPEN FONT LICENSE'))throw Error('Missing actual KaTeX asset license');

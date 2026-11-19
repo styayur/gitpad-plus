@@ -22,7 +22,7 @@ let child,browser,page;
 const check=(name,ok)=>{checks.push({name,passed:!!ok});if(!ok)throw Error(name);};
 const rpc=(method,params={})=>page.evaluate(({method,params})=>new Promise((resolve,reject)=>{
   const requestId=crypto.randomUUID();
-  const onMessage=event=>{const r=JSON.parse(event.detail.message);if(r.requestId!==requestId)return;clearTimeout(timer);window.removeEventListener('HybridWebViewMessageReceived',onMessage);r.error?reject(Error(r.error.message)):resolve(r.result);};
+  const onMessage=event=>{const r=JSON.parse(event.detail.message);if(r.requestId!==requestId)return;clearTimeout(timer);window.removeEventListener('HybridWebViewMessageReceived',onMessage);if(r.error)reject(Error(r.error.message));else resolve(r.result);};
   const timer=setTimeout(()=>{window.removeEventListener('HybridWebViewMessageReceived',onMessage);reject(Error('Native RPC timeout '+method));},30000);
   window.addEventListener('HybridWebViewMessageReceived',onMessage);
   window.HybridWebView.SendRawMessage(JSON.stringify({protocolVersion:1,requestId,method,params}));

@@ -133,8 +133,8 @@ jobs:
         if: always()
         run: |
           mkdir -p artifacts/android
-          adb logcat -d > artifacts/android/logcat.log || true
-          adb pull /sdcard/Android/data/io.github.styayur.gitpadplus/files/acceptance/ artifacts/android/screenshots || true
+          timeout 15s adb logcat -d > artifacts/android/post-emulator-logcat.log || true
+          timeout 15s adb pull /sdcard/Android/data/io.github.styayur.gitpadplus/files/acceptance/ artifacts/android/post-emulator-screenshots || true
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
         with:

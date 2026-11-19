@@ -22,7 +22,7 @@ MAUI 10/WinUI 3/Android shell source and CI builds are provided. The local nativ
 
 ## Development
 
-Pinned versions: .NET SDK 10.0.403, Node.js 24.19.0 LTS, Corepack 0.34.6, pnpm 12.16.1. Run from the existing checkout; each cloud task is already isolated and needs no additional worktree.
+Pinned versions: .NET SDK 10.0.404, Node.js 24.19.0 LTS, Corepack 0.34.6, pnpm 12.16.1. Run from the existing checkout; each cloud task is already isolated and needs no additional worktree.
 
 ```bash
 # From the repository root, with the pinned tools on PATH:
