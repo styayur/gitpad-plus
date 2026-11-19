@@ -53,9 +53,7 @@ jobs:
       - name: Prepare pinned tools and all locked graphs
         shell: pwsh
         run: |
-          npm install --global corepack@0.34.6
-          corepack enable
-          corepack install --global pnpm@12.16.1
+          ./scripts/activate-pnpm.ps1
           pnpm install --frozen-lockfile
           if($LASTEXITCODE){exit $LASTEXITCODE}
           ./scripts/refresh-dotnet.ps1 -Scope all -InstallWorkloads

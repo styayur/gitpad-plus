@@ -41,10 +41,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           $env:NUGET_PACKAGES="$env:USERPROFILE/.nuget/packages"
-          npm install --global corepack@0.34.6
-          if($LASTEXITCODE){exit $LASTEXITCODE}
-          corepack enable
-          corepack install --global pnpm@12.16.1
+          ./scripts/activate-pnpm.ps1
           pnpm install --frozen-lockfile
           if($LASTEXITCODE){exit $LASTEXITCODE}
           ./scripts/verify-native-dependencies.ps1
