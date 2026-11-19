@@ -24,6 +24,7 @@ public record LinkTarget(Guid DocumentId, Guid? BlockId, Guid? SelectionId);
 public record SaveTransaction(Guid Id, string OldHash, string NewHash, string? OldSidecarHash = null);
 public record PairHead(string MarkdownHash, string SidecarHash);
 public record DeleteMarker(Guid Id, long Revision);
+public record RestoreMarker(Guid Id, string MarkdownHash, string SidecarHash);
 public record RecoveryIssue(Guid? DocumentId, string Code);
 public record WorkspaceState(Guid[] Tabs, Guid? ActiveId, long Sequence = 0, Guid? SecondaryId = null);
 public record PackagedPlugin(string Id, string Module, string[] Permissions, string[] Methods);
@@ -77,6 +78,7 @@ public static class Identity
 [JsonSerializable(typeof(PairHead))]
 [JsonSerializable(typeof(ClearTransaction))]
 [JsonSerializable(typeof(DeleteMarker))]
+[JsonSerializable(typeof(RestoreMarker))]
 [JsonSerializable(typeof(BlockAnchor[]))]
 [JsonSerializable(typeof(SelectionAnchor[]))]
 [JsonSerializable(typeof(string[]))]

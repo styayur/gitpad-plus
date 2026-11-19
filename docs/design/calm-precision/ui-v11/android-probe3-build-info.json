@@ -1,0 +1,14 @@
+{
+  "sourceCommit": "development",
+  "physicalDeviceVerified": false,
+  "checkoutCommit": "427b695dce819d3babccd32bb4d6905ee1ec0af0",
+  "packagedRegistrySha256": "2533507c914c1e9a8fdb187834bf9a4db94b9c99f639fa1416e50c0197848b9e",
+  "certificateSha256": "4fe4a85c853243d9d7c1b0dc421b5786f1bb89a91f22f8c691fe6840824e9fd0",
+  "quickProbe": true,
+  "configuration": "Release",
+  "bytes": 19133707,
+  "sha256": "7ea54ca1d245a253cb600d28be3105e25166a16e37362751cbe191925d2bd55e",
+  "scope": "Development signed probe; not release-ready",
+  "version": "0.1.0-alpha.1",
+  "dirty": true
+}

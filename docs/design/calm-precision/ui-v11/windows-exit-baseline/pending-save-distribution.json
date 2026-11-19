@@ -1,0 +1,8 @@
+{
+  "scenario": "pending-save",
+  "runs": 3,
+  "medianMs": 166.4289,
+  "p95Ms": 180.8293,
+  "maximumMs": 180.8293,
+  "scope": "Native close event to OS process exit, sampled every 10 ms. Operator clicks X. Physical click dispatch latency and UI-thread stalls require separate observation."
+}

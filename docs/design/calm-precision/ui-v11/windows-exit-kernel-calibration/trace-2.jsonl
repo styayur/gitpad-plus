@@ -1,0 +1,7 @@
+{"Phase":"window.created","ElapsedMs":0.1371,"Thread":2,"Dirty":null,"Timestamp":1023952839332,"MaximumDispatchDelayMs":null,"DispatchSamples":null}
+{"Phase":"close.requested","ElapsedMs":34853.1435,"Thread":2,"Dirty":false,"Timestamp":1024301369318,"MaximumDispatchDelayMs":null,"DispatchSamples":null}
+{"Phase":"detach.started","ElapsedMs":34857.2572,"Thread":2,"Dirty":null,"Timestamp":1024301410466,"MaximumDispatchDelayMs":null,"DispatchSamples":null}
+{"Phase":"detach.completed","ElapsedMs":34858.5043,"Thread":2,"Dirty":null,"Timestamp":1024301422924,"MaximumDispatchDelayMs":null,"DispatchSamples":null}
+{"Phase":"dispatcher.summary","ElapsedMs":34867.1077,"Thread":2,"Dirty":null,"Timestamp":1024301508963,"MaximumDispatchDelayMs":343.9877,"DispatchSamples":345}
+{"Phase":"window.closed","ElapsedMs":34867.1251,"Thread":2,"Dirty":null,"Timestamp":1024301509128,"MaximumDispatchDelayMs":null,"DispatchSamples":null}
+{"Phase":"process.exit","ElapsedMs":35025.9241,"Thread":1,"Dirty":null,"Timestamp":1024303097126,"MaximumDispatchDelayMs":null,"DispatchSamples":null}

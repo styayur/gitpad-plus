@@ -26,6 +26,9 @@ public partial class App : Application
         {
             if (window.Handler?.PlatformView is Microsoft.UI.Xaml.Window native)
             {
+                ExitDiagnostics.Record("window.created");
+                var finishDispatcherObservation=ExitDiagnostics.ObserveDispatcher(native.DispatcherQueue);
+                native.Closed += (_, _) => {finishDispatcherObservation();ExitDiagnostics.Record("window.closed");};
                 page.AttachAppearance(native,titleBar);
                 // MAUI sizes the window in DIPs; AppWindow bounds are physical
                 // pixels. Clamp once to the actual work area so a high-DPI
@@ -40,8 +43,8 @@ public partial class App : Application
                     appWindow.MoveAndResize(bounds);
                 }
                 var closingAfterSave=false;
-                native.AppWindow.Closing += (_, args) => { if (page.HasUnsavedChanges) { args.Cancel = true;closingAfterSave=true; page.RequestFlush(); } };
-                page.Flushed+=()=>{if(closingAfterSave){closingAfterSave=false;native.Close();}};
+                native.AppWindow.Closing += (_, args) => { ExitDiagnostics.Record("close.requested", page.HasUnsavedChanges); if (page.HasUnsavedChanges) { args.Cancel = true;closingAfterSave=true; ExitDiagnostics.Record("close.waiting-for-save"); page.RequestFlush(); } };
+                page.Flushed+=()=>{ExitDiagnostics.Record("save.flushed", page.HasUnsavedChanges);if(closingAfterSave){closingAfterSave=false;native.Close();}};
             }
         };
 #endif

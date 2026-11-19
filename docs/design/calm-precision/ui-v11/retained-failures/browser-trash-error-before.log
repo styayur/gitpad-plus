@@ -1,0 +1,49 @@
+[WebServer] (node:19324) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 1 test using 1 worker
+
+(node:16532) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  x  1 tests\ui\trash.spec.ts:99:1 › a failed restore explains its cause inside the active trash dialog (10.3s)
+
+
+  1) tests\ui\trash.spec.ts:99:1 › a failed restore explains its cause inside the active trash dialog
+
+    Error: expect(locator).toContainText(expected) failed
+
+    Locator: getByRole('dialog', { name: 'Trash', exact: true }).getByRole('alert')
+    Expected substring: "active vault"
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toContainText" getByRole('dialog', { name: 'Trash', exact: true }).getByRole('alert') with timeout 5000ms
+      - waiting for getByRole('dialog', { name: 'Trash', exact: true }).getByRole('alert')
+
+
+      111 |   });
+      112 |   await trash.getByRole('button',{name:'Restore '+note.header.title,exact:true}).click();
+    > 113 |   await expect(trash.getByRole('alert')).toContainText('active vault');
+          |                                          ^
+      114 |   await expect(trash.getByRole('alert')).toBeInViewport();
+      115 |   await expect(trash.getByRole('button',{name:'Restore '+note.header.title,exact:true})).toBeVisible();
+      116 |   expect((await call(request,'documents.trash')).map((item:{id:string})=>item.id)).toContain(note.header.id);
+        at E:\GitHub\gitpad-plus\tests\ui\trash.spec.ts:113:42
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\trash-a-failed-restore-exp-7f2f6-ide-the-active-trash-dialog\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\trash-a-failed-restore-exp-7f2f6-ide-the-active-trash-dialog\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\trash-a-failed-restore-exp-7f2f6-ide-the-active-trash-dialog\trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace test-results\trash-a-failed-restore-exp-7f2f6-ide-the-active-trash-dialog\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  1 failed
+    tests\ui\trash.spec.ts:99:1 › a failed restore explains its cause inside the active trash dialog

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 import { test, expect, type APIRequestContext } from '@playwright/test';
 
+const fixtureDate=()=>{const date=new Date();return [date.getFullYear(),String(date.getMonth()+1).padStart(2,'0'),String(date.getDate()).padStart(2,'0')].join('-');};
 async function call(request:APIRequestContext,method:string,params:unknown={}) {
   const response=await request.post('/rpc',{data:{protocolVersion:1,requestId:crypto.randomUUID(),method,params}});
   expect(response.ok()).toBe(true);const json=await response.json();expect(json.error).toBeNull();return json.result;
@@ -70,7 +71,11 @@ test('editor, toolbar and status fit desktop, narrow and reduced keyboard viewpo
     const rect=await page.locator('.editor-pane').boundingBox();expect(rect,`${width}x${height}`).not.toBeNull();expect(rect!.height).toBeGreaterThan(80);
     expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
     await expect(page.getByRole('textbox',{name:'Note title',exact:true})).toBeVisible();
-    const toolbar=await page.getByRole('toolbar',{name:'Formatting'}).boundingBox();expect(toolbar!.y+toolbar!.height).toBeLessThanOrEqual(rect!.y+1);
+    const toolbar=await page.getByRole('toolbar',{name:'Formatting'}).boundingBox();
+    if(width<=760){
+      expect(toolbar!.y).toBeGreaterThanOrEqual(rect!.y+rect!.height-1);
+      expect(toolbar!.y+toolbar!.height).toBe(height);
+    }else expect(toolbar!.y+toolbar!.height).toBeLessThanOrEqual(rect!.y+1);
     await expect(page.locator('footer [role=status]')).toBeVisible();
   }
 });
@@ -78,7 +83,7 @@ test('editor, toolbar and status fit desktop, narrow and reduced keyboard viewpo
 test('stacked writing panes remain editable and keyboard-scrollable on narrow and short screens',async({page,request},testInfo)=>{
   const now=new Date(),date=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
   const first=await call(request,'documents.create',{date,title:'Primary narrow page'}),second=await call(request,'documents.create',{date,title:'Secondary narrow page'});
-  await page.goto('/');await page.getByRole('navigation',{name:'Notes'}).getByRole('button').filter({hasText:'Primary narrow page'}).click();
+  await page.goto('/');await page.getByRole('navigation',{name:'Notes'}).locator('.open-note').filter({hasText:'Primary narrow page'}).click();
   await expect(page.locator('.ProseMirror')).toHaveCount(1);await page.getByRole('combobox',{name:'Open beside'}).selectOption(second.header.id);await expect(page.locator('.ProseMirror')).toHaveCount(2);
   for(const [width,height]of [[320,640],[393,430]]){
     await page.setViewportSize({width,height});const workspace=page.getByRole('main',{name:'Writing workspace'});
@@ -128,4 +133,79 @@ test('writing chrome stays reachable at 100, 125, 150 and 200 percent render sca
     await page.getByRole('button',{name:'Save',exact:true}).click();await expect(page.locator('footer [role=status]')).toHaveText('Local: Saved');
     await page.screenshot({path:testInfo.outputPath(`render-scale-${scale}.png`)});await context.close();
   }
+});
+
+
+test('mobile writing uses one compact title row and a viewport docked command strip',async({page,request})=>{
+  await page.setViewportSize({width:320,height:640});
+  const note=await call(request,'documents.create',{date:fixtureDate(),title:'A long mobile journal title that must yield to its actions'});
+  await page.goto('/');
+  await page.locator('nav[aria-label=Notes] button').filter({hasText:note.header.title}).click();
+  const title=page.getByRole('textbox',{name:'Note title',exact:true});
+  await expect(title).toBeVisible();
+  await expect(page.locator('.app-header')).toBeHidden();
+  for(const name of ['Calendar','Save'])await expect(page.getByRole('button',{name,exact:true})).toBeVisible();
+  await expect(page.getByLabel('Note actions',{exact:true})).toBeVisible();
+  const strip=page.getByRole('toolbar',{name:'Formatting'});
+  await expect(strip).toBeVisible();
+  for(const height of [640,430,640]){
+    await page.setViewportSize({width:320,height});
+    const metrics=await strip.evaluate(node=>{
+      const rect=node.getBoundingClientRect();
+      const status=document.querySelector('footer')!.getBoundingClientRect();
+      return {bottom:rect.bottom,top:rect.top,height:rect.height,statusBottom:status.bottom,viewport:innerHeight,overflow:document.documentElement.scrollWidth>innerWidth};
+    });
+    expect(metrics.bottom).toBe(metrics.viewport);
+    expect(metrics.statusBottom).toBeLessThanOrEqual(metrics.top);
+    expect(metrics.height).toBe(48);
+    expect(metrics.overflow).toBe(false);
+  }
+  await page.screenshot({path:'artifacts/ui-v11-mobile-320.png'});
+});
+
+test('mobile overflow exposes settings and calendar returns to writing',async({page,request})=>{
+  await page.setViewportSize({width:320,height:640});
+  const note=await call(request,'documents.create',{date:fixtureDate(),title:'Mobile navigation'});
+  await page.goto('/');
+  await page.locator('nav[aria-label=Notes] button').filter({hasText:note.header.title}).click();
+  await page.getByLabel('Note actions',{exact:true}).click();
+  await page.getByRole('button',{name:'Settings',exact:true}).click();
+  await expect(page.getByRole('dialog',{name:'Settings',exact:true})).toBeVisible();
+  await page.keyboard.press('Escape');
+  await page.getByRole('button',{name:'Calendar',exact:true}).click();
+  await expect(page.getByRole('complementary',{name:'Calendar navigation'})).toBeVisible();
+  await page.getByRole('button',{name:'Back to writing',exact:true}).click();
+  await expect(page.getByRole('textbox',{name:'Note title',exact:true})).toBeVisible();
+});
+
+
+test('trash and undo retain the original document identity',async({page,request})=>{
+  const note=await call(request,'documents.create',{date:fixtureDate(),title:'Recycle fixture'});
+  await page.goto('/');
+  const row=page.locator('.note-row').filter({hasText:'Recycle fixture'});
+  await row.locator('.recycle-note').focus();
+  await row.locator('.recycle-note').press('Enter');
+  await expect(row).toHaveCount(0);
+  const retained=await call(request,'documents.trash');
+  expect(retained.map((item:{id:string})=>item.id)).toContain(note.header.id);
+  await page.getByRole('button',{name:'Undo',exact:true}).click();
+  await expect(page.locator('.note-row').filter({hasText:'Recycle fixture'})).toBeVisible();
+  expect(await call(request,'documents.load',{id:note.header.id})).toEqual(note);
+});
+
+test('mobile swipe reveals trash while vertical movement and short drags preserve the note',async({page,request})=>{
+  await page.setViewportSize({width:393,height:700});
+  await call(request,'documents.create',{date:fixtureDate(),title:'Swipe fixture'});
+  await page.goto('/');
+  const row=page.locator('.note-row').filter({hasText:'Swipe fixture'});
+  for(const end of [{x:290,y:210},{x:280,y:110},{x:200,y:110}]){
+    await row.dispatchEvent('pointerdown',{pointerType:'touch',clientX:300,clientY:110});
+    await row.dispatchEvent('pointermove',{pointerType:'touch',clientX:end.x,clientY:end.y});
+    await row.dispatchEvent('pointerup',{pointerType:'touch'});
+    await expect(row).toBeVisible();
+    expect(await call(request,'documents.trash')).toHaveLength(0);
+  }
+  await expect(row.locator('.open-note')).toHaveCSS('transform','matrix(1, 0, 0, 1, -88, 0)');
+  await row.locator('.recycle-note').click();
+  await expect(row).toHaveCount(0);
 });

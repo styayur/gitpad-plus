@@ -32,6 +32,36 @@ public final class AcceptanceInstrumentation extends Instrumentation {
         return result.get();
     }
     public final class NativeActions {
+        @JavascriptInterface public String sourcePairDigest(String id, boolean trash) throws Exception {
+            if (!id.matches("[a-f0-9]{8}-[a-f0-9]{4}-7[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}"))
+                throw new IllegalArgumentException("Expected synthetic document UUIDv7");
+            File vault = new File(getTargetContext().getFilesDir().getCanonicalFile(), "Vault");
+            String[] paths = trash ? new String[]{".gitpad/trash/"+id+"/document.md", ".gitpad/trash/"+id+"/sidecar.json"}
+                : new String[]{"Journal/"+id+".md", ".gitpad/anchors/"+id+".json"};
+            org.json.JSONArray hashes = new org.json.JSONArray();
+            for (String path : paths) {
+                byte[] digest = java.security.MessageDigest.getInstance("SHA-256").digest(java.nio.file.Files.readAllBytes(new File(vault,path).toPath()));
+                StringBuilder value = new StringBuilder();
+                for (byte part : digest) value.append(String.format("%02x",part));
+                hashes.put(value.toString());
+            }
+            return hashes.toString();
+        }
+        @JavascriptInterface public void swipe(float x1,float y1,float x2,float y2,float viewportWidth) {
+            int[] position=new int[2];float[] scale=new float[1];
+            runOnMainSync(()->{web.getLocationOnScreen(position);scale[0]=web.getWidth()/viewportWidth;});
+            long down=SystemClock.uptimeMillis();
+            MotionEvent.PointerProperties pointer=new MotionEvent.PointerProperties();pointer.id=0;pointer.toolType=MotionEvent.TOOL_TYPE_FINGER;
+            MotionEvent.PointerCoords coordinates=new MotionEvent.PointerCoords();coordinates.pressure=1;coordinates.size=1;
+            for(int step=0;step<=12;step++){
+                coordinates.x=position[0]+(x1+(x2-x1)*step/12)*scale[0];
+                coordinates.y=position[1]+(y1+(y2-y1)*step/12)*scale[0];
+                int action=step==0?MotionEvent.ACTION_DOWN:step==12?MotionEvent.ACTION_UP:MotionEvent.ACTION_MOVE;
+                MotionEvent event=MotionEvent.obtain(down,SystemClock.uptimeMillis(),action,1,new MotionEvent.PointerProperties[]{pointer},new MotionEvent.PointerCoords[]{coordinates},0,0,1,1,0,0,InputDevice.SOURCE_TOUCHSCREEN,0);
+                try{sendPointerSync(event);}finally{event.recycle();}
+                SystemClock.sleep(16);
+            }
+        }
         @JavascriptInterface public String pluginStorageDigest() throws Exception {
             File file=new File(getTargetContext().getFilesDir().getCanonicalFile(),"Vault/.gitpad/plugins/native-qualification-example.json");
             if(!file.isFile())return "missing";
@@ -121,7 +151,7 @@ public final class AcceptanceInstrumentation extends Instrumentation {
             });
             String phase=arguments.getString("phase","initial");
             if(phase.equals("clear")&&(!"true".equals(arguments.getString("disposable"))||!(Build.HARDWARE.equals("ranchu")||Build.FINGERPRINT.contains("sdk_gphone"))))throw new IOException("Clear requires an explicitly disposable emulator");
-            if(phase.equals("ui-two-pane")&&(!"true".equals(arguments.getString("disposable"))||!(Build.HARDWARE.equals("ranchu")||Build.FINGERPRINT.contains("sdk_gphone"))))throw new IOException("Two-pane writing requires an explicitly disposable emulator");
+            if((phase.equals("ui-two-pane")||phase.equals("trash")||phase.startsWith("writing-end"))&&(!"true".equals(arguments.getString("disposable"))||!(Build.HARDWARE.equals("ranchu")||Build.FINGERPRINT.contains("sdk_gphone"))))throw new IOException("Writing/trash tests require an explicitly disposable emulator");
             if(phase.startsWith("performance")){
                 if(!"true".equals(arguments.getString("disposable"))||!(Build.HARDWARE.equals("ranchu")||Build.FINGERPRINT.contains("sdk_gphone")))throw new IOException("Performance seeding requires an explicitly disposable emulator");
                 File vault=new File(getTargetContext().getFilesDir().getCanonicalFile(),"Vault");

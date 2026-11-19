@@ -1,0 +1,15 @@
+{
+  "passed": true,
+  "scope": "Synthetic Windows locked-source close recovery; original prose compared ignoring whitespace after removing the three inserted markers",
+  "documentId": "01a1aae3-2384-772c-a9a7-a1f10016edb3",
+  "blockIds": [
+    "01a1aae3-283c-7b03-bb79-14e100f00391"
+  ],
+  "markers": [
+    "LOCK-RECOVERY-1",
+    "LOCK-RECOVERY-2",
+    "LOCK-RECOVERY-3"
+  ],
+  "markdownSha256": "7e46c0b5c7124d212b509094473791a127022b6691fbbfdf66968e0f5e7b0b34",
+  "sidecarSha256": "e64e3fbb38f6cc664694fc99dcf973deaf81088c7850e55e6d12a9103623b29f"
+}

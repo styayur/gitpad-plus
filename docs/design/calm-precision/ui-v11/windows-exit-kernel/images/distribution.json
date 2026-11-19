@@ -1,0 +1,11 @@
+{
+  "scenario": "images",
+  "runs": 5,
+  "medianMs": 532.8582,
+  "p95Ms": 774.6718,
+  "maximumMs": 774.6718,
+  "kernelMedianMs": 481.541,
+  "kernelP95Ms": 736.366,
+  "kernelMaximumMs": 736.366,
+  "scope": "Native close event to OS process exit, sampled every 10 ms. Operator clicks X. Physical click dispatch latency and UI-thread stalls require separate observation."
+}

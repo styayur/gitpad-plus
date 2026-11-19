@@ -1,0 +1,6 @@
+INSTRUMENTATION_RESULT: failure=java.io.IOException: WebView evaluation timed out
+	at io.github.styayur.gitpadplus.acceptance.AcceptanceInstrumentation.evaluate(AcceptanceInstrumentation.java:31)
+	at io.github.styayur.gitpadplus.acceptance.AcceptanceInstrumentation.onStart(AcceptanceInstrumentation.java:193)
+	at android.app.Instrumentation$InstrumentationThread.run(Instrumentation.java:2597)
+
+INSTRUMENTATION_CODE: 0

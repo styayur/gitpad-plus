@@ -1,0 +1,85 @@
+[
+  {
+    "scenario": "empty",
+    "sourcePairsUnchanged": true,
+    "files": null
+  },
+  {
+    "scenario": "ordinary",
+    "sourcePairsUnchanged": true,
+    "files": [
+      {
+        "path": "Journal\\01a1aae3-2384-772c-a9a7-a1f10016edb3.md",
+        "sha256": "caccbd0d9adb912c5326ebffe0b5fa89faf0f3d2063af972808e02417044cb0c"
+      },
+      {
+        "path": ".gitpad\\anchors\\01a1aae3-2384-772c-a9a7-a1f10016edb3.json",
+        "sha256": "9058a8b9f669ed490d823f0dc0c7536bcdae2e8bd01ee2adea8d552e4e7b7ecd"
+      }
+    ]
+  },
+  {
+    "scenario": "long",
+    "sourcePairsUnchanged": true,
+    "files": [
+      {
+        "path": "Journal\\01a1aae3-2f28-729a-8b51-caa4854da712.md",
+        "sha256": "17ce558ead6f83501085c08413575ec999ece37ff3065d5cc1bf056ff78d7de5"
+      },
+      {
+        "path": ".gitpad\\anchors\\01a1aae3-2f28-729a-8b51-caa4854da712.json",
+        "sha256": "0e0f0631188741adc16d27b28393b68e24342dc34796c8d91a65570d380d6b7f"
+      }
+    ]
+  },
+  {
+    "scenario": "two-pane",
+    "sourcePairsUnchanged": true,
+    "files": [
+      {
+        "path": "Journal\\01a1aae3-395b-75a5-9f82-7923187b31b8.md",
+        "sha256": "56aa71f6e89931279c3568f01f9fadf9b8bd4e4e8b319a0d1aed635d7b415604"
+      },
+      {
+        "path": "Journal\\01a1aae3-3f3d-7c05-9587-e2a8483beb13.md",
+        "sha256": "7519f7388307a77a58c9085d35ada8269ae07518d27ab9afb1af90c379d42289"
+      },
+      {
+        "path": ".gitpad\\anchors\\01a1aae3-395b-75a5-9f82-7923187b31b8.json",
+        "sha256": "07a61bb12dec71903252d0711046b7ac4788e90c95b9de1f3be5521cd3dec492"
+      },
+      {
+        "path": ".gitpad\\anchors\\01a1aae3-3f3d-7c05-9587-e2a8483beb13.json",
+        "sha256": "108edbee6a6aa4cf0bf3787f7c1f064dbce3dd184e0c87ce04a43af05d28ce56"
+      }
+    ]
+  },
+  {
+    "scenario": "images",
+    "sourcePairsUnchanged": true,
+    "files": [
+      {
+        "path": "Journal\\01a1aae3-48db-71c1-8e95-6050a9494e50.md",
+        "sha256": "4374ca408dfee1268fea487e9d32cf2130ea5555f3a01ff091c520e8ea1e8758"
+      },
+      {
+        "path": ".gitpad\\anchors\\01a1aae3-48db-71c1-8e95-6050a9494e50.json",
+        "sha256": "49cc4a831730cfc25aa8474e366071a895d2904a6b63449d234dcbbc444af6ac"
+      }
+    ]
+  },
+  {
+    "scenario": "plugins-disabled",
+    "sourcePairsUnchanged": true,
+    "files": [
+      {
+        "path": "Journal\\01a1aae3-51c0-7849-a56a-58e22c945318.md",
+        "sha256": "4a527b36e9c41de8497d34edeed215bbd69fb80e04216702225cb91c20ae3362"
+      },
+      {
+        "path": ".gitpad\\anchors\\01a1aae3-51c0-7849-a56a-58e22c945318.json",
+        "sha256": "895c8237f8ed46ac693eaf09ef25b771c82bc589a44f1ba3008a8362ff10cb25"
+      }
+    ]
+  }
+]

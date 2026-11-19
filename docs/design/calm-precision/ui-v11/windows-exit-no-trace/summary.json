@@ -1,0 +1,23 @@
+{
+  "scope": "No trace enabled. Actual native X via CUA, measured from API call start including dispatch overhead; not directly comparable to native close-event traces",
+  "samples": [
+    {
+      "run": 1,
+      "exitCode": 0,
+      "clickApiCallToKernelExitMs": 376,
+      "clickApiDurationMs": 146
+    },
+    {
+      "run": 2,
+      "exitCode": 0,
+      "clickApiCallToKernelExitMs": 379,
+      "clickApiDurationMs": 159
+    },
+    {
+      "run": 3,
+      "exitCode": 0,
+      "clickApiCallToKernelExitMs": 378,
+      "clickApiDurationMs": 160
+    }
+  ]
+}

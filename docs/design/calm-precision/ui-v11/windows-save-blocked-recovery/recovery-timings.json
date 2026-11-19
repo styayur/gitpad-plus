@@ -1,0 +1,26 @@
+[
+  {
+    "run": 1,
+    "unsavedAtBothRequests": true,
+    "flushedDirty": false,
+    "retryToFlushedMs": 810.5000999999902,
+    "retryToKernelExitMs": 1287.556599999989,
+    "scope": "Excludes deliberate source-lock and operator waiting time; real native X requests retained in trace"
+  },
+  {
+    "run": 2,
+    "unsavedAtBothRequests": true,
+    "flushedDirty": false,
+    "retryToFlushedMs": 728.1622999999963,
+    "retryToKernelExitMs": 1178.3219999999892,
+    "scope": "Excludes deliberate source-lock and operator waiting time; real native X requests retained in trace"
+  },
+  {
+    "run": 3,
+    "unsavedAtBothRequests": true,
+    "flushedDirty": false,
+    "retryToFlushedMs": 910.1965000000055,
+    "retryToKernelExitMs": 1385.5819999999949,
+    "scope": "Excludes deliberate source-lock and operator waiting time; real native X requests retained in trace"
+  }
+]

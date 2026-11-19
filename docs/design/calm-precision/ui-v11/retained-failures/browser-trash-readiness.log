@@ -1,0 +1,100 @@
+[WebServer] (node:10560) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 5 tests using 1 worker
+
+(node:6460) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 1 tests\ui\trash.spec.ts:14:1 › a failed save blocks recycling and retains the open buffer (5.9s)
+  x  2 tests\ui\trash.spec.ts:31:1 › recycling the second pane closes that pane and undo keeps the first document (8.5s)
+(node:5204) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 3 tests\ui\trash.spec.ts:52:1 › a complete swipe delivered within one render turn expands without recycling (3.8s)
+  x  4 tests\ui\trash.spec.ts:66:1 › recycling a background tab preserves the active editor and survives workspace restart (10.8s)
+(node:7812) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 5 tests\ui\trash.spec.ts:99:1 › a failed restore explains its cause inside the active trash dialog (4.1s)
+
+
+  1) tests\ui\trash.spec.ts:31:1 › recycling the second pane closes that pane and undo keeps the first document
+
+    Error: expect(locator).toHaveCount(expected) failed
+
+    Locator:  getByRole('region', { name: 'Second document pane' })
+    Expected: 0
+    Received: 1
+    Timeout:  5000ms
+
+    Call log:
+      - Expect "toHaveCount" getByRole('region', { name: 'Second document pane' }) with timeout 5000ms
+      - waiting for getByRole('region', { name: 'Second document pane' })
+        13 × locator resolved to 1 element
+           - unexpected value "1"
+
+
+      42 |   await row.locator('.recycle-note').focus();
+      43 |   await row.locator('.recycle-note').press('Enter');
+    > 44 |   await expect(page.getByRole('region',{name:'Second document pane'})).toHaveCount(0);
+         |                                                                        ^
+      45 |   await expect(page.locator('.ProseMirror')).toHaveCount(1);
+      46 |   await page.getByRole('button',{name:'Undo',exact:true}).click();
+      47 |   expect((await call(request,'documents.load',{id:first.header.id})).header.id).toBe(first.header.id);
+        at E:\GitHub\gitpad-plus\tests\ui\trash.spec.ts:44:72
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\trash-recycling-the-second-be1f1-do-keeps-the-first-document\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\trash-recycling-the-second-be1f1-do-keeps-the-first-document\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\trash-recycling-the-second-be1f1-do-keeps-the-first-document\trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace test-results\trash-recycling-the-second-be1f1-do-keeps-the-first-document\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  2) tests\ui\trash.spec.ts:66:1 › recycling a background tab preserves the active editor and survives workspace restart
+
+    Error: expect(locator).toContainText(expected) failed
+
+    Locator: locator('.ProseMirror')
+    Expected substring: "Active writing stays connected"
+    Received string:    ""
+    Timeout: 5000ms
+
+    Call log:
+      - Expect "toContainText" locator('.ProseMirror') with timeout 5000ms
+      - waiting for locator('.ProseMirror')
+        13 × locator resolved to <div translate="no" role="textbox" contenteditable="true" class="ProseMirror virtual-cursor-enabled editor">…</div>
+           - unexpected value ""
+
+
+      94 |   await expect(page.getByRole('tab',{selected:true})).toHaveAttribute('title',active.header.id);
+      95 |   await expect(page.getByRole('tab').filter({hasText:background.header.title})).toHaveCount(0);
+    > 96 |   await expect(page.locator('.ProseMirror')).toContainText('Active writing stays connected');
+         |                                              ^
+      97 | });
+      98 |
+      99 | test('a failed restore explains its cause inside the active trash dialog',async({page,request})=>{
+        at E:\GitHub\gitpad-plus\tests\ui\trash.spec.ts:96:46
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\trash-recycling-a-backgrou-aef95--survives-workspace-restart\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\trash-recycling-a-backgrou-aef95--survives-workspace-restart\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\trash-recycling-a-backgrou-aef95--survives-workspace-restart\trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace test-results\trash-recycling-a-backgrou-aef95--survives-workspace-restart\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  2 failed
+    tests\ui\trash.spec.ts:31:1 › recycling the second pane closes that pane and undo keeps the first document
+    tests\ui\trash.spec.ts:66:1 › recycling a background tab preserves the active editor and survives workspace restart
+  3 passed (44.9s)

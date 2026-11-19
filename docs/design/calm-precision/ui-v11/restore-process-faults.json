@@ -1,0 +1,48 @@
+{
+  "scope": "Actual Core restore subprocess termination on this host; native app lifecycle tested separately",
+  "os": "Microsoft Windows 10.0.26200",
+  "timestamp": "2026-11-05T14:27:42.9228471+00:00",
+  "passed": true,
+  "results": [
+    {
+      "stage": "RestoreStaged",
+      "passed": true,
+      "childProcessId": 2596,
+      "exitCode": -1,
+      "vault": "E:\\GitPadPlus-Acceptance\\ui-v11-20261105\\restore-process-faults-anchors\\gitpad-process-fault-9acf41ca07b5498591b30e4679a0a4e2\\Vault",
+      "documentId": "01a1ac1b-76f1-7724-8b7d-ea84208fdf0a",
+      "markdownSha256": "56eb675a2920c5bf5ca0cf13e215e64854bb74fd5f8bff0c3d38d1835050d010",
+      "sidecarSha256": "23c81da78d9a6620de48d4e74a516253ef70aed98b74433cc002ac319e4c24ec"
+    },
+    {
+      "stage": "RestoreMarkdownReplaced",
+      "passed": true,
+      "childProcessId": 20024,
+      "exitCode": -1,
+      "vault": "E:\\GitPadPlus-Acceptance\\ui-v11-20261105\\restore-process-faults-anchors\\gitpad-process-fault-f068d25bbc2f4c39b5d08070dad4ef5d\\Vault",
+      "documentId": "01a1ac1b-8d2e-7ab6-8f49-69d7401339ad",
+      "markdownSha256": "28de931efcc0310ed258a35e85a9d82b063883b8b9a5bd4888f687ce6b8eaa4c",
+      "sidecarSha256": "7efd7d54cbf579f857e0f573ec4fcd078e38430afc750078d4a26398066f4895"
+    },
+    {
+      "stage": "RestoreSidecarReplaced",
+      "passed": true,
+      "childProcessId": 2064,
+      "exitCode": -1,
+      "vault": "E:\\GitPadPlus-Acceptance\\ui-v11-20261105\\restore-process-faults-anchors\\gitpad-process-fault-50764c07fc9c4749a965a34a16c1a382\\Vault",
+      "documentId": "01a1ac1b-a13b-7807-8245-203cc935fc4a",
+      "markdownSha256": "845ff40a5d6f639fed7388ea82fbaf4679cb71bf567c0fe8d9b0e4185fae3820",
+      "sidecarSha256": "7423425dfe4c6ce27e8207421549876f606c53611c5ef8c005a777a76c8f0fc8"
+    },
+    {
+      "stage": "RestoreCommitted",
+      "passed": true,
+      "childProcessId": 24044,
+      "exitCode": -1,
+      "vault": "E:\\GitPadPlus-Acceptance\\ui-v11-20261105\\restore-process-faults-anchors\\gitpad-process-fault-e72935e65637457f839074552f2dd764\\Vault",
+      "documentId": "01a1ac1b-b27b-786a-a642-508dcfa40090",
+      "markdownSha256": "6ba8b7ec4ecdb61da40e59dd68ac34768a5fd00d5cc891bd1bdf49f47605571f",
+      "sidecarSha256": "4d6a968119d2f82498debe554696e3deeb83237b48f99c1bbf64bf6d91fce7de"
+    }
+  ]
+}

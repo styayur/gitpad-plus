@@ -1,0 +1,68 @@
+[
+  {
+    "scenario": "empty",
+    "runs": 5,
+    "medianMs": 444.6534,
+    "p95Ms": 508.9825,
+    "maxMs": 508.9825,
+    "maxCloseToNativeClosedMs": 14.421599999997852,
+    "allExitCodesZero": true,
+    "allVisibilityObserved": true,
+    "allSourcePairsUnchanged": true
+  },
+  {
+    "scenario": "ordinary",
+    "runs": 3,
+    "medianMs": 509.4519,
+    "p95Ms": 540.0054,
+    "maxMs": 540.0054,
+    "maxCloseToNativeClosedMs": 22.44969999999921,
+    "allExitCodesZero": true,
+    "allVisibilityObserved": true,
+    "allSourcePairsUnchanged": true
+  },
+  {
+    "scenario": "long",
+    "runs": 3,
+    "medianMs": 256.0933,
+    "p95Ms": 281.4039,
+    "maxMs": 281.4039,
+    "maxCloseToNativeClosedMs": 16.70969999999943,
+    "allExitCodesZero": true,
+    "allVisibilityObserved": true,
+    "allSourcePairsUnchanged": true
+  },
+  {
+    "scenario": "two-pane",
+    "runs": 3,
+    "medianMs": 601.9179,
+    "p95Ms": 652.2424,
+    "maxMs": 652.2424,
+    "maxCloseToNativeClosedMs": 22.826200000003155,
+    "allExitCodesZero": true,
+    "allVisibilityObserved": true,
+    "allSourcePairsUnchanged": true
+  },
+  {
+    "scenario": "images",
+    "runs": 5,
+    "medianMs": 481.541,
+    "p95Ms": 736.366,
+    "maxMs": 736.366,
+    "maxCloseToNativeClosedMs": 24.571900000002643,
+    "allExitCodesZero": true,
+    "allVisibilityObserved": true,
+    "allSourcePairsUnchanged": true
+  },
+  {
+    "scenario": "plugins-disabled",
+    "runs": 3,
+    "medianMs": 500.8476,
+    "p95Ms": 567.9859,
+    "maxMs": 567.9859,
+    "maxCloseToNativeClosedMs": 22.66270000000077,
+    "allExitCodesZero": true,
+    "allVisibilityObserved": true,
+    "allSourcePairsUnchanged": true
+  }
+]

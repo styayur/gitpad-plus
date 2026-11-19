@@ -1,0 +1,98 @@
+{
+  "passed": true,
+  "phase": "ui-two-pane",
+  "started": "2026-11-05T08:03:25.379Z",
+  "finished": "2026-11-05T08:03:34.158Z",
+  "userAgent": "Mozilla/5.0 (Linux; Android 16; sdk_gphone64_x86_64 Build/BE2A.250530.026.F3; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/133.0.6943.137 Mobile Safari/537.36",
+  "checks": [
+    {
+      "name": "Actual Android Release HybridWebView loaded",
+      "passed": true
+    },
+    {
+      "name": "Loaded embedded module",
+      "scripts": [
+        "./assets/index-CHhG__aw.js",
+        "./HybridWebView.js"
+      ]
+    },
+    {
+      "name": "Two-pane keyboard actually reduces the WebView viewport",
+      "passed": true
+    },
+    {
+      "name": "Neither writing body collapses under the actual IME",
+      "passed": true
+    },
+    {
+      "name": "Split workspace scrolls while its shell status remains visible",
+      "passed": true
+    },
+    {
+      "name": "Split keyboard layout has no document-level horizontal overflow",
+      "passed": true
+    },
+    {
+      "name": "Actual two-pane IME geometry",
+      "fullHeight": 708,
+      "keyboardViewportHeight": 433,
+      "panes": [
+        {
+          "height": 160
+        },
+        {
+          "height": 170
+        }
+      ],
+      "scrollHeight": 576,
+      "clientHeight": 357,
+      "nativeGeometry": "[0, 136, 720, 866]",
+      "nativeLayout": "softInputMode=16; chain=[\"crc6452ffdc5b34af3a0f.MauiHybridWebView size=720x866 padding=0,0,0,0\",\"crc6452ffdc5b34af3a0f.WrapperView size=720x866 padding=0,0,0,0\",\"crc6452ffdc5b34af3a0f.LayoutViewGroup size=720x866 padding=0,0,0,0\",\"crc6452ffdc5b34af3a0f.ContentViewGroup size=720x1600 padding=0,136,0,598\",\"androidx.fragment.app.FragmentContainerView size=720x1600 padding=0,0,0,0\",\"androidx.coordinatorlayout.widget.CoordinatorLayout size=720x1600 padding=0,0,0,0\",\"androidx.appcompat.widget.ContentFrameLayout size=720x1600 padding=0,0,0,0\",\"androidx.appcompat.widget.FitWindowsFrameLayout size=720x1600 padding=0,0,0,0\",\"android.widget.FrameLayout size=720x1600 padding=0,0,0,0\",\"android.widget.LinearLayout size=720x1600 padding=0,0,0,0\",\"com.android.internal.policy.DecorView size=720x1600 padding=0,0,0,0\"]; imeBottom=598"
+    },
+    {
+      "name": "Second-pane save command is reachable above the IME",
+      "passed": true
+    },
+    {
+      "name": "Second-pane Unicode and block IDs persist",
+      "passed": true
+    },
+    {
+      "name": "Reopening second pane preserves its exact source and identities",
+      "passed": true
+    },
+    {
+      "name": "Split native writing preserves the primary source pair",
+      "passed": true
+    }
+  ],
+  "saves": [
+    {
+      "requestId": "01a1aabb-f975-705e-90e5-8a3e310301a6",
+      "bodyLength": 0,
+      "blocks": 1,
+      "payloadLength": 445,
+      "invalidRanges": 0,
+      "duplicateIds": 0,
+      "started": 4226.600000000093,
+      "elapsedMs": 192.19999999995343,
+      "error": null,
+      "revision": 2
+    },
+    {
+      "requestId": "01a1aabc-0b89-7723-a8f8-3c90aad9741d",
+      "bodyLength": 30,
+      "blocks": 1,
+      "payloadLength": 477,
+      "invalidRanges": 0,
+      "duplicateIds": 0,
+      "started": 8853.90000000014,
+      "elapsedMs": 249.5999999998603,
+      "error": null,
+      "revision": 3
+    }
+  ],
+  "scope": "Actual signed Release APK; emulator only; clipboard Unicode input does not establish Chinese IME composition",
+  "activityRecreationVerified": false,
+  "backgroundForegroundRequested": false
+}
