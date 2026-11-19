@@ -2,6 +2,7 @@
 import {readFileSync,writeFileSync,mkdirSync,readdirSync,existsSync,cpSync} from 'node:fs';
 import {resolve,join,relative} from 'node:path';
 import {createHash} from 'node:crypto';
+import {execFileSync} from 'node:child_process';
 import {verifyWin2DSource,win2dVersion} from './win2d-source.mjs';
 import {readZip} from './release-evidence.mjs';
 
@@ -103,11 +104,18 @@ function workloadRecord(name,version,scope){
     const different=[...new Set([...entries.keys(),...original.keys()])].filter(key=>!entries.get(key)?.equals(original.get(key)??Buffer.alloc(0))||!original.has(key));
     const comparison={path:path.replaceAll('\\','/'),sha256,packageSha256,differentEntries:different,installedEntries:entries.size,packageEntries:original.size};
     writeFileSync(evidence+'.json',JSON.stringify(comparison,null,2)+'\n');
-    if(different.length||entries.size!==original.size)throw Error('Installed JAR entry bytes differ from official NuGet package: '+path+' '+different.join(','));
+    if(entries.size!==original.size||different.some(key=>key!=='META-INF/MSFTSIG.RSA'))throw Error('Installed JAR entry bytes differ from official NuGet package: '+path+' '+different.join(','));
+    if(different.length){
+      const result=resolve(evidence+'.signature.json');
+      execFileSync('pwsh',['-NoProfile','-File',resolve('scripts/verify-jar-provenance.ps1'),'-InstalledFile',file,'-ReferenceFile',source,'-OutputFile',result],{stdio:'inherit',timeout:60000});
+      const signatures=JSON.parse(readFileSync(result,'utf8'));
+      if(!signatures.passed||signatures.installed.sha256!==sha256||signatures.reference.sha256!==packageSha256)throw Error('JAR signature proof does not bind actual bytes');
+      return {...comparison,signatures,comparison:'Every non-signature-block entry byte is identical; both differing Microsoft CMS blocks independently verify with trusted chains and the same signer identity'};
+    }
     return {...comparison,comparison:'All ZIP entry names and decompressed bytes identical; only archive container encoding differs'};
   });
   record(name,version,packageRoot,scope);
-  ids.get(name.toLowerCase()+'/'+version).installedPack={version,binaryFiles:payload.length,payload,metadataSource:`https://api.nuget.org/v3-flatcontainer/${name.toLowerCase()}/${version}/${name.toLowerCase()}.${version}.nupkg`,scope:'Official exact NuGet metadata/notices retained; installed binaries match package bytes, with every JAR entry byte checked if container encoding differs; installer metadata is not fabricated'};
+  ids.get(name.toLowerCase()+'/'+version).installedPack={version,binaryFiles:payload.length,payload,metadataSource:`https://api.nuget.org/v3-flatcontainer/${name.toLowerCase()}/${version}/${name.toLowerCase()}.${version}.nupkg`,scope:'Official exact NuGet metadata/notices retained; binary bytes match except JAR container encoding or independently trusted same-signer CMS re-signing. Every other JAR entry byte must match. Installed metadata is not fabricated.'};
 }
 for(const abi of ['android-arm64','android-x64']){
   const name='Microsoft.NETCore.App.Runtime.Mono.'+abi;
