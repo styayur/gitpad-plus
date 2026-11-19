@@ -81,11 +81,25 @@ for(const input of inputs){
 record('Microsoft.NETCore.App.Runtime.win-x64',runtimePins.windowsRuntimeVersion,join(nuget,'microsoft.netcore.app.runtime.win-x64',runtimePins.windowsRuntimeVersion),'Windows published runtime');
 record('Microsoft.Windows.SDK.NET.Ref',runtimePins.windowsSdkReferenceVersion,join(nuget,'microsoft.windows.sdk.net.ref',runtimePins.windowsSdkReferenceVersion),'Windows SDK projections');
 const packs=join(process.env.DOTNET_ROOT??'','packs');
+function workloadRecord(name,version,scope){
+  const installed=join(packs,name,version),packageRoot=join(nuget,name.toLowerCase(),version);
+  if(!existsSync(installed))throw Error('Reviewed installed workload pack missing: '+installed);
+  const walk=folder=>readdirSync(folder,{withFileTypes:true}).flatMap(entry=>entry.isDirectory()?walk(join(folder,entry.name)):[join(folder,entry.name)]);
+  const binaries=walk(installed).filter(file=>/\.(?:dll|exe|so|a|lib|bc|dat|bin|wasm|jar|dylib|winmd)$/i.test(file));
+  if(!binaries.length)throw Error('No installed workload binary payload: '+installed);
+  const payload=binaries.map(file=>{
+    const path=relative(installed,file),source=join(packageRoot,path),sha256=hash(readFileSync(file));
+    if(!existsSync(source)||hash(readFileSync(source))!==sha256)throw Error('Installed workload differs from exact official NuGet payload: '+path);
+    return {path:path.replaceAll('\\','/'),sha256};
+  });
+  record(name,version,packageRoot,scope);
+  ids.get(name.toLowerCase()+'/'+version).installedPack={version,binaryFiles:payload.length,payload,metadataSource:`https://api.nuget.org/v3-flatcontainer/${name.toLowerCase()}/${version}/${name.toLowerCase()}.${version}.nupkg`,scope:'Official exact NuGet metadata/notices retained; every installed runtime binary matches its package bytes; installer metadata is not fabricated'};
+}
 for(const abi of ['android-arm64','android-x64']){
   const name='Microsoft.NETCore.App.Runtime.Mono.'+abi;
-  record(name,runtimePins.androidMonoRuntimeVersion,join(packs,name,runtimePins.androidMonoRuntimeVersion),'Android published Mono runtime '+abi);
+  workloadRecord(name,runtimePins.androidMonoRuntimeVersion,'Android published Mono runtime '+abi);
   const android='Microsoft.Android.Runtime.Mono.36.'+abi;
-  record(android,runtimePins.androidRuntimeGlueVersion,join(packs,android,runtimePins.androidRuntimeGlueVersion),'Android native runtime glue '+abi);
+  workloadRecord(android,runtimePins.androidRuntimeGlueVersion,'Android native runtime glue '+abi);
 }
 const fontText=readFileSync('docs/licenses/katex-fonts-OFL-1.1.txt','utf8');
 if(!fontText.includes('SIL OPEN FONT LICENSE'))throw Error('Missing actual KaTeX asset license');

@@ -44,6 +44,23 @@ try {
         if($advisories.Count){throw "Review native upstream advisory: $query"}
     }
     $records|ConvertTo-Json -Depth 30|Set-Content artifacts/native-upstream-advisories.json -Encoding utf8
+    # Workload installers can omit NuGet metadata from the installed pack. Fetch
+    # the same exact official packages into the normal verified NuGet cache;
+    # native-license-inventory binds their binary payloads to installed packs.
+    # This disposable metadata project is separate from every locked app graph.
+    $metadataRoot=Join-Path ([IO.Path]::GetTempPath()) ('gitpad-runtime-metadata-'+[guid]::NewGuid().ToString('N'))
+    New-Item -ItemType Directory -Path $metadataRoot|Out-Null
+    $items=@()
+    foreach($abi in @('android-arm64','android-x64')){
+        $items+="<PackageDownload Include=`"Microsoft.NETCore.App.Runtime.Mono.$abi`" Version=`"[$($pins.androidMonoRuntimeVersion)]`" />"
+        $items+="<PackageDownload Include=`"Microsoft.Android.Runtime.Mono.36.$abi`" Version=`"[$($pins.androidRuntimeGlueVersion)]`" />"
+    }
+    $metadataProject=Join-Path $metadataRoot 'RuntimeMetadata.csproj'
+    [IO.File]::WriteAllText($metadataProject,('<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net10.0</TargetFramework><RestorePackagesWithLockFile>true</RestorePackagesWithLockFile></PropertyGroup><ItemGroup>'+($items -join '')+'</ItemGroup></Project>'))
+    Checked dotnet @('restore',$metadataProject,'--source','https://api.nuget.org/v3/index.json','--packages',$env:NUGET_PACKAGES,'--use-lock-file')
+    Checked dotnet @('restore',$metadataProject,'--source','https://api.nuget.org/v3/index.json','--packages',$env:NUGET_PACKAGES,'--locked-mode')
+    New-Item -ItemType Directory -Force artifacts/workload-package-metadata|Out-Null
+    Copy-Item -LiteralPath $metadataProject,(Join-Path $metadataRoot 'packages.lock.json') -Destination artifacts/workload-package-metadata/
     Checked node @('scripts/licenses.mjs')
     Checked node @('scripts/native-license-inventory.mjs','artifacts/restore-assets/windows-app.json','artifacts/restore-assets/android-app.json')
     Checked node @('scripts/bundle-notices.mjs')
