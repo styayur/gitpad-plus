@@ -115,6 +115,8 @@ try{
   await page.getByLabel('Note actions',{exact:true}).click();await page.getByRole('button',{name:'Move to trash',exact:true}).click();
   await page.getByRole('button',{name:'Settings',exact:true}).click();await page.getByRole('button',{name:'Trash',exact:true}).click();
   await page.getByRole('dialog',{name:'Trash',exact:true}).getByRole('button',{name:/^Restore /}).click();
+  // Wait for the actual asynchronous native restore before reading its files.
+  await expect(page.getByRole('dialog',{name:'Trash',exact:true}).getByRole('button',{name:/^Restore /})).toHaveCount(0);
   check('Native Trash restore retained exact Markdown and sidecar bytes',JSON.stringify(pair(id))===JSON.stringify(beforeTrash));
   await page.getByRole('button',{name:'Close trash',exact:true}).click();
   const sentinel=join(out,'outside-vault-sentinel.txt');writeFileSync(sentinel,'Synthetic native clear sentinel');
@@ -122,6 +124,10 @@ try{
   check('Clear cancellation retained the native document',(await rpc('documents.list')).some(note=>note.id===id));
   await page.getByRole('button',{name:'Clear Local GitPad+ Data',exact:true}).click();await page.getByRole('button',{name:'Confirm permanent deletion',exact:true}).click();
   await expect(page.locator('.ProseMirror')).toHaveCount(0);
+  // The restored note is closed, so no editor is not a clear-completion signal.
+  await expect.poll(()=>readdirSync(join(vault,'Journal')).length).toBe(0);
+  await page.waitForFunction(()=>document.documentElement.dataset.workspaceReady==='true');
+  await expect.poll(async()=>{try{return (await rpc('documents.list')).length;}catch{return -1;}}).toBe(0);
   check('Explicit native clear removed notes and retained external sentinel',readdirSync(join(vault,'Journal')).length===0&&readFileSync(sentinel,'utf8')==='Synthetic native clear sentinel');
   await page.screenshot({path:join(out,'native-cleared.png')});await close();
   writeFileSync(join(out,'windows-native.json'),JSON.stringify({passed:true,sourceCommit,scope:'Exact extracted native MAUI Windows executable, actual WebView2 and Core transport; no DevHost/Vite',os:platform()+' '+release(),packagedExecutableSha256:hash(readFileSync(exe)),savedPair:source,checks},null,2)+'\n');
