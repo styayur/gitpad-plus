@@ -1,6 +1,6 @@
 # Building
 
-Use .NET SDK **10.0.403**, Node **24.19.0**, Corepack **0.34.6**, pnpm **12.16.1** and committed lockfiles. MAUI Controls is pinned to **10.0.120**. Linux supports portable Core/frontend tests; WinUI requires Windows. Native builds and runtime acceptance are separate checks.
+Use .NET SDK **10.0.403**, Node **24.19.0**, Corepack **0.34.6**, pnpm **12.16.1** and committed lockfiles. MAUI Controls is pinned to **10.0.130**. Linux supports portable Core/frontend tests; WinUI requires Windows. Native builds and runtime acceptance are separate checks.
 
 Windows requires the `maui-windows` workload and Windows SDK 10.0.26100. Use the app-only framework selector to avoid restoring Android. The project enables .NET self-contained deployment, `WindowsAppSDKSelfContained=true` and `WindowsPackageType=None` for Windows.
 
@@ -11,7 +11,7 @@ Windows x64 restores the reviewed [Win2D source rebuild](../third-party/win2d/RE
 ```powershell
 pnpm install --frozen-lockfile
 pnpm build
-dotnet workload install maui-windows --version 10.0.400
+dotnet workload install maui-windows
 $commit=(git rev-parse HEAD).Trim()
 dotnet publish apps/GitPadPlus.App/GitPadPlus.App.csproj -c Release -f net10.0-windows10.0.19041.0 -p:GitPadTargetFramework=net10.0-windows10.0.19041.0 -r win-x64 -p:GitPadSourceCommit=$commit -o artifacts/windows-publish
 ```
@@ -35,3 +35,5 @@ The [candidate transport procedure](acceptance/candidate-transport.md) tests the
 `release.yml` verifies a supplied candidate and does not publish it. `publish-local-release.ps1 -CandidateDirectory <path>` checks clean HEAD, exact GitHub main, successful corresponding CI, the fail-closed gate and checksums without creating a tag. A candidate contains the ZIP/APK, SBOM, notices, release notes, acceptance metadata, hashed evidence and SHA256SUMS.
 
 After the user reviews the complete readiness report, `-StageDraft -ApproveTag` may create/push the annotated tag and draft prerelease. Uploaded assets are independently downloaded and hashed. Separate final user approval is required for `-Publish -ApprovePublication`, which rechecks the draft and all public assets. Existing unrelated tags/releases are refused. Never bypass a mandatory failed gate.
+
+SDK, workload and all platform lock refresh: see [dependency maintenance](DEPENDENCY-MAINTENANCE.md).

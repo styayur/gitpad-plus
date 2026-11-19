@@ -1,6 +1,8 @@
 packages:
   - packages/*
   - plugins/*
+patchedDependencies:
+  picomatch@4.0.7: patches/picomatch@4.0.7.patch
 minimumReleaseAgeExclude:
   - eslint@10.14.0
 onlyBuiltDependencies:

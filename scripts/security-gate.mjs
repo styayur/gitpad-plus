@@ -1,7 +1,21 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 import { readFileSync } from 'node:fs';
+import { verifyPicomatchBackport } from './picomatch-backport.mjs';
 const npm=JSON.parse(readFileSync('artifacts/npm-audit.json'));
-if(!npm.metadata?.vulnerabilities||Object.values(npm.metadata.vulnerabilities).some(n=>n!==0))throw new Error('Security gate: npm audit is missing or has unresolved advisories');
+if(!npm.metadata?.vulnerabilities)throw new Error('Security gate: npm audit is missing');
+const advisories=Object.values(npm.advisories??{});
+const total=Object.values(npm.metadata.vulnerabilities).reduce((a,b)=>a+b,0);
+if(total!==advisories.length)throw new Error('Security gate: incomplete npm advisory inventory');
+// This installed hardening check remains required even if the registry withdraws
+// the advisory. Raw audit JSON is always retained without modifying its counts.
+console.log(JSON.stringify(verifyPicomatchBackport()));
+for(const advisory of advisories){
+  if(advisory.github_advisory_id!=='GHSA-fc5q-39xc-vjpf'||advisory.module_name!=='picomatch'||
+     !advisory.findings?.length||advisory.findings.some(f=>f.version!=='4.0.7'||f.dev!==true))
+    throw new Error('Security gate: unresolved npm advisory '+advisory.github_advisory_id);
+  // Keep the raw advisory visible. Accept only an independently hash-checked,
+  // installed backport whose exploit and compatibility tests pass in a bounded child.
+}
 for(const path of process.argv.slice(2).length?process.argv.slice(2):['artifacts/nuget-audit.json']){
   const nuget=JSON.parse(readFileSync(path));
   const inventory=JSON.parse(readFileSync(path.replace(/\.json$/,'.inventory.json')));
