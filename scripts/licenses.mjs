@@ -55,6 +55,10 @@ for(const project of ['src/GitPadPlus.Core','tests/dotnet','apps/GitPadPlus.DevH
   }
 }
 const digest=createHash('sha256').update(readFileSync('pnpm-lock.yaml')).digest('hex');
+const backport=JSON.parse(readFileSync('patches/picomatch-provenance.json'));
+for(const pkg of packages.filter(p=>p.name==='picomatch')){
+  pkg.sourceInfo=`Upstream MIT 4.0.7 with local security backport for ${backport.advisory}; patch SHA256 ${backport.patchSha256}; upstream ${backport.upstreamCommit}. Raw registry advisory retained; see docs/SECURITY-PICOMATCH.md.`;
+}
 const sbom={spdxVersion:'SPDX-2.3',dataLicense:'CC0-1.0',SPDXID:'SPDXRef-DOCUMENT',name:'GitPadPlus-portable-dependencies',documentNamespace:'https://github.com/styayur/gitpad-plus/sbom/'+digest,creationInfo:{created:new Date().toISOString(),creators:['Tool: GitPadPlus-license-inventory-0.1']},packages,relationships:packages.map(p=>({spdxElementId:'SPDXRef-DOCUMENT',relationshipType:'DESCRIBES',relatedSpdxElement:p.SPDXID}))};
 writeFileSync('artifacts/SBOM.spdx.json',JSON.stringify(sbom,null,2)+'\n');
 writeFileSync('artifacts/license-inventory.json',JSON.stringify({scope:'installed portable npm/NuGet dependencies; native workloads and artifacts require a separate audit',inventory},null,2)+'\n');

@@ -223,6 +223,27 @@ test('plugin disabled preference persists after restart',async({page})=>{
   await page.reload();await page.getByRole('button',{name:'Settings',exact:true}).click();await expect(page.getByLabel('Official toolbar',{exact:true})).not.toBeChecked();
 });
 
+test('settings cannot close while a plugin preference write is pending',async({page})=>{
+  await page.goto('/');await page.getByRole('button',{name:'Settings',exact:true}).click();
+  let releaseWrite!:()=>void,notifyWrite!:()=>void;
+  const blocked=new Promise<void>(resolve=>{releaseWrite=resolve;});
+  const writeStarted=new Promise<void>(resolve=>{notifyWrite=resolve;});
+  await page.route('**/rpc',async route=>{
+    const message=route.request().postDataJSON();
+    if(message.method==='settings.update'){notifyWrite();await blocked;}
+    await route.continue();
+  });
+  try{
+    await page.getByLabel('Official toolbar',{exact:true}).uncheck();await writeStarted;
+    await expect(page.getByRole('button',{name:'Close settings'})).toBeDisabled();
+    await page.keyboard.press('Escape');await expect(page.getByRole('dialog',{name:'Settings',exact:true})).toBeVisible();
+  }finally{releaseWrite();}
+  await expect(page.getByRole('button',{name:'Close settings'})).toBeEnabled();
+  await page.getByRole('button',{name:'Close settings'}).click();
+  await page.reload();await page.getByRole('button',{name:'Settings',exact:true}).click();
+  await expect(page.getByLabel('Official toolbar',{exact:true})).not.toBeChecked();
+});
+
 test('a committed save acknowledgement delayed past ten seconds completes without losing the buffer',async({page,request})=>{
   let delayed=false;
   await page.route('**/rpc',async route=>{
