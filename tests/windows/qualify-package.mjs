@@ -92,8 +92,9 @@ try{
   await expect.poll(()=>page.locator('.ProseMirror img').evaluate(image=>image.complete&&image.naturalWidth>0)).toBe(true);
   await page.getByRole('button',{name:'Save',exact:true}).click();
   await expect(page.locator('footer [role=status]').first()).toHaveText('Local: Saved');
-  const richBefore=await rpc('documents.load',{id:rich.header.id});await action('Source peek');
-  await expect(page.getByRole('textbox',{name:'Original Markdown source'})).toHaveValue(richBefore.body.trimEnd());await page.getByRole('button',{name:'Close peek',exact:true}).click();
+  const richBefore=await rpc('documents.load',{id:rich.header.id});check('Complete rich Markdown retained exact source',richBefore.body===body);await action('Source peek');
+  // Source peek shows the active block, whose initial selection is the heading.
+  await expect(page.getByRole('textbox',{name:'Original Markdown source'})).toHaveValue('## Native rich fixture');await page.getByRole('button',{name:'Close peek',exact:true}).click();
   await page.locator('.ProseMirror').evaluate(editor=>{const text=[...editor.querySelectorAll('p')].find(node=>node.textContent.startsWith('Selection quote')).firstChild;const range=document.createRange();range.setStart(text,10);range.setEnd(text,18);const selection=window.getSelection();selection.removeAllRanges();selection.addRange(range);document.dispatchEvent(new Event('selectionchange'));});
   await action('Selection link');await expect(page.getByRole('alert')).toContainText('Link copied');
   const link=execFileSync('pwsh.exe',['-NoProfile','-Command','Get-Clipboard -Raw'],{encoding:'utf8',windowsHide:true}).trim();check('Native clipboard contains persistent selection URI',link.startsWith('gitpadplus://note/'+rich.header.id)&&link.includes('?selection='));
