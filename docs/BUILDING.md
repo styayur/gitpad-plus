@@ -11,20 +11,20 @@ Windows x64 restores the reviewed [Win2D source rebuild](../third-party/win2d/RE
 ```powershell
 pnpm install --frozen-lockfile
 pnpm build
-dotnet workload install maui-windows
+./scripts/refresh-dotnet.ps1 -Scope windows -InstallWorkloads
 $commit=(git rev-parse HEAD).Trim()
 dotnet publish apps/GitPadPlus.App/GitPadPlus.App.csproj -c Release -f net10.0-windows10.0.19041.0 -p:GitPadTargetFramework=net10.0-windows10.0.19041.0 -r win-x64 -p:GitPadSourceCommit=$commit -o artifacts/windows-publish
 ```
 
 For candidate packaging, run `scripts/build-windows-release.ps1 -OutputDirectory <new-directory>` after generating the portable/native inventories and offline notices. It requires clean committed source and creates the ZIP before runtime-generated WebView2 profiles exist. Package the **whole** publish directory, including native/runtime libraries and third-party notices. Extract the ZIP into a new directory and test that executable. The package still requires Windows x64 10.0.19041 or newer and working Evergreen WebView2. Testing Windows 11 does not qualify every supported OS version. State the publisher signature status explicitly; a self-issued certificate is not a trusted Authenticode publisher certificate.
 
-Android requires `maui-android` (local workload installation used `--version 10.0.404`), JDK 21, SDK platform 36 and build-tools 36.0.0. Set `JAVA_HOME`, `ANDROID_HOME` and `ANDROID_SDK_ROOT`. Emulator acceptance also needs platform-tools, the emulator and one compatible x86_64 system image. Local probes use Android 16/API 36 Google APIs. The manual Android CI Debug output is not a release asset.
+Android requires `maui-android` (workload set `10.0.404`), JDK 21, SDK platform 36 and build-tools 36.0.0. Set `JAVA_HOME`, `ANDROID_HOME` and `ANDROID_SDK_ROOT`. Emulator acceptance also needs platform-tools, the emulator and one compatible x86_64 system image. Native regression uses Android 16/API 36 Google APIs. A signed regression output still requires exact-package qualification before publication.
 
 ```powershell
 ./scripts/build-android-release.ps1 -KeystorePath <outside-repository-keystore> -AndroidSdkDirectory $env:ANDROID_HOME -JavaSdkDirectory $env:JAVA_HOME -OutputDirectory <new-output-directory>
 ```
 
-The builder requires clean committed source, builds the editor, produces one arm64-v8a/x86_64 APK, stamps the source commit and verifies manifest/version/signature. It reads the keystore's `.password.dpapi` companion into temporary environment variables. Never supply literal passwords as arguments. DPAPI recovery depends on the original Windows account; keep an independent protected offline copy of the key and credentials. `new-android-release-key.ps1` requires explicit authorization and must never regenerate an existing identity.
+The builder requires clean committed source, builds the editor, produces one arm64-v8a/x86_64 APK, stamps the source commit and verifies manifest/version/signature. It reads the keystore's `.password.dpapi` companion, or the explicitly selected signing environment variable, into temporary environment variables. The hosted workflow uses the existing protected identity. Never supply literal passwords as arguments. DPAPI recovery depends on the original Windows account; keep an independent protected offline copy of the key and credentials. `new-android-release-key.ps1` requires explicit authorization and must never regenerate an existing identity.
 
 `-QuickProbe -AllowDirtyDevelopmentBuild` produces a development-stamped probe that cannot pass the release gate. Install and test the exact candidate APK; retain `apksigner verify --verbose --print-certs`, `aapt2 dump badging`, ABI, source stamp and SHA-256 evidence. Repeat acceptance after candidate changes.
 
@@ -32,8 +32,10 @@ Native locked restores use `apps/GitPadPlus.App/packages.windows.lock.json` for 
 
 The [candidate transport procedure](acceptance/candidate-transport.md) tests the hosted upload path before final native builds, then sends only the locally gated immutable candidate to Actions. Run the existing `release.yml` verifier against that successful upload run. Uploading evidence does not authorize tag creation, a draft Release or publication.
 
-`release.yml` verifies a supplied candidate and does not publish it. `publish-local-release.ps1 -CandidateDirectory <path>` checks clean HEAD, exact GitHub main, successful corresponding CI, the fail-closed gate and checksums without creating a tag. A candidate contains the ZIP/APK, SBOM, notices, release notes, acceptance metadata, hashed evidence and SHA256SUMS.
+`release.yml` builds exact-main immutable packages or independently verifies a supplied accepted candidate; it does not publish. `publish-local-release.ps1 -CandidateDirectory <path>` checks clean HEAD, exact GitHub main, successful corresponding CI, the fail-closed gate and checksums without creating a tag. A candidate contains the ZIP/APK, SBOM, notices, release notes, acceptance metadata, hashed evidence and SHA256SUMS.
 
-After the user reviews the complete readiness report, `-StageDraft -ApproveTag` may create/push the annotated tag and draft prerelease. Uploaded assets are independently downloaded and hashed. Separate final user approval is required for `-Publish -ApprovePublication`, which rechecks the draft and all public assets. Existing unrelated tags/releases are refused. Never bypass a mandatory failed gate.
+After all mandatory acceptance passes and release authorization is established in the current user mission, `-StageDraft -ApproveTag` creates/pushes the annotated tag and draft prerelease. Uploaded assets are independently downloaded and hashed. `-Publish -ApprovePublication` records that authorization and rechecks the draft and all public assets. The current takeover mission already authorizes these ordinary release steps; no retired R4 or separate maintainer approval applies. Existing unrelated tags/releases are refused. Never bypass a mandatory failed gate.
+
+Before package construction, run `./scripts/refresh-dotnet.ps1 -Scope all -InstallWorkloads` then `./scripts/verify-native-dependencies.ps1`. The latter uses each actual restore's original framework alias for NuGet queries, rejects query errors and findings, inventories both native graphs and runtime packs, and bundles reviewed license texts. Hosted branch preflight uses the existing `android.yml` with `verify_dependencies=true`; it creates no signed application, candidate, tag or release. Lock regeneration still requires the separate explicit `refresh_locks=true` input.
 
 SDK, workload and all platform lock refresh: see [dependency maintenance](DEPENDENCY-MAINTENANCE.md).

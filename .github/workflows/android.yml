@@ -6,6 +6,10 @@ on:
         description: Refresh every NuGet and platform lock on Windows
         type: boolean
         default: false
+      verify_dependencies:
+        description: Preflight actual native audits and complete license inventory without a release package
+        type: boolean
+        default: false
       candidate_run_id:
         description: Optional successful exact-source package-build run to test without rebuilding its APK
         required: false
@@ -15,16 +19,39 @@ permissions:
   actions: read
 jobs:
   refresh:
-    if: inputs.refresh_locks
+    if: inputs.refresh_locks || inputs.verify_dependencies
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
       - uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9
         with:
           global-json-file: global.json
-      - run: ./scripts/refresh-dotnet.ps1 -Scope all -Refresh -InstallWorkloads
+      - run: |
+          $refresh='${{ inputs.refresh_locks }}' -eq 'true'
+          ./scripts/refresh-dotnet.ps1 -Scope all -Refresh:$refresh -InstallWorkloads
         shell: pwsh
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        if: inputs.verify_dependencies
+        with:
+          node-version-file: .node-version
+      - name: Preflight all actual native dependency and license gates
+        if: inputs.verify_dependencies
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $env:NUGET_PACKAGES="$env:USERPROFILE/.nuget/packages"
+          ./scripts/activate-pnpm.ps1
+          pnpm install --frozen-lockfile
+          if($LASTEXITCODE){exit $LASTEXITCODE}
+          ./scripts/verify-native-dependencies.ps1
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always() && inputs.verify_dependencies
+        with:
+          name: native-dependency-evidence
+          path: artifacts/
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: inputs.refresh_locks
         with:
           name: refreshed-dotnet-locks
           path: |
@@ -32,7 +59,7 @@ jobs:
             apps/GitPadPlus.App/packages.windows.lock.json
             apps/GitPadPlus.App/packages.android.lock.json
   android-build:
-    if: ${{ !inputs.refresh_locks }}
+    if: ${{ !inputs.refresh_locks && !inputs.verify_dependencies }}
     environment: android-alpha-signing
     runs-on: ubuntu-latest
     timeout-minutes: 45

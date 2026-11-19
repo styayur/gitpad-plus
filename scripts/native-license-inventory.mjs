@@ -2,7 +2,9 @@
 import {readFileSync,writeFileSync,mkdirSync,readdirSync,existsSync,cpSync} from 'node:fs';
 import {resolve,join,relative} from 'node:path';
 import {createHash} from 'node:crypto';
+import {execFileSync} from 'node:child_process';
 import {verifyWin2DSource,win2dVersion} from './win2d-source.mjs';
+import {readZip} from './release-evidence.mjs';
 
 // Run after portable licenses.mjs, with snapshots of each actual native restore.
 const inputs=process.argv.slice(2);
@@ -81,11 +83,45 @@ for(const input of inputs){
 record('Microsoft.NETCore.App.Runtime.win-x64',runtimePins.windowsRuntimeVersion,join(nuget,'microsoft.netcore.app.runtime.win-x64',runtimePins.windowsRuntimeVersion),'Windows published runtime');
 record('Microsoft.Windows.SDK.NET.Ref',runtimePins.windowsSdkReferenceVersion,join(nuget,'microsoft.windows.sdk.net.ref',runtimePins.windowsSdkReferenceVersion),'Windows SDK projections');
 const packs=join(process.env.DOTNET_ROOT??'','packs');
+function workloadRecord(name,version,scope){
+  const installed=join(packs,name,version),packageRoot=join(nuget,name.toLowerCase(),version);
+  if(!existsSync(installed))throw Error('Reviewed installed workload pack missing: '+installed);
+  const walk=folder=>readdirSync(folder,{withFileTypes:true}).flatMap(entry=>entry.isDirectory()?walk(join(folder,entry.name)):[join(folder,entry.name)]);
+  const binaries=walk(installed).filter(file=>/\.(?:dll|exe|so|a|lib|bc|dat|bin|wasm|jar|dylib|winmd)$/i.test(file));
+  if(!binaries.length)throw Error('No installed workload binary payload: '+installed);
+  const payload=binaries.map(file=>{
+    const path=relative(installed,file),source=join(packageRoot,path),actual=readFileSync(file),sha256=hash(actual);
+    if(!existsSync(source))throw Error('Installed workload payload is absent from official NuGet package: '+path);
+    const expected=readFileSync(source),packageSha256=hash(expected);
+    if(packageSha256===sha256)return {path:path.replaceAll('\\','/'),sha256};
+    const evidence=join('artifacts/workload-payload-comparison',name,version,path);
+    mkdirSync(resolve(evidence,'..'),{recursive:true});
+    writeFileSync(evidence+'.installed',actual);writeFileSync(evidence+'.nuget',expected);
+    if(!path.endsWith('.jar'))throw Error('Installed workload differs from exact official NuGet payload: '+path);
+    // JAR compression/timestamps/order need not be reproducible. Every named
+    // entry, including manifests/signature files, must retain identical bytes.
+    const entries=readZip(actual),original=readZip(expected);
+    const different=[...new Set([...entries.keys(),...original.keys()])].filter(key=>!entries.get(key)?.equals(original.get(key)??Buffer.alloc(0))||!original.has(key));
+    const comparison={path:path.replaceAll('\\','/'),sha256,packageSha256,differentEntries:different,installedEntries:entries.size,packageEntries:original.size};
+    writeFileSync(evidence+'.json',JSON.stringify(comparison,null,2)+'\n');
+    if(entries.size!==original.size||different.some(key=>key!=='META-INF/MSFTSIG.RSA'))throw Error('Installed JAR entry bytes differ from official NuGet package: '+path+' '+different.join(','));
+    if(different.length){
+      const result=resolve(evidence+'.signature.json');
+      execFileSync('pwsh',['-NoProfile','-File',resolve('scripts/verify-jar-provenance.ps1'),'-InstalledFile',file,'-ReferenceFile',source,'-OutputFile',result],{stdio:'inherit',timeout:60000});
+      const signatures=JSON.parse(readFileSync(result,'utf8'));
+      if(!signatures.passed||signatures.installed.sha256!==sha256||signatures.reference.sha256!==packageSha256)throw Error('JAR signature proof does not bind actual bytes');
+      return {...comparison,signatures,comparison:'Every non-signature-block entry byte is identical; both differing Microsoft CMS blocks independently verify with trusted chains and the same signer identity'};
+    }
+    return {...comparison,comparison:'All ZIP entry names and decompressed bytes identical; only archive container encoding differs'};
+  });
+  record(name,version,packageRoot,scope);
+  ids.get(name.toLowerCase()+'/'+version).installedPack={version,binaryFiles:payload.length,payload,metadataSource:`https://api.nuget.org/v3-flatcontainer/${name.toLowerCase()}/${version}/${name.toLowerCase()}.${version}.nupkg`,scope:'Official exact NuGet metadata/notices retained; binary bytes match except JAR container encoding or independently trusted same-signer CMS re-signing. Every other JAR entry byte must match. Installed metadata is not fabricated.'};
+}
 for(const abi of ['android-arm64','android-x64']){
   const name='Microsoft.NETCore.App.Runtime.Mono.'+abi;
-  record(name,runtimePins.androidMonoRuntimeVersion,join(packs,name,runtimePins.androidMonoRuntimeVersion),'Android published Mono runtime '+abi);
+  workloadRecord(name,runtimePins.androidMonoRuntimeVersion,'Android published Mono runtime '+abi);
   const android='Microsoft.Android.Runtime.Mono.36.'+abi;
-  record(android,runtimePins.androidRuntimeGlueVersion,join(packs,android,runtimePins.androidRuntimeGlueVersion),'Android native runtime glue '+abi);
+  workloadRecord(android,runtimePins.androidRuntimeGlueVersion,'Android native runtime glue '+abi);
 }
 const fontText=readFileSync('docs/licenses/katex-fonts-OFL-1.1.txt','utf8');
 if(!fontText.includes('SIL OPEN FONT LICENSE'))throw Error('Missing actual KaTeX asset license');

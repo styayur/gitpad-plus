@@ -53,57 +53,18 @@ jobs:
       - name: Prepare pinned tools and all locked graphs
         shell: pwsh
         run: |
-          npm install --global corepack@0.34.6
-          corepack enable
-          corepack install --global pnpm@12.16.1
+          ./scripts/activate-pnpm.ps1
           pnpm install --frozen-lockfile
           if($LASTEXITCODE){exit $LASTEXITCODE}
           ./scripts/refresh-dotnet.ps1 -Scope all -InstallWorkloads
           if($LASTEXITCODE){exit $LASTEXITCODE}
           dotnet restore apps/GitPadPlus.App -p:GitPadTargetFramework=net10.0-windows10.0.19041.0 -p:RuntimeIdentifier=win-x64 --locked-mode
           if($LASTEXITCODE){exit $LASTEXITCODE}
-      - name: Audit actual restored Windows and Android dependencies
+      - name: Preflight actual native audits and complete offline licenses
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
-        run: |
-          pnpm audit --json > artifacts/npm-audit.json
-          if($LASTEXITCODE){throw 'Raw npm audit did not pass'}
-          $env:GitPadTargetFramework='net10.0-windows10.0.19041.0'
-          dotnet list apps/GitPadPlus.App package --no-restore --vulnerable --include-transitive --framework net10.0-windows10.0.19041 --format json > artifacts/windows-nuget-audit.json
-          if($LASTEXITCODE){throw 'Windows audit query failed'}
-          dotnet list apps/GitPadPlus.App package --no-restore --include-transitive --framework net10.0-windows10.0.19041 --format json > artifacts/windows-nuget-audit.inventory.json
-          if($LASTEXITCODE){throw 'Windows inventory query failed'}
-          dotnet restore apps/GitPadPlus.App -p:GitPadTargetFramework=net10.0-android -p:GitPadAndroidReleaseUniversal=true -p:Configuration=Release --locked-mode
-          if($LASTEXITCODE){throw 'Android locked restore failed'}
-          $env:GitPadTargetFramework='net10.0-android'
-          dotnet list apps/GitPadPlus.App package --no-restore --vulnerable --include-transitive --framework net10.0-android36.0 --format json > artifacts/android-nuget-audit.json
-          if($LASTEXITCODE){throw 'Android audit query failed'}
-          dotnet list apps/GitPadPlus.App package --no-restore --include-transitive --framework net10.0-android36.0 --format json > artifacts/android-nuget-audit.inventory.json
-          if($LASTEXITCODE){throw 'Android inventory query failed'}
-          $env:GitPadTargetFramework=$null
-          node scripts/security-gate.mjs artifacts/windows-nuget-audit.json artifacts/android-nuget-audit.json > artifacts/native-security-gate.log
-          if($LASTEXITCODE){throw 'Installed dependency security gate failed'}
-          $pins=(Get-Content eng/toolchain.json -Raw|ConvertFrom-Json).nativeRuntimePins
-          $queries=@('Microsoft.Graphics.Win2D@1.4.0',"Microsoft.NETCore.App.Runtime.win-x64@$($pins.windowsRuntimeVersion)","Microsoft.NETCore.App.Runtime.Mono.android-arm64@$($pins.androidMonoRuntimeVersion)","Microsoft.NETCore.App.Runtime.Mono.android-x64@$($pins.androidMonoRuntimeVersion)")
-          $records=@()
-          foreach($query in $queries){
-            $raw=gh api --method GET /advisories -f ecosystem=nuget -f "affects=$query"
-            if($LASTEXITCODE){throw 'Native upstream advisory query failed'}
-            $found=$raw|ConvertFrom-Json
-            $records+=@{package=$query;advisories=@($found)}
-            if(@($found).Count){throw "Review native upstream advisory: $query"}
-          }
-          $records|ConvertTo-Json -Depth 30|Set-Content artifacts/native-upstream-advisories.json
-      - name: Build complete offline native and web license inventory
-        shell: pwsh
-        run: |
-          node scripts/licenses.mjs
-          if($LASTEXITCODE){exit $LASTEXITCODE}
-          node scripts/native-license-inventory.mjs artifacts/restore-assets/windows-app.json artifacts/restore-assets/android-app.json
-          if($LASTEXITCODE){exit $LASTEXITCODE}
-          node scripts/bundle-notices.mjs
-          if($LASTEXITCODE){exit $LASTEXITCODE}
+        run: ./scripts/verify-native-dependencies.ps1
       - name: Restore existing signing identity and build immutable packages
         shell: pwsh
         env:
@@ -133,6 +94,8 @@ jobs:
             artifacts/native-security-gate.log
             artifacts/native-upstream-advisories.json
             artifacts/restore-assets/
+            artifacts/workload-package-metadata/
+            artifacts/workload-payload-comparison/
             public/THIRD_PARTY_LICENSES.txt
   verify:
     if: inputs.operation != 'build'
