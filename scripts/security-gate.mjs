@@ -19,6 +19,6 @@ for(const path of process.argv.slice(2).length?process.argv.slice(2):['artifacts
     // NuGet intentionally omits frameworks when no vulnerable packages exist.
     for(const framework of project.frameworks??[])for(const pkg of [...framework.topLevelPackages??[],...framework.transitivePackages??[]])if(pkg.vulnerabilities?.length)throw new Error('Security gate: NuGet advisory for '+pkg.id);
   }
-  if([...nuget.logs??[],...inventory.logs??[]].some(log=>log.level==='error'))throw new Error('Security gate: NuGet audit query failed');
+  if([...nuget.logs??[],...inventory.logs??[],...nuget.problems??[],...inventory.problems??[]].some(log=>log.level==='error'))throw new Error('Security gate: NuGet audit query failed');
 }
 console.log('Installed npm and requested NuGet framework vulnerability queries passed. Binary/native acceptance is a separate gate.');
