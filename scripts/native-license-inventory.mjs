@@ -52,7 +52,7 @@ function record(name,version,folder,scope){
     if(sqliteLicense){license=sqliteLicense.licenseId;extracted.set(license,sqliteLicense);}
     else if(name==='Microsoft.Web.WebView2'&&text.includes('Redistribution and use in source and binary forms')&&text.includes('may not be used to endorse or promote'))license='BSD-3-Clause';
     else if(name.startsWith('Microsoft.Android.Runtime.CoreCLR.')&&text.includes('The MIT License (MIT)')&&text.includes('Permission is hereby granted, free of charge'))license='MIT';
-    else if(name==='Microsoft.Windows.AI.MachineLearning'&&version==='2.1.74'){
+    else if(name==='Microsoft.Windows.AI.MachineLearning'&&version==='2.5.96'){
       if(hash(readFileSync(path))!=='66395f8cb219087fae2bd025010bd9076b736c14f03b48f20295471c0c376814'
           ||hash(readFileSync(join(folder,'ThirdPartyNotices.txt')))!=='fb0af774b4d7cffc5b9d046f2aaeade2f37df2f80abf8033c95dfffcc77a8866'){
         throw Error('Windows ML redistribution terms or third-party notices differ from the reviewed package');
