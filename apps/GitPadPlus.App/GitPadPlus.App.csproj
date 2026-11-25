@@ -33,6 +33,7 @@
   </ItemGroup>
   <ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">
     <PackageReference Include="Microsoft.Graphics.Win2D" />
+    <PackageReference Include="Microsoft.WindowsAppSDK" />
   </ItemGroup>
   <Target Name="VerifySourceBuiltWin2D" BeforeTargets="ResolveReferences" Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">
     <Exec Command="node &quot;$(MSBuildThisFileDirectory)..\..\scripts\win2d-source.mjs&quot; &quot;$(NuGetPackageRoot)/microsoft.graphics.win2d/1.4.1-gitpadplus.1&quot;" />

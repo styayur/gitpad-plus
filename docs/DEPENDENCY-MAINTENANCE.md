@@ -45,7 +45,10 @@ complete native, data recovery, license and packaging acceptance before MAUI10
 support ends. The migration is tracked in [issue #22](https://github.com/styayur/gitpad-plus/issues/22).
 Microsoft lists .NET 11 support through 2028-11-14 and MAUI 11 support through
 2028-05-09. The pinned 11.0.100.1 workload set supplies Android 37.2.31, and
-the central NuGet manifest selects MAUI 11.0.10. The Android branch build uses
+the central NuGet manifest selects MAUI 11.0.10 and Windows App SDK 2.7.0.
+Microsoft requires the latest Windows App SDK patch for support and lists
+2027-04-29 as the 2.0 servicing end date. The Windows app and Win2D probe
+share the same Windows App SDK pin. The Android branch build uses
 CoreCLR and preserves the app's API 26 installation floor, existing app ID and
 release certificate. Its build code is 3 for the upgrade test against Alpha.2
 (build code 2). The regression keeps reports and hashes in Actions and leaves

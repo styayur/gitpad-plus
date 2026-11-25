@@ -9,5 +9,6 @@
     <!-- Match the application's actual renderer/App SDK and WebView SDK graph. -->
     <PackageReference Include="Microsoft.Maui.Graphics.Win2D.WinUI.Desktop" />
     <PackageReference Include="Microsoft.Web.WebView2" />
+    <PackageReference Include="Microsoft.WindowsAppSDK" />
   </ItemGroup>
 </Project>
