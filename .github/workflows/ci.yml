@@ -76,7 +76,7 @@ jobs:
       - name: Install Windows workload only
         run: dotnet workload install maui-windows --version ((Get-Content eng/toolchain.json -Raw | ConvertFrom-Json).workloadSetVersion)
       - name: Compile unpackaged Windows target
-        run: dotnet build apps/GitPadPlus.App/GitPadPlus.App.csproj -c Release -f net10.0-windows10.0.19041.0 -p:GitPadTargetFramework=net10.0-windows10.0.19041.0 -p:RuntimeIdentifier=win-x64 -p:WindowsPackageType=None -p:RestoreLockedMode=true
+        run: dotnet build apps/GitPadPlus.App/GitPadPlus.App.csproj -c Release -f net11.0-windows10.0.19041.0 -p:GitPadTargetFramework=net11.0-windows10.0.19041.0 -p:RuntimeIdentifier=win-x64 -p:WindowsPackageType=None -p:RestoreLockedMode=true
       - name: Exercise source-built Win2D managed drawing and pixel readback
         shell: pwsh
         run: |
@@ -92,4 +92,4 @@ jobs:
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: windows-build-not-release
-          path: apps/GitPadPlus.App/bin/Release/net10.0-windows10.0.19041.0/win-x64/
+          path: apps/GitPadPlus.App/bin/Release/net11.0-windows10.0.19041.0/win-x64/

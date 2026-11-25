@@ -49,7 +49,7 @@ jobs:
           "NUGET_PACKAGES=$env:USERPROFILE\.nuget\packages" >> $env:GITHUB_ENV
       - uses: android-actions/setup-android@9fc6c4e9069bf8d3d10b2204b1fb8f6ef7065407
         with:
-          packages: platform-tools platforms;android-36 build-tools;36.0.0
+          packages: platform-tools platforms;android-37.0 build-tools;37.0.0
       - name: Prepare pinned tools and all locked graphs
         shell: pwsh
         run: |
@@ -58,7 +58,7 @@ jobs:
           if($LASTEXITCODE){exit $LASTEXITCODE}
           ./scripts/refresh-dotnet.ps1 -Scope all -InstallWorkloads
           if($LASTEXITCODE){exit $LASTEXITCODE}
-          dotnet restore apps/GitPadPlus.App -p:GitPadTargetFramework=net10.0-windows10.0.19041.0 -p:RuntimeIdentifier=win-x64 --locked-mode
+          dotnet restore apps/GitPadPlus.App -p:GitPadTargetFramework=net11.0-windows10.0.19041.0 -p:RuntimeIdentifier=win-x64 --locked-mode
           if($LASTEXITCODE){exit $LASTEXITCODE}
       - name: Preflight actual native audits and complete offline licenses
         shell: pwsh
@@ -121,9 +121,9 @@ jobs:
       - name: Install APK verification tools
         uses: android-actions/setup-android@9fc6c4e9069bf8d3d10b2204b1fb8f6ef7065407
         with:
-          packages: build-tools;36.0.0
+          packages: build-tools;37.0.0
       - name: Verify APK tool availability
-        run: sdkmanager "build-tools;36.0.0"
+        run: sdkmanager "build-tools;37.0.0"
       - name: Fail closed on missing native acceptance, signatures or asset checks
         env:
           SOURCE_COMMIT: ${{ inputs.source_commit }}

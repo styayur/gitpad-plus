@@ -12,8 +12,8 @@ $root=Split-Path $PSScriptRoot -Parent
 $output=[IO.Path]::GetFullPath($OutputDirectory)
 if(Test-Path -LiteralPath $output){if(Get-ChildItem -LiteralPath $output -Force){throw 'Instrumentation output must be new/empty'}}
 New-Item -ItemType Directory -Force -Path $output,(Join-Path $output 'classes'),(Join-Path $output 'dex'),(Join-Path $output 'assets')|Out-Null
-$tools=Join-Path $AndroidSdkDirectory 'build-tools/36.0.0'
-$androidJar=Join-Path $AndroidSdkDirectory 'platforms/android-36/android.jar'
+$tools=Join-Path $AndroidSdkDirectory 'build-tools/37.0.0'
+$androidJar=Join-Path $AndroidSdkDirectory 'platforms/android-37.0/android.jar'
 $key=(Resolve-Path -LiteralPath $KeystorePath).Path
 if($key.StartsWith($root+[IO.Path]::DirectorySeparatorChar,[StringComparison]::OrdinalIgnoreCase)){throw 'Permanent identity must be outside source repository'}
 $pointer=[IntPtr]::Zero

@@ -5,6 +5,7 @@ import {createHash} from 'node:crypto';
 import {execFileSync} from 'node:child_process';
 import {verifyWin2DSource,win2dVersion} from './win2d-source.mjs';
 import {readZip} from './release-evidence.mjs';
+import {reviewedSqliteLicense} from './reviewed-sqlite-license.mjs';
 
 // Run after portable licenses.mjs, with snapshots of each actual native restore.
 const inputs=process.argv.slice(2);
@@ -14,7 +15,8 @@ if(!inputs.length)throw Error('Supply actual native project.assets.json snapshot
 const nuget=process.env.NUGET_PACKAGES;if(!nuget)throw Error('Set NUGET_PACKAGES to the restored package cache');
 const sbom=JSON.parse(readFileSync('artifacts/SBOM.spdx.json','utf8'));
 if(sbom.name!=='GitPadPlus-portable-dependencies')throw Error('Regenerate the portable SBOM before augmentation');
-const inventory=[],unresolved=[],ids=new Map(),extracted=new Map();
+const inventory=[],unresolved=[],ids=new Map();
+const extracted=new Map((sbom.hasExtractedLicensingInfos??[]).map(entry=>[entry.licenseId,entry]));
 const decode=value=>value.replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>');
 const approved=new Set(['MIT','Apache-2.0','BSD-2-Clause','BSD-3-Clause','ISC','CC0-1.0']);
 const hash=bytes=>createHash('sha256').update(bytes).digest('hex');
@@ -46,9 +48,18 @@ function record(name,version,folder,scope){
     const path=resolve(folder,decode(licenseFile));
     if(!path.startsWith(resolve(folder)+'/')&&!path.startsWith(resolve(folder)+'\\'))throw Error('License path escapes package');
     const text=readFileSync(path,'utf8');extra.push(path);
-    if(name==='Microsoft.Web.WebView2'&&text.includes('Redistribution and use in source and binary forms')&&text.includes('may not be used to endorse or promote'))license='BSD-3-Clause';
-    else if(name.startsWith('Microsoft.Android.Runtime.Mono.')&&text.includes('The MIT License (MIT)')&&text.includes('Permission is hereby granted, free of charge'))license='MIT';
-    else if(name.startsWith('Microsoft.WindowsAppSDK')||name==='Microsoft.Windows.SDK.BuildTools.MSIX')license=extractedLicense(text,name);
+    const sqliteLicense=reviewedSqliteLicense(name,version,spec,folder);
+    if(sqliteLicense){license=sqliteLicense.licenseId;extracted.set(license,sqliteLicense);}
+    else if(name==='Microsoft.Web.WebView2'&&text.includes('Redistribution and use in source and binary forms')&&text.includes('may not be used to endorse or promote'))license='BSD-3-Clause';
+    else if(name.startsWith('Microsoft.Android.Runtime.CoreCLR.')&&text.includes('The MIT License (MIT)')&&text.includes('Permission is hereby granted, free of charge'))license='MIT';
+    else if(name==='Microsoft.Windows.AI.MachineLearning'&&version==='2.5.96'){
+      if(hash(readFileSync(path))!=='66395f8cb219087fae2bd025010bd9076b736c14f03b48f20295471c0c376814'
+          ||hash(readFileSync(join(folder,'ThirdPartyNotices.txt')))!=='fb0af774b4d7cffc5b9d046f2aaeade2f37df2f80abf8033c95dfffcc77a8866'){
+        throw Error('Windows ML redistribution terms or third-party notices differ from the reviewed package');
+      }
+      license=extractedLicense(text,name);
+      review='Windows ML package terms and third-party notices retained. Section 3 covers files binplaced by Windows App SDK in the application and sets redistribution conditions.';
+    }else if(name.startsWith('Microsoft.WindowsAppSDK')||name==='Microsoft.Windows.SDK.BuildTools.MSIX')license=extractedLicense(text,name);
     else throw Error('Review native license file '+key);
   }else if(name==='Microsoft.Graphics.Win2D'&&version==='1.4.0'){
     const path='docs/licenses/win2d-legacy-eula.txt',text=readFileSync(path,'utf8');
@@ -71,17 +82,32 @@ function record(name,version,folder,scope){
   sbom.packages.push({SPDXID:id,name,versionInfo:version,downloadLocation:sourceBuild?'NOASSERTION':`https://api.nuget.org/v3-flatcontainer/${name.toLowerCase()}/${version}/${name.toLowerCase()}.${version}.nupkg`,filesAnalyzed:false,licenseDeclared:sourceBuild?'MIT':license,licenseConcluded:license,copyrightText:'NOASSERTION',comment:review,...(sourceBuild?{checksums:[{algorithm:'SHA256',checksumValue:sourceBuild.package.sha256}],sourceInfo:`Vendored third-party/win2d/feed/${sourceBuild.package.file}; built from https://github.com/microsoft/Win2D/tree/${sourceBuild.upstream.commit}`}:{})});
   sbom.relationships.push({spdxElementId:'SPDXRef-DOCUMENT',relationshipType:'DESCRIBES',relatedSpdxElement:id});
 }
+const downloads=new Map();
 for(const input of inputs){
   const assets=JSON.parse(readFileSync(input,'utf8'));
+  for(const framework of Object.values(assets.project.frameworks)){
+    for(const dependency of framework.downloadDependencies??[]){
+      const key=dependency.name.toLowerCase();
+      if(downloads.has(key)&&downloads.get(key)!==dependency.version)throw Error('Native restores disagree on '+key);
+      downloads.set(key,dependency.version);
+    }
+  }
   if(!assets.targets||!assets.libraries)throw Error('Expected native project.assets.json: '+input);
   for(const [framework,target] of Object.entries(assets.targets))for(const key of Object.keys(target)){
     if(assets.libraries[key]?.type!=='package')continue;
     const [name,version]=key.split('/');record(name,version,join(nuget,name.toLowerCase(),version),framework);
   }
 }
-// Self-contained Windows and Mono Android runtime packs are not normal PackageReferences.
-record('Microsoft.NETCore.App.Runtime.win-x64',runtimePins.windowsRuntimeVersion,join(nuget,'microsoft.netcore.app.runtime.win-x64',runtimePins.windowsRuntimeVersion),'Windows published runtime');
-record('Microsoft.Windows.SDK.NET.Ref',runtimePins.windowsSdkReferenceVersion,join(nuget,'microsoft.windows.sdk.net.ref',runtimePins.windowsSdkReferenceVersion),'Windows SDK projections');
+// Framework runtime downloads are resolved outside the ordinary NuGet target graph.
+function restoredPack(name,version,scope){
+  const id=name.toLowerCase();
+  if(downloads.get(id)!==`[${version}, ${version}]`)throw Error('Actual native restore differs from reviewed pack '+name+'@'+version);
+  record(name,version,join(nuget,id,version),scope);
+}
+for(const name of ['Microsoft.NETCore.App','Microsoft.WindowsDesktop.App','Microsoft.AspNetCore.App']){
+  restoredPack(name+'.Runtime.win-x64',runtimePins.windowsRuntimeVersion,'Windows published runtime');
+}
+restoredPack('Microsoft.Windows.SDK.NET.Ref',runtimePins.windowsSdkReferenceVersion,'Windows SDK projections');
 const packs=join(process.env.DOTNET_ROOT??'','packs');
 function workloadRecord(name,version,scope){
   const installed=join(packs,name,version),packageRoot=join(nuget,name.toLowerCase(),version);
@@ -118,9 +144,10 @@ function workloadRecord(name,version,scope){
   ids.get(name.toLowerCase()+'/'+version).installedPack={version,binaryFiles:payload.length,payload,metadataSource:`https://api.nuget.org/v3-flatcontainer/${name.toLowerCase()}/${version}/${name.toLowerCase()}.${version}.nupkg`,scope:'Official exact NuGet metadata/notices retained; binary bytes match except JAR container encoding or independently trusted same-signer CMS re-signing. Every other JAR entry byte must match. Installed metadata is not fabricated.'};
 }
 for(const abi of ['android-arm64','android-x64']){
-  const name='Microsoft.NETCore.App.Runtime.Mono.'+abi;
-  workloadRecord(name,runtimePins.androidMonoRuntimeVersion,'Android published Mono runtime '+abi);
-  const android='Microsoft.Android.Runtime.Mono.36.'+abi;
+  const name='Microsoft.NETCore.App.Runtime.'+abi;
+  // The SDK restores CoreCLR via NuGet. Only Android's glue is a workload-installed pack.
+  restoredPack(name,runtimePins.androidRuntimeVersion,'Android published CoreCLR runtime '+abi);
+  const android='Microsoft.Android.Runtime.CoreCLR.37.'+abi;
   workloadRecord(android,runtimePins.androidRuntimeGlueVersion,'Android native runtime glue '+abi);
 }
 const fontText=readFileSync('docs/licenses/katex-fonts-OFL-1.1.txt','utf8');

@@ -283,8 +283,16 @@ void(async()=>{
       await wait(300);
       check('Selection uses the current target editor',editor.isConnected);
       checks.push({name:'Selection before toolbar touch',quote:getSelection()?.toString(),focusedElement:document.activeElement?.tagName,editorSelection:editor.pmViewDesc?.view?.state.selection.toJSON()});
-      const bold=button('Bold');bold.scrollIntoView({block:'nearest',inline:'nearest'});const boldRect=bold.getBoundingClientRect();
-      NativeAcceptance.press(boldRect.x+boldRect.width/2,boldRect.y+boldRect.height/2,innerWidth,80);
+      const bold=button('Bold');
+      bold.scrollIntoView({block:'nearest',inline:'nearest'});
+      const point=await until(()=>{
+        const rect=bold.getBoundingClientRect();
+        const x=rect.x+rect.width/2,y=rect.y+rect.height/2;
+        const visible=Math.min(innerHeight,NativeAcceptance.visibleViewportHeight(innerWidth));
+        // Browser layout and the native IME finish resizing on different frames.
+        return y>=0&&y<visible&&bold.contains(document.elementFromPoint(x,y))?{x,y}:null;
+      },'Bold button visible above the native keyboard');
+      NativeAcceptance.press(point.x,point.y,innerWidth,80);
       await until(()=>[...paragraph.querySelectorAll('strong')].some(node=>node.textContent==='quote 中文'),'native format touch applied to selected quote');
       check('Native formatting keeps the selected text and editor instance',editor.isConnected&&getSelection()?.toString()==='quote 中文');
       check('Native formatting strip stays at the visible IME',NativeAcceptance.keyboardVisible()&&Math.abs(document.querySelector('.format-toolbar').getBoundingClientRect().bottom-innerHeight)<=1);

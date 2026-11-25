@@ -13,7 +13,8 @@ internal static class NativeFilePicker
     }
     private static Task<NativePickedFile?> PickAsync(string kind)=>MainThread.InvokeOnMainThreadAsync<NativePickedFile?>(async()=>{
         var options=new PickOptions{PickerTitle=kind=="image"?"Import image":"Import Markdown",FileTypes=kind=="image"?FilePickerFileType.Images:new FilePickerFileType(new Dictionary<DevicePlatform,IEnumerable<string>>{
-            [DevicePlatform.WinUI]=[".md",".markdown"],[DevicePlatform.Android]=["text/markdown","text/plain","application/octet-stream"]
+            [DevicePlatform.WinUI]=new[] { ".md", ".markdown" },
+            [DevicePlatform.Android]=new[] { "text/markdown", "text/plain", "application/octet-stream" }
         })};
         var file=await FilePicker.Default.PickAsync(options);
         if(file is null)return null;

@@ -113,6 +113,25 @@ public final class AcceptanceInstrumentation extends Instrumentation {
             if(buttons.size()!=1||!buttons.get(0).performAction(android.view.accessibility.AccessibilityNodeInfo.ACTION_CLICK))throw new IllegalStateException("Cannot dismiss the identified Gboard tutorial");
             return true;
         }
+        @JavascriptInterface public float visibleViewportHeight(float viewportWidth) {
+            float[] height = new float[1];
+            runOnMainSync(() -> {
+                if (!web.isAttachedToWindow() || viewportWidth <= 0 || web.getWidth() <= 0) return;
+                int[] position = new int[2];
+                web.getLocationOnScreen(position);
+                int bottom = position[1] + web.getHeight();
+                if (Build.VERSION.SDK_INT >= 30 && resumed != null) {
+                    var insets = web.getRootWindowInsets();
+                    if (insets != null) {
+                        int imeTop = resumed.getWindowManager().getCurrentWindowMetrics().getBounds().bottom
+                            - insets.getInsets(WindowInsets.Type.ime()).bottom;
+                        bottom = Math.min(bottom, imeTop);
+                    }
+                }
+                height[0] = Math.max(0, bottom - position[1]) * viewportWidth / web.getWidth();
+            });
+            return height[0];
+        }
         @JavascriptInterface public void press(float x,float y,float viewportWidth,int duration) {
             int[] position=new int[2];float[] scale=new float[1];
             runOnMainSync(()->{web.getLocationOnScreen(position);scale[0]=web.getWidth()/viewportWidth;});

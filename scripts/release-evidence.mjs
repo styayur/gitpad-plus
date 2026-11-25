@@ -37,7 +37,7 @@ export function readZip(bytes) {
 export function verifyAndroidBadging(badging) {
   if(!badging.includes("name='io.github.styayur.gitpadplus'")||!badging.includes(`versionName='${releaseVersion}'`)||!badging.includes(`versionCode='${androidVersionCode}'`)||badging.includes('application-debuggable'))fail('Wrong package/version or Debug APK');
   const abis=/^native-code:\s*(.+)\r?$/m.exec(badging)?.[1]??'';
-  if(!/^(?:minSdkVersion|sdkVersion):'26'\r?$/m.test(badging)||!/^targetSdkVersion:'36'\r?$/m.test(badging)||!abis.includes("'arm64-v8a'")||!abis.includes("'x86_64'"))fail('Wrong minimum/target SDK or missing distributed Android ABI');
+  if(!/^(?:minSdkVersion|sdkVersion):'26'\r?$/m.test(badging)||!/^targetSdkVersion:'37'\r?$/m.test(badging)||!abis.includes("'arm64-v8a'")||!abis.includes("'x86_64'"))fail('Wrong minimum/target SDK or missing distributed Android ABI');
 }
 
 export function inspectAndroid(apk, evidence) {

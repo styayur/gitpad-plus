@@ -16,7 +16,7 @@ try {
     $pins=Get-Content global.json -Raw|ConvertFrom-Json
     $nativePins=Get-Content eng/toolchain.json -Raw|ConvertFrom-Json
     if((& dotnet --version).Trim() -ne $pins.sdk.version){throw 'Use the exact SDK pinned in global.json'}
-    if($pins.sdk.version -notmatch '^10\.' -or $nativePins.workloadSetVersion -notmatch '^10\.') {throw 'The current release lane is .NET/MAUI 10'}
+    if($pins.sdk.version -notmatch '^11\.' -or $nativePins.workloadSetVersion -notmatch '^11\.') {throw 'This compatibility branch requires .NET/MAUI 11'}
     if($InstallWorkloads){
         $workloads=@()
         if($Scope -in @('windows','all')){$workloads+='maui-windows'}
@@ -31,17 +31,17 @@ try {
     }
     if($Scope -in @('windows','all')){
         if(!$IsWindows){throw 'Windows platform lock refresh requires a Windows runner'}
-        $targets+=,@('apps/GitPadPlus.App','-p:GitPadTargetFramework=net10.0-windows10.0.19041.0','-p:RuntimeIdentifier=win-x64','-p:WindowsPackageType=None')
+        $targets+=,@('apps/GitPadPlus.App','-p:GitPadTargetFramework=net11.0-windows10.0.19041.0','-p:RuntimeIdentifier=win-x64','-p:WindowsPackageType=None')
         $targets+=,@('tests/windows/Win2D.ManagedProbe')
     }
     if($Scope -in @('android','all')){
-        $targets+=,@('apps/GitPadPlus.App','-p:GitPadTargetFramework=net10.0-android','-p:GitPadAndroidReleaseUniversal=true','-p:Configuration=Release')
+        $targets+=,@('apps/GitPadPlus.App','-p:GitPadTargetFramework=net11.0-android','-p:GitPadAndroidReleaseUniversal=true','-p:Configuration=Release')
     }
     foreach($target in $targets){
         if($Refresh){Run-Dotnet (@('restore')+$target+@('--force-evaluate','-p:RestoreLockedMode=false'))}
         Run-Dotnet (@('restore')+$target+@('--locked-mode'))
         if($target[0] -eq 'apps/GitPadPlus.App'){
-            $label=if($target -contains '-p:GitPadTargetFramework=net10.0-android'){'android-app'}else{'windows-app'}
+            $label=if($target -contains '-p:GitPadTargetFramework=net11.0-android'){'android-app'}else{'windows-app'}
             New-Item -ItemType Directory -Force artifacts/restore-assets|Out-Null
             Copy-Item -LiteralPath apps/GitPadPlus.App/obj/project.assets.json -Destination "artifacts/restore-assets/$label.json"
         }
