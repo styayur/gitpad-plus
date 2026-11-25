@@ -19,7 +19,7 @@ try{
     & pnpm build 2>&1 | Tee-Object (Join-Path $output 'web-build.log')
     if($LASTEXITCODE -ne 0){throw 'Embedded editor build failed'}
     $publish=Join-Path $output 'publish'
-    & dotnet publish apps/GitPadPlus.App/GitPadPlus.App.csproj -c Release -f net10.0-windows10.0.19041.0 '-p:GitPadTargetFramework=net10.0-windows10.0.19041.0' '-p:RestoreLockedMode=true' "-p:GitPadPackagedRegistry=$registry" -r win-x64 "-p:GitPadSourceCommit=$stamp" -o $publish -v:minimal 2>&1 | Tee-Object (Join-Path $output 'windows-publish.log')
+    & dotnet publish apps/GitPadPlus.App/GitPadPlus.App.csproj -c Release -f net11.0-windows10.0.19041.0 '-p:GitPadTargetFramework=net11.0-windows10.0.19041.0' '-p:RestoreLockedMode=true' "-p:GitPadPackagedRegistry=$registry" -r win-x64 "-p:GitPadSourceCommit=$stamp" -o $publish -v:minimal 2>&1 | Tee-Object (Join-Path $output 'windows-publish.log')
     if($LASTEXITCODE -ne 0){throw 'Self-contained Windows publish failed'}
     foreach($file in @('THIRD_PARTY_NOTICES.md','LICENSE')){Copy-Item -LiteralPath (Join-Path $root $file) -Destination (Join-Path $publish $file)}
     Copy-Item -LiteralPath public/THIRD_PARTY_LICENSES.txt -Destination (Join-Path $publish 'THIRD_PARTY_LICENSES.txt')

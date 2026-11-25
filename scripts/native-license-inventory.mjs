@@ -47,7 +47,7 @@ function record(name,version,folder,scope){
     if(!path.startsWith(resolve(folder)+'/')&&!path.startsWith(resolve(folder)+'\\'))throw Error('License path escapes package');
     const text=readFileSync(path,'utf8');extra.push(path);
     if(name==='Microsoft.Web.WebView2'&&text.includes('Redistribution and use in source and binary forms')&&text.includes('may not be used to endorse or promote'))license='BSD-3-Clause';
-    else if(name.startsWith('Microsoft.Android.Runtime.Mono.')&&text.includes('The MIT License (MIT)')&&text.includes('Permission is hereby granted, free of charge'))license='MIT';
+    else if(name.startsWith('Microsoft.Android.Runtime.CoreCLR.')&&text.includes('The MIT License (MIT)')&&text.includes('Permission is hereby granted, free of charge'))license='MIT';
     else if(name.startsWith('Microsoft.WindowsAppSDK')||name==='Microsoft.Windows.SDK.BuildTools.MSIX')license=extractedLicense(text,name);
     else throw Error('Review native license file '+key);
   }else if(name==='Microsoft.Graphics.Win2D'&&version==='1.4.0'){
@@ -79,7 +79,7 @@ for(const input of inputs){
     const [name,version]=key.split('/');record(name,version,join(nuget,name.toLowerCase(),version),framework);
   }
 }
-// Self-contained Windows and Mono Android runtime packs are not normal PackageReferences.
+// Self-contained Windows and CoreCLR Android runtime packs are not normal PackageReferences.
 record('Microsoft.NETCore.App.Runtime.win-x64',runtimePins.windowsRuntimeVersion,join(nuget,'microsoft.netcore.app.runtime.win-x64',runtimePins.windowsRuntimeVersion),'Windows published runtime');
 record('Microsoft.Windows.SDK.NET.Ref',runtimePins.windowsSdkReferenceVersion,join(nuget,'microsoft.windows.sdk.net.ref',runtimePins.windowsSdkReferenceVersion),'Windows SDK projections');
 const packs=join(process.env.DOTNET_ROOT??'','packs');
@@ -118,9 +118,9 @@ function workloadRecord(name,version,scope){
   ids.get(name.toLowerCase()+'/'+version).installedPack={version,binaryFiles:payload.length,payload,metadataSource:`https://api.nuget.org/v3-flatcontainer/${name.toLowerCase()}/${version}/${name.toLowerCase()}.${version}.nupkg`,scope:'Official exact NuGet metadata/notices retained; binary bytes match except JAR container encoding or independently trusted same-signer CMS re-signing. Every other JAR entry byte must match. Installed metadata is not fabricated.'};
 }
 for(const abi of ['android-arm64','android-x64']){
-  const name='Microsoft.NETCore.App.Runtime.Mono.'+abi;
-  workloadRecord(name,runtimePins.androidMonoRuntimeVersion,'Android published Mono runtime '+abi);
-  const android='Microsoft.Android.Runtime.Mono.36.'+abi;
+  const name='Microsoft.NETCore.App.Runtime.'+abi;
+  workloadRecord(name,runtimePins.androidRuntimeVersion,'Android published CoreCLR runtime '+abi);
+  const android='Microsoft.Android.Runtime.CoreCLR.37.'+abi;
   workloadRecord(android,runtimePins.androidRuntimeGlueVersion,'Android native runtime glue '+abi);
 }
 const fontText=readFileSync('docs/licenses/katex-fonts-OFL-1.1.txt','utf8');

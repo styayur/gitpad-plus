@@ -4,10 +4,10 @@
     <CentralPackageVersionOverrideEnabled>false</CentralPackageVersionOverrideEnabled>
   </PropertyGroup>
   <ItemGroup>
-    <PackageVersion Include="Microsoft.Data.Sqlite" Version="10.0.15" />
+    <PackageVersion Include="Microsoft.Data.Sqlite" Version="11.0.0" />
     <PackageVersion Include="Microsoft.Graphics.Win2D" Version="[1.4.1-gitpadplus.1]" />
-    <PackageVersion Include="Microsoft.Maui.Controls" Version="10.0.130" />
-    <PackageVersion Include="Microsoft.Maui.Graphics.Win2D.WinUI.Desktop" Version="10.0.130" />
+    <PackageVersion Include="Microsoft.Maui.Controls" Version="11.0.10" />
+    <PackageVersion Include="Microsoft.Maui.Graphics.Win2D.WinUI.Desktop" Version="11.0.10" />
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
     <PackageVersion Include="Microsoft.Web.WebView2" Version="1.0.4258.31" />
     <PackageVersion Include="YamlDotNet" Version="18.1.0" />

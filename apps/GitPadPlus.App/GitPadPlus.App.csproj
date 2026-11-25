@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>net10.0-android</TargetFrameworks>
-    <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows'))">net10.0-android;net10.0-windows10.0.19041.0</TargetFrameworks>
+    <TargetFrameworks>net11.0-android</TargetFrameworks>
+    <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows'))">net11.0-android;net11.0-windows10.0.19041.0</TargetFrameworks>
     <TargetFrameworks Condition="'$(GitPadTargetFramework)' != ''">$(GitPadTargetFramework)</TargetFrameworks>
     <OutputType>Exe</OutputType><RootNamespace>GitPadPlus.App</RootNamespace><UseMaui>true</UseMaui><SingleProject>true</SingleProject>
     <ApplicationTitle>GitPad+</ApplicationTitle><ApplicationId>io.github.styayur.gitpadplus</ApplicationId>
@@ -17,9 +17,9 @@
     <GitPadSourceCommit Condition="'$(GitPadSourceCommit)' == ''">unverified</GitPadSourceCommit>
     <AndroidManifestPlaceholders>gitpadSourceCommit=$(GitPadSourceCommit)</AndroidManifestPlaceholders>
     <GitPadPackagedRegistry Condition="'$(GitPadPackagedRegistry)' == ''">../../plugins/packaged.json</GitPadPackagedRegistry>
-    <NuGetLockFilePath Condition="'$(GitPadTargetFramework)' == 'net10.0-windows10.0.19041.0'">$(MSBuildThisFileDirectory)packages.windows.lock.json</NuGetLockFilePath>
-    <NuGetLockFilePath Condition="'$(GitPadTargetFramework)' == 'net10.0-android' and '$(GitPadAndroidReleaseUniversal)' == 'true'">$(MSBuildThisFileDirectory)packages.android.lock.json</NuGetLockFilePath>
-    <NuGetLockFilePath Condition="'$(GitPadTargetFramework)' == 'net10.0-android' and '$(GitPadAndroidReleaseUniversal)' != 'true'">$(MSBuildThisFileDirectory)packages.android.probe.lock.json</NuGetLockFilePath>
+    <NuGetLockFilePath Condition="'$(GitPadTargetFramework)' == 'net11.0-windows10.0.19041.0'">$(MSBuildThisFileDirectory)packages.windows.lock.json</NuGetLockFilePath>
+    <NuGetLockFilePath Condition="'$(GitPadTargetFramework)' == 'net11.0-android' and '$(GitPadAndroidReleaseUniversal)' == 'true'">$(MSBuildThisFileDirectory)packages.android.lock.json</NuGetLockFilePath>
+    <NuGetLockFilePath Condition="'$(GitPadTargetFramework)' == 'net11.0-android' and '$(GitPadAndroidReleaseUniversal)' != 'true'">$(MSBuildThisFileDirectory)packages.android.probe.lock.json</NuGetLockFilePath>
     <RuntimeIdentifiers Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android' and '$(GitPadAndroidReleaseUniversal)' == 'true'">android-arm64;android-x64</RuntimeIdentifiers>
   </PropertyGroup>
   <ItemGroup>

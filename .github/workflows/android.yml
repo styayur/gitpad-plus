@@ -99,12 +99,12 @@ jobs:
             dotnet workload install maui-android --version "$(node -p 'JSON.parse(require("fs").readFileSync("eng/toolchain.json")).workloadSetVersion')"
           fi
           yes | sdkmanager --licenses > /dev/null || test "${PIPESTATUS[1]}" = 0
-          sdkmanager 'platforms;android-36' 'build-tools;36.0.0'
+          sdkmanager 'platforms;android-37.0' 'build-tools;37.0.0'
       - name: Build signed universal Release candidate
         if: inputs.candidate_run_id == ''
         run: |
           mkdir -p artifacts/android
-          dotnet publish apps/GitPadPlus.App -c Release -f net10.0-android -p:GitPadTargetFramework=net10.0-android -p:GitPadAndroidReleaseUniversal=true -p:RestoreLockedMode=true -p:GitPadSourceCommit="$GITHUB_SHA" -p:AndroidKeyStore=true -p:AndroidSigningKeyStore="$GITPAD_ANDROID_KEY_PATH" -p:AndroidSigningKeyAlias=gitpadplus-release -p:AndroidSigningStorePass=env:GITPAD_ANDROID_PASSWORD -p:AndroidSigningKeyPass=env:GITPAD_ANDROID_PASSWORD -o artifacts/android/publish
+          dotnet publish apps/GitPadPlus.App -c Release -f net11.0-android -p:GitPadTargetFramework=net11.0-android -p:GitPadAndroidReleaseUniversal=true -p:RestoreLockedMode=true -p:GitPadSourceCommit="$GITHUB_SHA" -p:AndroidKeyStore=true -p:AndroidSigningKeyStore="$GITPAD_ANDROID_KEY_PATH" -p:AndroidSigningKeyAlias=gitpadplus-release -p:AndroidSigningStorePass=env:GITPAD_ANDROID_PASSWORD -p:AndroidSigningKeyPass=env:GITPAD_ANDROID_PASSWORD -o artifacts/android/publish
           apk=$(find artifacts/android/publish -name '*Signed.apk')
           test "$(printf '%s\n' "$apk" | wc -l)" = 1
           cp "$apk" artifacts/android/GitPadPlus-Android-Release.apk
@@ -128,23 +128,22 @@ jobs:
           echo "GITPAD_ANDROID_APK=artifacts/android/GitPadPlus-Android-Release.apk" >> "$GITHUB_ENV"
       - name: Independently verify APK signature, version and source stamp
         run: |
-          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose --print-certs artifacts/android/GitPadPlus-Android-Release.apk > artifacts/android/signature.log
+          "$ANDROID_HOME/build-tools/37.0.0/apksigner" verify --verbose --print-certs artifacts/android/GitPadPlus-Android-Release.apk > artifacts/android/signature.log
           grep -F "$GITPAD_ANDROID_CERTIFICATE_SHA256" artifacts/android/signature.log
-          "$ANDROID_HOME/build-tools/36.0.0/aapt2" dump badging artifacts/android/GitPadPlus-Android-Release.apk > artifacts/android/badging.log
-          "$ANDROID_HOME/build-tools/36.0.0/aapt2" dump xmltree artifacts/android/GitPadPlus-Android-Release.apk --file AndroidManifest.xml > artifacts/android/manifest.log
+          "$ANDROID_HOME/build-tools/37.0.0/aapt2" dump badging artifacts/android/GitPadPlus-Android-Release.apk > artifacts/android/badging.log
+          "$ANDROID_HOME/build-tools/37.0.0/aapt2" dump xmltree artifacts/android/GitPadPlus-Android-Release.apk --file AndroidManifest.xml > artifacts/android/manifest.log
           node scripts/verify-android-package.mjs
           sha256sum artifacts/android/GitPadPlus-Android-Release.apk > artifacts/android/SHA256SUMS.txt
           dotnet run --project tools/GitPadPlus.Benchmarks -c Release -- artifacts/android/fixture-generation.json --index-fixture --keep-fixture
           node scripts/android-instrumentation.mjs
       - name: Fetch the immutable prior alpha for signed upgrade acceptance
-        if: inputs.candidate_run_id != ''
         run: |
-          curl --fail --location --retry 2 --max-time 180 'https://github.com/styayur/gitpad-plus/releases/download/v0.1.0-alpha.1/GitPadPlus-Android-Release.apk' -o artifacts/android/alpha1-baseline.apk
-          echo '681b8b93b34385aa248413713876bd45400b04934a05228a4564f399ece3d07e  artifacts/android/alpha1-baseline.apk' | sha256sum --check
-          "$ANDROID_HOME/build-tools/36.0.0/aapt2" dump xmltree artifacts/android/alpha1-baseline.apk --file AndroidManifest.xml > artifacts/android/alpha1-baseline-manifest.log
-          grep -F '63070c81c99f90cd4e46a7ce4d700ace2d08b5fa' artifacts/android/alpha1-baseline-manifest.log
-          echo 'GITPAD_BASELINE_APK=artifacts/android/alpha1-baseline.apk' >> "$GITHUB_ENV"
-          echo 'GITPAD_BASELINE_SOURCE_COMMIT=63070c81c99f90cd4e46a7ce4d700ace2d08b5fa' >> "$GITHUB_ENV"
+          curl --fail --location --retry 2 --max-time 180 'https://github.com/styayur/gitpad-plus/releases/download/v0.1.0-alpha.2/GitPadPlus-Android-Release.apk' -o artifacts/android/alpha2-baseline.apk
+          echo 'bd8c5bb44c3ff8fb7c5797794b28b824aeedf5d26e24f7607d8857f3eed66b97  artifacts/android/alpha2-baseline.apk' | sha256sum --check
+          "$ANDROID_HOME/build-tools/37.0.0/aapt2" dump xmltree artifacts/android/alpha2-baseline.apk --file AndroidManifest.xml > artifacts/android/alpha2-baseline-manifest.log
+          grep -F '27f498c6d6c9968d899c4aefdbe93c91c98d79db' artifacts/android/alpha2-baseline-manifest.log
+          echo 'GITPAD_BASELINE_APK=artifacts/android/alpha2-baseline.apk' >> "$GITHUB_ENV"
+          echo 'GITPAD_BASELINE_SOURCE_COMMIT=27f498c6d6c9968d899c4aefdbe93c91c98d79db' >> "$GITHUB_ENV"
       - name: Enable KVM for the disposable emulator
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules

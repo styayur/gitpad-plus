@@ -13,7 +13,7 @@ try {
     New-Item -ItemType Directory -Force artifacts/restore-assets|Out-Null
     pnpm audit --json > artifacts/npm-audit.json
     if($LASTEXITCODE){throw 'Raw npm audit did not pass'}
-    foreach($target in @(@{name='windows';framework='net10.0-windows10.0.19041.0';args=@('-p:RuntimeIdentifier=win-x64')},@{name='android';framework='net10.0-android';args=@('-p:GitPadAndroidReleaseUniversal=true','-p:Configuration=Release')})){
+    foreach($target in @(@{name='windows';framework='net11.0-windows10.0.19041.0';args=@('-p:RuntimeIdentifier=win-x64')},@{name='android';framework='net11.0-android';args=@('-p:GitPadAndroidReleaseUniversal=true','-p:Configuration=Release')})){
         $env:GitPadTargetFramework=$target.framework
         $env:GitPadAndroidReleaseUniversal=if($target.name -eq 'android'){'true'}else{$null}
         Checked dotnet (@('restore','apps/GitPadPlus.App',"-p:GitPadTargetFramework=$($target.framework)",'--locked-mode')+$target.args)
@@ -32,7 +32,7 @@ try {
     & node scripts/security-gate.mjs artifacts/windows-nuget-audit.json artifacts/android-nuget-audit.json > artifacts/native-security-gate.log
     if($LASTEXITCODE){throw 'Installed native dependency security gate failed'}
     $pins=(Get-Content eng/toolchain.json -Raw|ConvertFrom-Json).nativeRuntimePins
-    $queries=@('Microsoft.Graphics.Win2D@1.4.0',"Microsoft.NETCore.App.Runtime.win-x64@$($pins.windowsRuntimeVersion)","Microsoft.NETCore.App.Runtime.Mono.android-arm64@$($pins.androidMonoRuntimeVersion)","Microsoft.NETCore.App.Runtime.Mono.android-x64@$($pins.androidMonoRuntimeVersion)","Microsoft.Android.Runtime.Mono.36.android-arm64@$($pins.androidRuntimeGlueVersion)","Microsoft.Android.Runtime.Mono.36.android-x64@$($pins.androidRuntimeGlueVersion)")
+    $queries=@('Microsoft.Graphics.Win2D@1.4.0',"Microsoft.NETCore.App.Runtime.win-x64@$($pins.windowsRuntimeVersion)","Microsoft.NETCore.App.Runtime.android-arm64@$($pins.androidRuntimeVersion)","Microsoft.NETCore.App.Runtime.android-x64@$($pins.androidRuntimeVersion)","Microsoft.Android.Runtime.CoreCLR.37.android-arm64@$($pins.androidRuntimeGlueVersion)","Microsoft.Android.Runtime.CoreCLR.37.android-x64@$($pins.androidRuntimeGlueVersion)")
     $records=@()
     foreach($query in $queries){
         $raw=gh api --method GET /advisories -f ecosystem=nuget -f "affects=$query"
@@ -52,11 +52,11 @@ try {
     New-Item -ItemType Directory -Path $metadataRoot|Out-Null
     $items=@()
     foreach($abi in @('android-arm64','android-x64')){
-        $items+="<PackageDownload Include=`"Microsoft.NETCore.App.Runtime.Mono.$abi`" Version=`"[$($pins.androidMonoRuntimeVersion)]`" />"
-        $items+="<PackageDownload Include=`"Microsoft.Android.Runtime.Mono.36.$abi`" Version=`"[$($pins.androidRuntimeGlueVersion)]`" />"
+        $items+="<PackageDownload Include=`"Microsoft.NETCore.App.Runtime.$abi`" Version=`"[$($pins.androidRuntimeVersion)]`" />"
+        $items+="<PackageDownload Include=`"Microsoft.Android.Runtime.CoreCLR.37.$abi`" Version=`"[$($pins.androidRuntimeGlueVersion)]`" />"
     }
     $metadataProject=Join-Path $metadataRoot 'RuntimeMetadata.csproj'
-    [IO.File]::WriteAllText($metadataProject,('<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net10.0</TargetFramework><RestorePackagesWithLockFile>true</RestorePackagesWithLockFile></PropertyGroup><ItemGroup>'+($items -join '')+'</ItemGroup></Project>'))
+    [IO.File]::WriteAllText($metadataProject,('<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net11.0</TargetFramework><RestorePackagesWithLockFile>true</RestorePackagesWithLockFile></PropertyGroup><ItemGroup>'+($items -join '')+'</ItemGroup></Project>'))
     Checked dotnet @('restore',$metadataProject,'--source','https://api.nuget.org/v3/index.json','--packages',$env:NUGET_PACKAGES,'--use-lock-file')
     Checked dotnet @('restore',$metadataProject,'--source','https://api.nuget.org/v3/index.json','--packages',$env:NUGET_PACKAGES,'--locked-mode')
     New-Item -ItemType Directory -Force artifacts/workload-package-metadata|Out-Null

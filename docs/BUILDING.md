@@ -1,6 +1,6 @@
 # Building
 
-Use .NET SDK **10.0.404**, Node **24.19.0**, Corepack **0.34.6**, pnpm **12.16.1** and committed lockfiles. MAUI Controls is pinned to **10.0.130**. Linux supports portable Core/frontend tests; WinUI requires Windows. Native builds and runtime acceptance are separate checks.
+Use .NET SDK **11.0.100**, Node **24.19.0**, Corepack **0.34.6**, pnpm **12.16.1** and committed lockfiles. MAUI Controls is pinned to **11.0.10**. Linux supports portable Core/frontend tests; WinUI requires Windows. Native builds and runtime acceptance are separate checks.
 
 Windows requires the `maui-windows` workload and Windows SDK 10.0.26100. Use the app-only framework selector to avoid restoring Android. The project enables .NET self-contained deployment, `WindowsAppSDKSelfContained=true` and `WindowsPackageType=None` for Windows.
 
@@ -13,12 +13,12 @@ pnpm install --frozen-lockfile
 pnpm build
 ./scripts/refresh-dotnet.ps1 -Scope windows -InstallWorkloads
 $commit=(git rev-parse HEAD).Trim()
-dotnet publish apps/GitPadPlus.App/GitPadPlus.App.csproj -c Release -f net10.0-windows10.0.19041.0 -p:GitPadTargetFramework=net10.0-windows10.0.19041.0 -r win-x64 -p:GitPadSourceCommit=$commit -o artifacts/windows-publish
+dotnet publish apps/GitPadPlus.App/GitPadPlus.App.csproj -c Release -f net11.0-windows10.0.19041.0 -p:GitPadTargetFramework=net11.0-windows10.0.19041.0 -r win-x64 -p:GitPadSourceCommit=$commit -o artifacts/windows-publish
 ```
 
 For candidate packaging, run `scripts/build-windows-release.ps1 -OutputDirectory <new-directory>` after generating the portable/native inventories and offline notices. It requires clean committed source and creates the ZIP before runtime-generated WebView2 profiles exist. Package the **whole** publish directory, including native/runtime libraries and third-party notices. Extract the ZIP into a new directory and test that executable. The package still requires Windows x64 10.0.19041 or newer and working Evergreen WebView2. Testing Windows 11 does not qualify every supported OS version. State the publisher signature status explicitly; a self-issued certificate is not a trusted Authenticode publisher certificate.
 
-Android requires `maui-android` (workload set `10.0.404`), JDK 21, SDK platform 36 and build-tools 36.0.0. Set `JAVA_HOME`, `ANDROID_HOME` and `ANDROID_SDK_ROOT`. Emulator acceptance also needs platform-tools, the emulator and one compatible x86_64 system image. Native regression uses Android 16/API 36 Google APIs. A signed regression output still requires exact-package qualification before publication.
+Android requires `maui-android` (workload set `11.0.100.1`), JDK 21, SDK platform 37.0 and build-tools 37.0.0. Set `JAVA_HOME`, `ANDROID_HOME` and `ANDROID_SDK_ROOT`. Emulator acceptance also needs platform-tools, the emulator and one compatible x86_64 system image. Native regression uses Android 16/API 36 Google APIs. A signed regression output still requires exact-package qualification before publication.
 
 ```powershell
 ./scripts/build-android-release.ps1 -KeystorePath <outside-repository-keystore> -AndroidSdkDirectory $env:ANDROID_HOME -JavaSdkDirectory $env:JAVA_HOME -OutputDirectory <new-output-directory>

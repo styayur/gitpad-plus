@@ -18,11 +18,11 @@ Implemented and tested in the portable core/browser workflow:
 - Image import/deduplication, managed-vault path checks, dirty-state protection and a separate clear-data confirmation.
 - Two official SDK plugins, durable plugin settings/object UUIDs, persisted disable preferences, lifecycle disposal, host capabilities and native-core checks on the packaged plugin RPC route.
 
-MAUI 10/WinUI 3/Android shell source and CI builds are provided. The local native probes cover Windows materials, native pickers/bitmap clipboard, URI routing, workspace/plugin restoration, external conflict recovery, disposable clear and large-library rendering; Android probes cover native input, intents, lifecycle and storage. See the [acceptance report](docs/acceptance/v0.1.0-alpha.1.md) for package-specific evidence, measured limits and remaining v0.1 gates. Browser tests are separate from native evidence.
+MAUI 11/WinUI 3/Android shell source and CI builds are provided. The local native probes cover Windows materials, native pickers/bitmap clipboard, URI routing, workspace/plugin restoration, external conflict recovery, disposable clear and large-library rendering; Android probes cover native input, intents, lifecycle and storage. See the [acceptance report](docs/acceptance/v0.1.0-alpha.1.md) for package-specific evidence, measured limits and remaining v0.1 gates. Browser tests are separate from native evidence.
 
 ## Development
 
-Pinned versions: .NET SDK 10.0.404, Node.js 24.19.0 LTS, Corepack 0.34.6, pnpm 12.16.1. Run from the existing checkout; each cloud task is already isolated and needs no additional worktree.
+Pinned versions: .NET SDK 11.0.100, Node.js 24.19.0 LTS, Corepack 0.34.6, pnpm 12.16.1. Run from the existing checkout; each cloud task is already isolated and needs no additional worktree.
 
 ```bash
 # From the repository root, with the pinned tools on PATH:

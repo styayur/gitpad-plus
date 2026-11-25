@@ -1,6 +1,6 @@
 # Supported dependency lane and refresh procedure
 
-The alpha release lane is .NET 10 / MAUI 10. `global.json` is the authority for
+This branch qualifies .NET 11 / MAUI 11. The current alpha release lane uses .NET 10 / MAUI 10. `global.json` is the authority for
 the exact SDK and `eng/toolchain.json` pins the native workload set;
 `Directory.Packages.props` is the authority for direct NuGet versions across
 the app, Core, tests and native probes. Do not put versions back into project

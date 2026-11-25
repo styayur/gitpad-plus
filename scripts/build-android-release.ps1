@@ -6,7 +6,7 @@ param(
     [Parameter(Mandatory)][string]$JavaSdkDirectory,
     [Parameter(Mandatory)][string]$OutputDirectory,
     [string]$Alias='gitpadplus-release',
-    [string]$BuildToolsVersion='36.0.0',
+    [string]$BuildToolsVersion='37.0.0',
     [string]$SigningPasswordEnvironmentVariable,
     [string]$PackagedRegistryPath,
     [switch]$QuickProbe,
@@ -36,7 +36,7 @@ try {
     $env:GITPAD_PLUGIN_REGISTRY=$registry
     & pnpm build 2>&1 | Tee-Object (Join-Path $output 'web-build.log')
     if($LASTEXITCODE -ne 0){throw 'Embedded editor build failed'}
-    [string[]]$modeArguments=if($QuickProbe){@('-p:GitPadAndroidReleaseUniversal=false','-p:RuntimeIdentifier=android-x64','-p:RunAOTCompilation=false')}else{@('-p:GitPadAndroidReleaseUniversal=true')}
+    [string[]]$modeArguments=if($QuickProbe){@('-p:GitPadAndroidReleaseUniversal=false','-p:RuntimeIdentifier=android-x64')}else{@('-p:GitPadAndroidReleaseUniversal=true')}
     $modeArguments+=if($QuickProbe){'-p:RestoreLockedMode=false'}else{'-p:RestoreLockedMode=true'}
     if($SigningPasswordEnvironmentVariable){
         $env:GITPAD_RELEASE_PASSWORD=[Environment]::GetEnvironmentVariable($SigningPasswordEnvironmentVariable)
@@ -50,7 +50,7 @@ try {
     $env:JAVA_HOME=$JavaSdkDirectory
     $env:ANDROID_HOME=$AndroidSdkDirectory
     $publish=Join-Path $output 'publish'
-    & dotnet publish apps/GitPadPlus.App/GitPadPlus.App.csproj -c Release -f net10.0-android '-p:GitPadTargetFramework=net10.0-android' "-p:GitPadPackagedRegistry=$registry" @modeArguments "-p:GitPadSourceCommit=$stamp" "-p:AndroidSdkDirectory=$AndroidSdkDirectory" "-p:JavaSdkDirectory=$JavaSdkDirectory" '-p:AndroidKeyStore=true' "-p:AndroidSigningKeyStore=$key" "-p:AndroidSigningKeyAlias=$Alias" '-p:AndroidSigningStorePass=env:GITPAD_RELEASE_PASSWORD' '-p:AndroidSigningKeyPass=env:GITPAD_RELEASE_PASSWORD' '-p:AndroidPackageFormats=apk' '-p:AndroidCreatePackagePerAbi=false' -o $publish 2>&1 | Tee-Object (Join-Path $output 'android-publish.log')
+    & dotnet publish apps/GitPadPlus.App/GitPadPlus.App.csproj -c Release -f net11.0-android '-p:GitPadTargetFramework=net11.0-android' "-p:GitPadPackagedRegistry=$registry" @modeArguments "-p:GitPadSourceCommit=$stamp" "-p:AndroidSdkDirectory=$AndroidSdkDirectory" "-p:JavaSdkDirectory=$JavaSdkDirectory" '-p:AndroidKeyStore=true' "-p:AndroidSigningKeyStore=$key" "-p:AndroidSigningKeyAlias=$Alias" '-p:AndroidSigningStorePass=env:GITPAD_RELEASE_PASSWORD' '-p:AndroidSigningKeyPass=env:GITPAD_RELEASE_PASSWORD' '-p:AndroidPackageFormats=apk' '-p:AndroidCreatePackagePerAbi=false' -o $publish 2>&1 | Tee-Object (Join-Path $output 'android-publish.log')
     if($LASTEXITCODE -ne 0){throw 'Signed Android publish failed'}
     $packages=@(Get-ChildItem -LiteralPath $publish -Filter '*Signed.apk' -File -Recurse)
     if($packages.Count -ne 1){throw 'Expected one signed universal APK'}
