@@ -3,14 +3,14 @@
 import {chromium,expect} from '@playwright/test';
 import {spawn,execFileSync} from 'node:child_process';
 import {createHash} from 'node:crypto';
-import {readFileSync,writeFileSync,appendFileSync,mkdirSync,readdirSync,existsSync,realpathSync} from 'node:fs';
+import {readFileSync,writeFileSync,appendFileSync,mkdirSync,readdirSync,existsSync,realpathSync,cpSync,renameSync} from 'node:fs';
 import {resolve,join,dirname,basename,sep} from 'node:path';
 import {createServer} from 'node:net';
 import {platform,release} from 'node:os';
 
 if(process.platform!=='win32')throw Error('Native Windows qualification requires Windows');
-const [exeArg,outArg,sourceCommit]=process.argv.slice(2);
-if(!exeArg||!outArg||!/^[a-f0-9]{40}$/.test(sourceCommit??''))throw Error('Usage: node tests/windows/qualify-package.mjs <extracted.exe> <new evidence directory> <source SHA>');
+const [exeArg,outArg,sourceCommit,baselineArg]=process.argv.slice(2);
+if(!exeArg||!outArg||!/^[a-f0-9]{40}$/.test(sourceCommit??''))throw Error('Usage: node tests/windows/qualify-package.mjs <extracted.exe> <new evidence directory> <source SHA> [extracted Alpha.2 exe]');
 const exe=realpathSync(resolve(exeArg)),out=resolve(outArg);
 if(basename(exe)!=='GitPadPlus.App.exe'||out.startsWith(dirname(exe)+sep)||existsSync(out))throw Error('Use the extracted executable and a fresh external evidence directory');
 if(!readFileSync(join(dirname(exe),'GitPadPlus.App.dll')).includes(Buffer.from(sourceCommit)))throw Error('Packaged assembly source stamp mismatch');
@@ -18,7 +18,7 @@ mkdirSync(out,{recursive:true});
 const hash=bytes=>createHash('sha256').update(bytes).digest('hex');
 const wait=ms=>new Promise(done=>setTimeout(done,ms));
 const vault=join(out,'Vault'),profile=join(out,'webview-profile'),checks=[];
-let child,browser,page;
+let child,browser,page,activeProfile,upgrade;
 const check=(name,ok)=>{checks.push({name,passed:!!ok});if(!ok)throw Error(name);};
 const rpc=(method,params={})=>page.evaluate(({method,params})=>new Promise((resolve,reject)=>{
   const requestId=crypto.randomUUID();
@@ -27,16 +27,17 @@ const rpc=(method,params={})=>page.evaluate(({method,params})=>new Promise((reso
   window.addEventListener('HybridWebViewMessageReceived',onMessage);
   window.HybridWebView.SendRawMessage(JSON.stringify({protocolVersion:1,requestId,method,params}));
 }),{method,params});
-const pair=id=>({markdown:hash(readFileSync(join(vault,'Journal',id+'.md'))),sidecar:hash(readFileSync(join(vault,'.gitpad/anchors',id+'.json')))});
+const pair=(id,root=vault)=>({markdown:hash(readFileSync(join(root,'Journal',id+'.md'))),sidecar:hash(readFileSync(join(root,'.gitpad/anchors',id+'.json')))});
 async function activate(uri){
   const forwarded=spawn(exe,[uri],{cwd:dirname(exe),env:{...process.env,GITPAD_ACCEPTANCE_VAULT:vault},stdio:'ignore'});
   const code=await new Promise((done,reject)=>{forwarded.once('error',reject);forwarded.once('exit',done);setTimeout(()=>reject(Error('Native activation forwarding timed out')),30000).unref();});
   check('Native single-instance activation forwarded and exited',code===0);
 }
 async function action(name){await page.getByLabel('Note actions',{exact:true}).click();await page.getByRole('button',{name,exact:true}).click();}
-async function launch(){
+async function launch(binary=exe,vaultRoot=vault,browserProfile=profile){
+  activeProfile=browserProfile;
   const server=createServer();await new Promise(done=>server.listen(0,'127.0.0.1',done));const port=server.address().port;await new Promise(done=>server.close(done));
-  child=spawn(exe,[],{cwd:dirname(exe),env:{...process.env,GITPAD_ACCEPTANCE_VAULT:vault,WEBVIEW2_USER_DATA_FOLDER:profile,WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS:`--remote-debugging-port=${port} --remote-debugging-address=127.0.0.1`},stdio:'ignore'});
+  child=spawn(binary,[],{cwd:dirname(binary),env:{...process.env,GITPAD_ACCEPTANCE_VAULT:vaultRoot,WEBVIEW2_USER_DATA_FOLDER:browserProfile,WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS:`--remote-debugging-port=${port} --remote-debugging-address=127.0.0.1`},stdio:'ignore'});
   child.on('error',error=>writeFileSync(join(out,'process-error.txt'),String(error)));
   for(let attempt=0;attempt<120;attempt++){
     if(child.exitCode!==null)throw Error('Native application exited before its WebView initialized: '+child.exitCode);
@@ -55,13 +56,75 @@ async function close(){
   check('Native window close flushed and exited without termination',child.exitCode===0);
   let owned=1;
   for(let attempt=0;attempt<50&&owned;attempt++){
-    owned=Number(execFileSync('pwsh.exe',['-NoProfile','-Command',"@(Get-CimInstance Win32_Process -Filter \"Name='msedgewebview2.exe'\" | Where-Object {$_.CommandLine -and $_.CommandLine.IndexOf($env:GITPAD_TEST_PROFILE,[StringComparison]::OrdinalIgnoreCase) -ge 0}).Count"],{encoding:'utf8',windowsHide:true,timeout:10000,env:{...process.env,GITPAD_TEST_PROFILE:profile}}).trim());
+    owned=Number(execFileSync('pwsh.exe',['-NoProfile','-Command',"@(Get-CimInstance Win32_Process -Filter \"Name='msedgewebview2.exe'\" | Where-Object {$_.CommandLine -and $_.CommandLine.IndexOf($env:GITPAD_TEST_PROFILE,[StringComparison]::OrdinalIgnoreCase) -ge 0}).Count"],{encoding:'utf8',windowsHide:true,timeout:10000,env:{...process.env,GITPAD_TEST_PROFILE:activeProfile}}).trim());
     if(owned)await wait(200);
   }
   check('Owned WebView2 profile processes exited',owned===0);browser=undefined;page=undefined;child=undefined;
 }
+async function qualifyUpgrade() {
+  const baseline=realpathSync(resolve(baselineArg));
+  const baselineSource='27f498c6d6c9968d899c4aefdbe93c91c98d79db';
+  const baselineSha=hash(readFileSync(baseline));
+  check('Baseline executable and source match public Alpha.2',basename(baseline)===basename(exe)
+    && baselineSha==='eefa3e4cb276baa571941a9700de9a473f9f762bc1e551dd318911b14e816fc4'
+    && readFileSync(join(dirname(baseline),'GitPadPlus.App.dll')).includes(Buffer.from(baselineSource)));
+
+  const original=join(out,'alpha2-original','Vault'),copy=join(out,'alpha2-copy','Vault');
+  const upgradedProfile=join(out,'upgrade-webview-profile');
+  await launch(baseline,original,join(out,'alpha2-webview-profile'));
+  const newNote=page.getByRole('button',{name:'New note',exact:true});
+  if(!await newNote.isVisible())await page.getByRole('button',{name:'Calendar',exact:true}).click();
+  await newNote.click();
+
+  const primary=await page.getByRole('tab',{selected:true}).getAttribute('title');
+  const date=(await rpc('documents.load',{id:primary})).header.date;
+  const secondary=(await rpc('documents.create',{date,title:'Alpha.2 second pane'})).header.id;
+  // Refresh the note selector so it sees the note created through the native RPC.
+  await page.reload();
+  await page.waitForFunction(()=>document.documentElement.dataset.workspaceReady==='true');
+  await page.getByRole('combobox',{name:'Open beside'}).selectOption(secondary);
+  const editors=()=>page.locator('.ProseMirror');
+  const primaryText='Alpha.2 portabilityfixture 中文';
+  const secondaryText='Second pane 👩🏽‍💻';
+  await expect(editors()).toHaveCount(2);
+  await editors().first().fill(primaryText);
+  await editors().last().fill(secondaryText);
+  await page.getByRole('button',{name:'Save',exact:true}).click();
+  await expect.poll(async()=>(await rpc('documents.load',{id:primary})).body).toContain(primaryText);
+  await expect.poll(async()=>(await rpc('documents.load',{id:secondary})).body).toContain(secondaryText);
+  await expect.poll(async()=>(await rpc('workspace.get')).secondaryId).toBe(secondary);
+
+  const pluginId='official-calendar-stats';
+  const pluginObject=async()=>(await rpc('plugins.storage.read',{pluginId}))?.objectIds['calendar-statistics'];
+  const objectId=await pluginObject();
+  check('Alpha.2 created durable Plugin SDK and SQLite state',!!objectId&&existsSync(join(original,'.gitpad','index.sqlite')));
+  await close();
+  const originalPairs=[primary,secondary].map(id=>pair(id,original));
+  cpSync(original,copy,{recursive:true,errorOnExist:true,force:false});
+  await launch(exe,copy,upgradedProfile);
+  await expect(editors()).toHaveCount(2);
+  await expect(editors().first()).toContainText(primaryText);
+  await expect(editors().last()).toContainText(secondaryText);
+  const search=async()=>(await rpc('documents.list',{search:'portabilityfixture'})).some(note=>note.id===primary);
+  check('Migrated copy reopens both editor panes, Plugin SDK state and existing search index',await pluginObject()===objectId&&await search());
+  check('Migrated Markdown and sidecars retain both exact source pairs',JSON.stringify([primary,secondary].map(id=>pair(id,copy)))===JSON.stringify(originalPairs));
+  await close();
+
+  // Move aside only the copied projections after both WebView and app shut down.
+  for(const suffix of ['','-wal','-shm']){
+    const path=join(copy,'.gitpad','index.sqlite'+suffix);
+    if(existsSync(path))renameSync(path,join(out,'upgrade-index.sqlite'+suffix));
+  }
+  await launch(exe,copy,upgradedProfile);
+  check('SQLite index rebuild finds old notes without rewriting the copied or original source pairs',
+    await search()&&JSON.stringify([primary,secondary].map(id=>pair(id,copy)))===JSON.stringify(originalPairs)
+    &&JSON.stringify([primary,secondary].map(id=>pair(id,original)))===JSON.stringify(originalPairs));
+  await close();
+  upgrade={baselineSource,baselineSha,originalPairs};
+}
 try{
   if(Number(execFileSync('pwsh.exe',['-NoProfile','-Command',"@(Get-Process -Name GitPadPlus.App -ErrorAction SilentlyContinue).Count"],{encoding:'utf8',windowsHide:true}).trim()))throw Error('Close the existing GitPad+ instance before isolated native qualification');
+  if(baselineArg)await qualifyUpgrade();
   await launch();
   const newNote=page.getByRole('button',{name:'New note',exact:true});
   if(!await newNote.isVisible())await page.getByRole('button',{name:'Calendar',exact:true}).click();
@@ -130,7 +193,7 @@ try{
   await expect.poll(async()=>{try{return (await rpc('documents.list')).length;}catch{return -1;}}).toBe(0);
   check('Explicit native clear removed notes and retained external sentinel',readdirSync(join(vault,'Journal')).length===0&&readFileSync(sentinel,'utf8')==='Synthetic native clear sentinel');
   await page.screenshot({path:join(out,'native-cleared.png')});await close();
-  writeFileSync(join(out,'windows-native.json'),JSON.stringify({passed:true,sourceCommit,scope:'Exact extracted native MAUI Windows executable, actual WebView2 and Core transport; no DevHost/Vite',os:platform()+' '+release(),packagedExecutableSha256:hash(readFileSync(exe)),savedPair:source,checks},null,2)+'\n');
+  writeFileSync(join(out,'windows-native.json'),JSON.stringify({passed:true,sourceCommit,scope:'Exact extracted native MAUI Windows executable, actual WebView2 and Core transport; no DevHost/Vite',os:platform()+' '+release(),packagedExecutableSha256:hash(readFileSync(exe)),savedPair:source,upgrade,checks},null,2)+'\n');
 }catch(error){
   if(page)await page.screenshot({path:join(out,'native-failure.png')}).catch(()=>{});
   writeFileSync(join(out,'windows-native-failure.json'),JSON.stringify({passed:false,sourceCommit,checks,error:String(error)},null,2));

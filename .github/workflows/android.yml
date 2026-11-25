@@ -169,7 +169,13 @@ jobs:
         if: always()
         with:
           name: android-native-evidence
-          path: artifacts/android/
+          path: |
+            artifacts/android/
+            !artifacts/android/**/*.apk
+            !artifacts/android/publish/
+            !artifacts/android/instrumentation/classes/
+            !artifacts/android/instrumentation/dex/
+            !artifacts/android/instrumentation/assets/
       - name: Remove ephemeral signing material
         if: always()
         run: rm -f "$RUNNER_TEMP/gitpad-release.keystore"

@@ -3,6 +3,7 @@ import { execFileSync } from 'node:child_process';
 import { readFileSync, writeFileSync, mkdirSync, readdirSync, existsSync, cpSync, renameSync } from 'node:fs';
 import { join, resolve, sep } from 'node:path';
 import { createHash, randomUUID } from 'node:crypto';
+import { reviewedSqliteLicense } from './reviewed-sqlite-license.mjs';
 const groups=JSON.parse(process.platform==='win32'
   ?execFileSync(process.env.ComSpec??'cmd.exe',['/d','/s','/c','pnpm licenses list --json'],{encoding:'utf8',maxBuffer:20_000_000})
   :execFileSync('pnpm',['licenses','list','--json'],{encoding:'utf8',maxBuffer:20_000_000}));
@@ -17,7 +18,7 @@ if(existsSync(noticeRoot)){
 }
 mkdirSync(noticeRoot,{recursive:true});
 const approved=new Set(['MIT','MIT-0','Apache-2.0','BSD-2-Clause','BSD-3-Clause','ISC','CC0-1.0','BlueOak-1.0.0','MPL-2.0','(MPL-2.0 OR Apache-2.0)']);
-const packages=[],inventory=[];let count=0;
+const packages=[],inventory=[],extractedLicenses=[];let count=0;
 for(const [license,items] of Object.entries(groups)){
   if(!approved.has(license))throw new Error('Unreviewed license expression: '+license);
   for(const item of items)for(const version of item.versions){
@@ -47,7 +48,9 @@ for(const project of ['src/GitPadPlus.Core','tests/dotnet','apps/GitPadPlus.DevH
       if(!text.includes('Apache License')||!text.includes('Version 2.0'))throw new Error('Legacy xUnit license evidence missing');
       license='Apache-2.0';
     }
-    if(!license||!approved.has(license))throw new Error('Review NuGet license: '+name+' '+license);
+    const sqliteLicense=reviewedSqliteLicense(name,entry.resolved,nuspec,folder);
+    if(sqliteLicense){license=sqliteLicense.licenseId;extractedLicenses.push(sqliteLicense);}
+    if(!sqliteLicense&&(!license||!approved.has(license)))throw new Error('Review NuGet license: '+name+' '+license);
     const id='SPDXRef-nuget-'+(++count),noticeDir=join('artifacts/third-party',id);mkdirSync(noticeDir,{recursive:true});
     for(const file of readdirSync(folder).filter(f=>/license|notice|copyright|\.nuspec$/i.test(f)))cpSync(join(folder,file),join(noticeDir,file),{recursive:true});
     inventory.push({name,version:entry.resolved,license,source:'NuGet'});
@@ -59,7 +62,7 @@ const backport=JSON.parse(readFileSync('patches/picomatch-provenance.json'));
 for(const pkg of packages.filter(p=>p.name==='picomatch')){
   pkg.sourceInfo=`Upstream MIT 4.0.7 with deliberate tooling hardening following withdrawn ${backport.advisory}; patch SHA256 ${backport.patchSha256}; upstream ${backport.upstreamCommit}. Raw audit is retained and must pass independently; bounded-corpus evidence and reachability in docs/SECURITY-PICOMATCH.md.`;
 }
-const sbom={spdxVersion:'SPDX-2.3',dataLicense:'CC0-1.0',SPDXID:'SPDXRef-DOCUMENT',name:'GitPadPlus-portable-dependencies',documentNamespace:'https://github.com/styayur/gitpad-plus/sbom/'+digest,creationInfo:{created:new Date().toISOString(),creators:['Tool: GitPadPlus-license-inventory-0.1']},packages,relationships:packages.map(p=>({spdxElementId:'SPDXRef-DOCUMENT',relationshipType:'DESCRIBES',relatedSpdxElement:p.SPDXID}))};
+const sbom={spdxVersion:'SPDX-2.3',dataLicense:'CC0-1.0',SPDXID:'SPDXRef-DOCUMENT',name:'GitPadPlus-portable-dependencies',documentNamespace:'https://github.com/styayur/gitpad-plus/sbom/'+digest,creationInfo:{created:new Date().toISOString(),creators:['Tool: GitPadPlus-license-inventory-0.1']},hasExtractedLicensingInfos:extractedLicenses,packages,relationships:packages.map(p=>({spdxElementId:'SPDXRef-DOCUMENT',relationshipType:'DESCRIBES',relatedSpdxElement:p.SPDXID}))};
 writeFileSync('artifacts/SBOM.spdx.json',JSON.stringify(sbom,null,2)+'\n');
 writeFileSync('artifacts/license-inventory.json',JSON.stringify({scope:'installed portable npm/NuGet dependencies; native workloads and artifacts require a separate audit',inventory},null,2)+'\n');
 console.log(`Recorded ${packages.length} restored package licenses and preserved upstream notice files. MPL-2.0 sources remain under MPL; inventory records their source locations. Native binary license gate is still pending.`);

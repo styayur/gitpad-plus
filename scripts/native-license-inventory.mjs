@@ -5,6 +5,7 @@ import {createHash} from 'node:crypto';
 import {execFileSync} from 'node:child_process';
 import {verifyWin2DSource,win2dVersion} from './win2d-source.mjs';
 import {readZip} from './release-evidence.mjs';
+import {reviewedSqliteLicense} from './reviewed-sqlite-license.mjs';
 
 // Run after portable licenses.mjs, with snapshots of each actual native restore.
 const inputs=process.argv.slice(2);
@@ -14,7 +15,8 @@ if(!inputs.length)throw Error('Supply actual native project.assets.json snapshot
 const nuget=process.env.NUGET_PACKAGES;if(!nuget)throw Error('Set NUGET_PACKAGES to the restored package cache');
 const sbom=JSON.parse(readFileSync('artifacts/SBOM.spdx.json','utf8'));
 if(sbom.name!=='GitPadPlus-portable-dependencies')throw Error('Regenerate the portable SBOM before augmentation');
-const inventory=[],unresolved=[],ids=new Map(),extracted=new Map();
+const inventory=[],unresolved=[],ids=new Map();
+const extracted=new Map((sbom.hasExtractedLicensingInfos??[]).map(entry=>[entry.licenseId,entry]));
 const decode=value=>value.replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>');
 const approved=new Set(['MIT','Apache-2.0','BSD-2-Clause','BSD-3-Clause','ISC','CC0-1.0']);
 const hash=bytes=>createHash('sha256').update(bytes).digest('hex');
@@ -46,7 +48,9 @@ function record(name,version,folder,scope){
     const path=resolve(folder,decode(licenseFile));
     if(!path.startsWith(resolve(folder)+'/')&&!path.startsWith(resolve(folder)+'\\'))throw Error('License path escapes package');
     const text=readFileSync(path,'utf8');extra.push(path);
-    if(name==='Microsoft.Web.WebView2'&&text.includes('Redistribution and use in source and binary forms')&&text.includes('may not be used to endorse or promote'))license='BSD-3-Clause';
+    const sqliteLicense=reviewedSqliteLicense(name,version,spec,folder);
+    if(sqliteLicense){license=sqliteLicense.licenseId;extracted.set(license,sqliteLicense);}
+    else if(name==='Microsoft.Web.WebView2'&&text.includes('Redistribution and use in source and binary forms')&&text.includes('may not be used to endorse or promote'))license='BSD-3-Clause';
     else if(name.startsWith('Microsoft.Android.Runtime.CoreCLR.')&&text.includes('The MIT License (MIT)')&&text.includes('Permission is hereby granted, free of charge'))license='MIT';
     else if(name.startsWith('Microsoft.WindowsAppSDK')||name==='Microsoft.Windows.SDK.BuildTools.MSIX')license=extractedLicense(text,name);
     else throw Error('Review native license file '+key);
@@ -119,7 +123,8 @@ function workloadRecord(name,version,scope){
 }
 for(const abi of ['android-arm64','android-x64']){
   const name='Microsoft.NETCore.App.Runtime.'+abi;
-  workloadRecord(name,runtimePins.androidRuntimeVersion,'Android published CoreCLR runtime '+abi);
+  // The SDK restores CoreCLR via NuGet. Only Android's glue is a workload-installed pack.
+  record(name,runtimePins.androidRuntimeVersion,join(nuget,name.toLowerCase(),runtimePins.androidRuntimeVersion),'Android published CoreCLR runtime '+abi);
   const android='Microsoft.Android.Runtime.CoreCLR.37.'+abi;
   workloadRecord(android,runtimePins.androidRuntimeGlueVersion,'Android native runtime glue '+abi);
 }

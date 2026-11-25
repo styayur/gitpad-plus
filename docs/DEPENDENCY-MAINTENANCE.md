@@ -42,5 +42,25 @@ lifecycle differs from .NET10 LTS. Review the official policy during each
 maintenance cycle and stay on the latest servicing patch after compatibility
 checks. Begin the independent .NET11/MAUI11 compatibility work early enough to
 complete native, data recovery, license and packaging acceptance before MAUI10
-support ends. The migration does not block this alpha update and is not an
-automatic Dependabot major upgrade.
+support ends. The migration is tracked in [issue #22](https://github.com/styayur/gitpad-plus/issues/22).
+Microsoft lists .NET 11 support through 2028-11-14 and MAUI 11 support through
+2028-05-09. The pinned 11.0.100.1 workload set supplies Android 37.2.31, and
+the central NuGet manifest selects MAUI 11.0.10. The Android branch build uses
+CoreCLR and preserves the app's API 26 installation floor, existing app ID and
+release certificate. Its build code is 3 for the upgrade test against Alpha.2
+(build code 2). The regression keeps reports and hashes in Actions and leaves
+the signed test packages on the ephemeral runner.
+
+For Windows back-compat, extract the published Alpha.2 ZIP and the migration
+qualification ZIP into separate directories. Verify both ZIP hashes, then run
+the existing native harness with the Alpha.2 executable as its fourth argument:
+
+```powershell
+node tests/windows/qualify-package.mjs <migration-exe> <new-evidence-dir> <migration-sha> <alpha2-exe>
+```
+
+The harness seeds a disposable vault with the Alpha.2 application, saves both
+editor panes and plugin state, then opens a copy with the migration executable.
+It compares the Markdown and sidecar bytes and exercises search before and
+after moving the copy's SQLite index aside. Keep the original vault and the
+reports for inspection.
