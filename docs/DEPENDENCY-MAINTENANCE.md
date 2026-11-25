@@ -51,7 +51,12 @@ release certificate. Its build code is 3 for the upgrade test against Alpha.2
 (build code 2). The regression keeps reports and hashes in Actions and leaves
 the signed test packages on the ephemeral runner.
 
-For Windows back-compat, extract the published Alpha.2 ZIP and the migration
+The existing Android native regression workflow also accepts the Windows
+qualification input `qualify_windows=true`. It runs the native preflight, then
+builds and tests the Windows ZIP on a disposable runner. The workflow retains
+only test reports and package hashes for this Windows trial.
+
+For local Windows back-compat, extract the published Alpha.2 ZIP and the migration
 qualification ZIP into separate directories. Verify both ZIP hashes, then run
 the existing native harness with the Alpha.2 executable as its fourth argument:
 

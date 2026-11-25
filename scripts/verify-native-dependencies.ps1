@@ -32,7 +32,7 @@ try {
     & node scripts/security-gate.mjs artifacts/windows-nuget-audit.json artifacts/android-nuget-audit.json > artifacts/native-security-gate.log
     if($LASTEXITCODE){throw 'Installed native dependency security gate failed'}
     $pins=(Get-Content eng/toolchain.json -Raw|ConvertFrom-Json).nativeRuntimePins
-    $queries=@('Microsoft.Graphics.Win2D@1.4.0',"Microsoft.NETCore.App.Runtime.win-x64@$($pins.windowsRuntimeVersion)","Microsoft.NETCore.App.Runtime.android-arm64@$($pins.androidRuntimeVersion)","Microsoft.NETCore.App.Runtime.android-x64@$($pins.androidRuntimeVersion)","Microsoft.Android.Runtime.CoreCLR.37.android-arm64@$($pins.androidRuntimeGlueVersion)","Microsoft.Android.Runtime.CoreCLR.37.android-x64@$($pins.androidRuntimeGlueVersion)")
+    $queries=@('Microsoft.Graphics.Win2D@1.4.0',"Microsoft.NETCore.App.Runtime.win-x64@$($pins.windowsRuntimeVersion)","Microsoft.WindowsDesktop.App.Runtime.win-x64@$($pins.windowsRuntimeVersion)","Microsoft.AspNetCore.App.Runtime.win-x64@$($pins.windowsRuntimeVersion)","Microsoft.NETCore.App.Runtime.android-arm64@$($pins.androidRuntimeVersion)","Microsoft.NETCore.App.Runtime.android-x64@$($pins.androidRuntimeVersion)","Microsoft.Android.Runtime.CoreCLR.37.android-arm64@$($pins.androidRuntimeGlueVersion)","Microsoft.Android.Runtime.CoreCLR.37.android-x64@$($pins.androidRuntimeGlueVersion)")
     $records=@()
     foreach($query in $queries){
         $raw=gh api --method GET /advisories -f ecosystem=nuget -f "affects=$query"

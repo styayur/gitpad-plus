@@ -10,6 +10,10 @@ on:
         description: Preflight actual native audits and complete license inventory without a release package
         type: boolean
         default: false
+      qualify_windows:
+        description: Build and test a Windows migration ZIP against the public Alpha.2 app
+        type: boolean
+        default: false
       candidate_run_id:
         description: Optional successful exact-source package-build run to test without rebuilding its APK
         required: false
@@ -19,7 +23,7 @@ permissions:
   actions: read
 jobs:
   refresh:
-    if: inputs.refresh_locks || inputs.verify_dependencies
+    if: inputs.refresh_locks || inputs.verify_dependencies || inputs.qualify_windows
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
@@ -31,11 +35,11 @@ jobs:
           ./scripts/refresh-dotnet.ps1 -Scope all -Refresh:$refresh -InstallWorkloads
         shell: pwsh
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
-        if: inputs.verify_dependencies
+        if: inputs.verify_dependencies || inputs.qualify_windows
         with:
           node-version-file: .node-version
       - name: Preflight all actual native dependency and license gates
-        if: inputs.verify_dependencies
+        if: inputs.verify_dependencies || inputs.qualify_windows
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
@@ -46,7 +50,7 @@ jobs:
           if($LASTEXITCODE){exit $LASTEXITCODE}
           ./scripts/verify-native-dependencies.ps1
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
-        if: always() && inputs.verify_dependencies
+        if: always() && (inputs.verify_dependencies || inputs.qualify_windows)
         with:
           name: native-dependency-evidence
           path: artifacts/
@@ -58,8 +62,35 @@ jobs:
             **/packages.lock.json
             apps/GitPadPlus.App/packages.windows.lock.json
             apps/GitPadPlus.App/packages.android.lock.json
+      - name: Qualify a fresh Windows ZIP with the public Alpha.2 vault format
+        if: inputs.qualify_windows
+        shell: pwsh
+        run: |
+          $package=Join-Path $env:RUNNER_TEMP 'gitpad-windows-package'
+          ./scripts/build-windows-release.ps1 -OutputDirectory $package
+          $current=Join-Path $env:RUNNER_TEMP 'gitpad-windows-extracted'
+          $baseline=Join-Path $env:RUNNER_TEMP 'gitpad-alpha2-extracted'
+          New-Item -ItemType Directory -Path $current,$baseline | Out-Null
+          $baselineZip=Join-Path $env:RUNNER_TEMP 'gitpad-alpha2.zip'
+          curl.exe --disable --fail --location --retry 2 --max-time 180 https://github.com/styayur/gitpad-plus/releases/download/v0.1.0-alpha.2/GitPadPlus-Windows-x64.zip -o $baselineZip
+          if($LASTEXITCODE -or (Get-FileHash -LiteralPath $baselineZip).Hash -ne '422e144751623234a9c90e0562758b0e91c1dcef764a2811cb050810855e27ed'){throw 'Published Alpha.2 baseline ZIP hash mismatch'}
+          tar.exe -xf $baselineZip -C $baseline
+          if($LASTEXITCODE){exit $LASTEXITCODE}
+          tar.exe -xf (Join-Path $package 'GitPadPlus-Windows-x64.zip') -C $current
+          if($LASTEXITCODE){exit $LASTEXITCODE}
+          node tests/windows/qualify-package.mjs (Join-Path $current 'GitPadPlus.App.exe') (Join-Path $env:RUNNER_TEMP 'gitpad-windows-native') $env:GITHUB_SHA (Join-Path $baseline 'GitPadPlus.App.exe')
+          if($LASTEXITCODE){exit $LASTEXITCODE}
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always() && inputs.qualify_windows
+        with:
+          name: windows-migration-evidence
+          path: |
+            ${{ runner.temp }}/gitpad-windows-package/windows-build-info.json
+            ${{ runner.temp }}/gitpad-windows-package/windows-publish.log
+            ${{ runner.temp }}/gitpad-windows-native/*.json
+            ${{ runner.temp }}/gitpad-windows-native/*.png
   android-build:
-    if: ${{ !inputs.refresh_locks && !inputs.verify_dependencies }}
+    if: ${{ !inputs.refresh_locks && !inputs.verify_dependencies && !inputs.qualify_windows }}
     environment: android-alpha-signing
     runs-on: ubuntu-latest
     timeout-minutes: 45

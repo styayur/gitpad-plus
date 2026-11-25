@@ -6,6 +6,6 @@
     "windowsRuntimeVersion": "11.0.0",
     "androidRuntimeVersion": "11.0.0",
     "androidRuntimeGlueVersion": "37.2.31",
-    "windowsSdkReferenceVersion": "10.0.19041.57"
+    "windowsSdkReferenceVersion": "10.0.19041.87"
   }
 }
